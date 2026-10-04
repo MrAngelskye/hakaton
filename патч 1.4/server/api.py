@@ -4,15 +4,17 @@ from contextlib import asynccontextmanager
 from datetime import date
 from pathlib import Path
 from fastapi import FastAPI,Request,HTTPException,Depends
-from fastapi.responses import Response,JSONResponse,HTMLResponse
+from fastapi.responses import Response,JSONResponse,HTMLResponse,FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel,Field,ConfigDict
 from server.store import ServerStore
 from server.anythingllm import AnythingLLM,AIError,parse_verdict
 
 LOG=logging.getLogger('naryadai')
 MAX_BODY=36*1024*1024
-WRITE_METHODS={'create_task','claim','reschedule','transition','submit','review','add_user','set_active','reset_password','support_update_task','set_shift'}
-READ_METHODS={'task','events','pauses','shift','free_slots','employee_status'}
+WRITE_METHODS={'create_task','claim','reschedule','transition','submit','review','add_user','set_active','reset_password','support_update_task','set_shift',
+    'reassign_task','save_reference','delete_reference','acknowledge_alert','set_notification_settings'}
+READ_METHODS={'task','events','pauses','shift','free_slots','employee_status','references','equipment_history','alerts','attention','notification_settings'}
 
 class LoginBody(BaseModel):
     model_config=ConfigDict(extra='forbid')
@@ -66,6 +68,10 @@ def create_app(settings,provider=None):
         jobs=RemoteJobs(store,settings)
     from server.chat import AdminChat
     chat=AdminChat(store,settings)
+    with store.transaction() as c:
+        if settings.database_url:c.execute('ALTER TABLE rpc_results ADD COLUMN IF NOT EXISTS request_hash TEXT')
+        elif 'request_hash' not in [r['name'] for r in c.execute('PRAGMA table_info(rpc_results)')]:
+            c.execute('ALTER TABLE rpc_results ADD COLUMN request_hash TEXT')
     stopping=threading.Event();rpc_lock=threading.Lock();login_lock=threading.Lock();attempts={}
 
     def ai_loop():
@@ -94,12 +100,21 @@ def create_app(settings,provider=None):
             except Exception:
                 LOG.exception('Ошибка очереди ИИ');stopping.wait(1)
 
+    def deadline_loop():
+        while not stopping.is_set():
+            try:
+                with rpc_lock:store.process_alerts()
+            except Exception:LOG.exception('Не удалось обновить уведомления сроков')
+            stopping.wait(5)
+
     @asynccontextmanager
     async def lifespan(app):
         thread=threading.Thread(target=ai_loop,name='report-ai',daemon=True)
+        deadlines=threading.Thread(target=deadline_loop,name='task-deadlines',daemon=True)
         thread.start()
+        deadlines.start()
         try:yield
-        finally:stopping.set();thread.join(timeout=2)
+        finally:stopping.set();thread.join(timeout=2);deadlines.join(timeout=2)
 
     app=FastAPI(title='НарядAI · сервер',version='1.4',lifespan=lifespan,docs_url=None,redoc_url=None,openapi_url=None)
     app.state.store=store;app.state.provider=ai;app.state.chat=chat
@@ -112,7 +127,11 @@ def create_app(settings,provider=None):
         if request.method=='POST':
             raw=await request.body()
             if len(raw)>MAX_BODY:return JSONResponse({'detail':'Слишком большой запрос.'},status_code=413)
-        response=await call_next(request);response.headers['Cache-Control']='no-store';return response
+        response=await call_next(request);response.headers['Cache-Control']='no-store'
+        response.headers['X-Content-Type-Options']='nosniff'
+        response.headers['Referrer-Policy']='same-origin'
+        response.headers['Content-Security-Policy']="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+        return response
 
     @app.exception_handler(PermissionError)
     async def permission_error(request,exc):return JSONResponse({'detail':str(exc)},status_code=403)
@@ -138,9 +157,23 @@ def create_app(settings,provider=None):
         return dict(u)
 
     @app.get('/health')
-    def health():return {'ok':True,'version':'1.4','ai_enabled':settings.ai_enabled,'features':['admin_chat']}
-    @app.get('/',response_class=HTMLResponse)
-    def home():return '<html><meta charset="utf-8"><title>НарядAI</title><h1>Сервер НарядAI работает</h1><p>Откройте start_client.bat в папке приложения.</p></html>'
+    def health():return {'ok':True,'version':'1.4','ai_enabled':settings.ai_enabled,'features':['admin_chat','mobile_web','issued_workflow','references','photo_checks']}
+    root=Path(__file__).resolve().parents[1]
+    web=root/'web'
+    if web.is_dir():
+        app.mount('/web',StaticFiles(directory=web),name='web')
+        app.mount('/assets',StaticFiles(directory=root/'assets'),name='assets')
+    @app.get('/')
+    def home():
+        if (web/'index.html').exists():
+            return FileResponse(web/'index.html',headers={
+                'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+                'X-Content-Type-Options':'nosniff','Referrer-Policy':'same-origin'})
+        return HTMLResponse('<html><meta charset="utf-8"><title>НарядAI</title><h1>Сервер НарядAI работает</h1></html>')
+    @app.get('/sw.js')
+    def service_worker():
+        if not (web/'sw.js').exists():raise HTTPException(404)
+        return FileResponse(web/'sw.js',media_type='application/javascript',headers={'Service-Worker-Allowed':'/','Cache-Control':'no-cache'})
 
     @app.post('/api/login')
     def login(body:LoginBody,request:Request):
@@ -174,8 +207,12 @@ def create_app(settings,provider=None):
             shifts={str(p['id']):store.shift(user,p['id'],day) for p in workers}
             free={str(p['id']):store.free_slots(user,p['id'],day) for p in workers}
             statuses={str(p['id']):store.employee_status(user,p['id']) for p in workers}
+            references=store.references(user)
+            alerts=store.alerts(user)
+            attention=store.attention(user) if user['role']!='worker' else {}
         return {'tasks':tasks,'reports':reports,'users':people,'day':day,'shifts':shifts,'free_slots':free,'employee_status':statuses,
-                'ai_enabled':settings.ai_enabled,'server_time':time.time()}
+                'references':references,'alerts':alerts,'attention':attention,
+                'ai_enabled':settings.ai_enabled,'server_time':time.time(),'timezone':'Asia/Qyzylorda'}
 
     @app.get('/api/chat')
     def chat_history(conversation_id:str='',user=Depends(actor)):
@@ -195,11 +232,15 @@ def create_app(settings,provider=None):
         kwargs=body.kwargs.copy()
         if 'actor' in kwargs or 'photo_sources' in kwargs:raise ValueError('Недопустимые параметры запроса.')
         if body.photos and method!='submit':raise ValueError('Фото можно передавать только с отчётом.')
+        fingerprint=hashlib.sha256(json.dumps({'method':method,'args':body.args,'kwargs':kwargs,'photos':body.photos},
+            ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
         with rpc_lock:
             with store.transaction() as c:
                 previous=c.execute('SELECT * FROM rpc_results WHERE request_id=?',(body.request_id,)).fetchone()
             if previous:
                 if previous['user_id']!=user['id'] or previous['method']!=method:raise PermissionError('Запрос принадлежит другому пользователю.')
+                if previous['request_hash'] and not hmac.compare_digest(previous['request_hash'],fingerprint):
+                    raise ValueError('Этот идентификатор уже использован для другого действия. Обновите данные.')
                 return {'result':json.loads(previous['result'])}
             with tempfile.TemporaryDirectory(prefix='naryadai-report-') as folder:
                 if method=='submit':
@@ -220,7 +261,8 @@ def create_app(settings,provider=None):
                 except (TypeError,KeyError,AttributeError):raise ValueError('Проверьте значения в запросе.') from None
                 if method in WRITE_METHODS:
                     with store.transaction() as c:
-                        c.execute('INSERT INTO rpc_results VALUES(?,?,?,?,?)',(body.request_id,user['id'],method,json.dumps(result,ensure_ascii=False),str(time.time())))
+                        c.execute('INSERT INTO rpc_results(request_id,user_id,method,result,created,request_hash) VALUES(?,?,?,?,?,?)',
+                            (body.request_id,user['id'],method,json.dumps(result,ensure_ascii=False),str(time.time()),fingerprint))
                         if method=='reset_password':c.execute('DELETE FROM sessions WHERE user_id=?',(bound.arguments['uid'],))
                 return {'result':result}
 

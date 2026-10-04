@@ -37,9 +37,11 @@ def main():
         win.navigate('team_schedule');app.processEvents();win.grab().save(str(args.output_dir/'team-schedule.png'))
         dialog=CreateTask(store,master,win);save(dialog,'create-task');dialog.reject()
         win.hide()
-        worker=MainWindow(store,store.authenticate('worker1','1234','worker'));save(worker,'worker-tasks')
+        worker=MainWindow(store,store.authenticate('worker1','1234','worker'));save(worker,'worker-overview')
+        worker.navigate('tasks');app.processEvents();worker.grab().save(str(args.output_dir/'worker-tasks.png'))
         worker.navigate('schedule');app.processEvents();worker.grab().save(str(args.output_dir/'worker-schedule.png'));worker.hide()
-        admin=MainWindow(store,store.authenticate('admin','1234','admin'));admin.resize(1040,760);save(admin,'admin-small');admin.hide()
+        admin=MainWindow(store,store.authenticate('admin','1234','admin'));admin.resize(1040,760);save(admin,'admin-small')
+        admin.navigate('references');app.processEvents();admin.grab().save(str(args.output_dir/'admin-references.png'));admin.hide()
         win.show();win.navigate('overview');app.processEvents()
         preferences().set_reduced(False)
         from io import BytesIO

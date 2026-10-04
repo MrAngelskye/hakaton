@@ -11,8 +11,10 @@ import uuid
 from contextlib import contextmanager
 from datetime import datetime, date, timedelta
 from pathlib import Path
+from app.domain import WorkflowMixin, PRIORITIES, company_time, local_stamp
 
-STATUS = {'available':'Доступен', 'planned':'В графике', 'inProgress':'В работе',
+STATUS = {'available':'Доступен', 'issued':'Выдан', 'accepted':'Принят исполнителем',
+          'queued':'В очереди', 'rejected':'Отказ исполнителя', 'planned':'В графике', 'inProgress':'В работе',
           'aiPending':'Проверяет ИИ',
           'paused':'Приостановлен', 'submitted':'На проверке', 'approved':'Принят',
           'revision':'Доработка', 'cancelled':'Отменён', 'superseded':'Предыдущая версия'}
@@ -24,14 +26,14 @@ EMPLOYEE_STATUS = {'free':('Свободен','employeeGreen'), 'busy':('В ра
 
 
 def now():
-    return datetime.now().isoformat(timespec='seconds')
+    return local_stamp()
 
 
 def password_hash(password, salt):
     return hashlib.pbkdf2_hmac('sha256', password.encode(), bytes.fromhex(salt), 200_000).hex()
 
 
-class Store:
+class Store(WorkflowMixin):
     def __init__(self, directory):
         self.directory = Path(directory)
         self.directory.mkdir(parents=True, exist_ok=True)
@@ -77,6 +79,7 @@ class Store:
             ''')
         self.seed()
         self.migrate_schedules()
+        self.migrate_workflow()
 
     def migrate_schedules(self):
         # Идемпотентное обновление 1.1: существующие наряды и фото сохраняются.
@@ -113,17 +116,17 @@ class Store:
             self.require(c,actor,('master','admin'));c.execute('BEGIN IMMEDIATE')
             if not c.execute("SELECT 1 FROM users WHERE id=? AND role='worker' AND active=1",(wid,)).fetchone():
                 raise ValueError('Выберите действующего сотрудника.')
-            tasks=c.execute("SELECT * FROM tasks WHERE worker_id=? AND day=? AND status!='cancelled' AND start IS NOT NULL",(wid,day)).fetchall()
+            tasks=c.execute("SELECT * FROM tasks WHERE worker_id=? AND day=? AND status NOT IN ('cancelled','rejected') AND start IS NOT NULL",(wid,day)).fetchall()
             if any(start is None or t['start']<start or t['start']+t['duration']>end for t in tasks):
                 raise ValueError('Новая смена исключает назначенные работы. Сначала перенесите или отмените наряды.')
             c.execute('INSERT INTO shifts VALUES(?,?,?,?,?,?) ON CONFLICT(worker_id,day) DO UPDATE SET start=excluded.start,end=excluded.end,updated_by=excluded.updated_by,updated=excluded.updated',
                       (wid,day,start,end,actor['id'],now()))
 
     def free_slots(self,actor,wid,day,at=None):
-        at=at or datetime.now();shift=self.shift(actor,wid,day)
+        at=company_time(at);shift=self.shift(actor,wid,day)
         if not shift or date.fromisoformat(day)<at.date():return []
         with self.transaction() as c:
-            tasks=c.execute("SELECT start,duration,status FROM tasks WHERE worker_id=? AND day=? AND status!='cancelled' AND start IS NOT NULL ORDER BY start",(wid,day)).fetchall()
+            tasks=c.execute("SELECT start,duration,status FROM tasks WHERE worker_id=? AND day=? AND status NOT IN ('cancelled','rejected') AND start IS NOT NULL ORDER BY start",(wid,day)).fetchall()
         cursor=shift['start']
         if day==at.date().isoformat():
             # Следующая пятиминутка; продолжающаяся работа удерживает время до завершения.
@@ -137,13 +140,13 @@ class Store:
         return [(a,b) for a,b in result if b-a>=.5-1e-8]
 
     def employee_status(self,actor,wid,at=None):
-        at=at or datetime.now();day=at.date().isoformat();shift=self.shift(actor,wid,day)
+        at=company_time(at);day=at.date().isoformat();shift=self.shift(actor,wid,day)
         hour=at.hour+at.minute/60+at.second/3600
         active=next((u for u in self.users(actor,True) if u['id']==wid),None)
         if not active or not active['active'] or not shift or not shift['start']<=hour<shift['end']:return 'off'
         tasks=[t for t in self.tasks(actor) if t['worker_id']==wid]
-        if any(t['status'] in ('inProgress','paused') or (t['day']==day and t['start'] is not None and t['start']<=hour<t['start']+t['duration'] and t['status']=='planned') for t in tasks):return 'busy'
-        if any(t['status'] in ('planned','revision') for t in tasks):return 'queued'
+        if any(t['status'] in ('inProgress','paused') or (t['day']==day and t['start'] is not None and t['start']<=hour<t['start']+t['duration'] and t['status'] in ('planned','accepted','queued')) for t in tasks):return 'busy'
+        if any(t['status'] in ('issued','accepted','queued','planned','revision') for t in tasks):return 'queued'
         return 'free'
 
     def pauses(self,actor,tid):
@@ -190,7 +193,17 @@ class Store:
                 salt=secrets.token_hex(16)
                 c.execute('INSERT INTO users(username,name,job,role,salt,password_hash) VALUES(?,?,?,?,?,?)',
                           (username,name,job,role,salt,password_hash(getattr(self,'seed_password','1234'),salt)))
-            today = date.today()
+            # Only a fresh demo DB is populated. Existing accounts keep their IDs/data.
+            extra=[('master2','Демо: Арман Бекетов','Мастер ремонтной смены','master')]
+            demo_names=['Айдос Сериков','Илья Петров','Алия Турсунова','Максим Лебедев','Нурлан Исаев',
+                        'Анастасия Волкова','Ерлан Муратов','Сергей Ковалёв','Диана Садыкова','Тимур Абишев','Олег Смирнов']
+            for index,name in enumerate(demo_names,5):
+                extra.append((f'worker{index}','Демо: '+name,['Механик','Электрик','Наладчик'][index%3],'worker'))
+            for username,name,job,role in extra:
+                salt=secrets.token_hex(16)
+                c.execute('INSERT INTO users(username,name,job,role,salt,password_hash) VALUES(?,?,?,?,?,?)',
+                          (username,name,job,role,salt,password_hash(getattr(self,'seed_password','1234'),salt)))
+            today = company_time().date()
             samples=[
                 (1048,'Проверить привод ленточного конвейера',1,'Конвейер ЛК-03',2,'urgent',None,'available',None),
                 (1049,'Осмотреть гидравлическую систему экскаватора',0,'Экскаватор ЭК-12',1,'normal',None,'available',None),
@@ -261,29 +274,32 @@ class Store:
         if not items: raise PermissionError('Наряд не найден или недоступен.')
         return items[0]
 
-    def create_task(self,actor,*,title,description,site,equipment,priority,kind,duration,day,start,deadline,worker_id=None):
+    def create_task(self,actor,*,title,description,site,equipment,priority,kind,duration,day,start,deadline,worker_id=None,issued=False,brigade_id=None,normative_id=None):
         if len(title.strip())<5 or len(description.strip())<10 or not equipment.strip():
             raise ValueError('Заполните название (от 5 символов), описание (от 10) и оборудование.')
-        if not math.isfinite(duration) or not .5<=duration<=10 or priority not in ('urgent','normal'):
+        if not math.isfinite(duration) or not .5<=duration<=10 or priority not in PRIORITIES:
             raise ValueError('Проверьте время и приоритет.')
-        if site not in SITES or kind not in ('Плановая','Внеплановая'):
+        if kind not in ('Плановая','Внеплановая'):
             raise ValueError('Проверьте участок и тип работ.')
         date.fromisoformat(day)
-        due=datetime.fromisoformat(deadline)
+        due=company_time(deadline)
         if due.date()<date.fromisoformat(day): raise ValueError('Срок не может быть раньше дня работ.')
         with self.transaction() as c:
             self.require(c,actor,('master','admin'))
             c.execute('BEGIN IMMEDIATE')
+            self._validate_assignment_references(c,site,equipment,brigade_id,worker_id,normative_id,strict=issued)
+            if issued and not worker_id:raise ValueError('Для выдачи наряда выберите ответственного исполнителя.')
             if worker_id:
                 if not c.execute("SELECT 1 FROM users WHERE id=? AND role='worker' AND active=1",(worker_id,)).fetchone():
                     raise ValueError('Выберите действующего сотрудника.')
                 self._schedule(c,worker_id,day,start,duration)
-                if due < datetime.fromisoformat(f'{day}T{int(start):02d}:{int(round(start%1*60)):02d}')+timedelta(hours=duration):
+                if due < company_time(day+'T00:00')+timedelta(hours=start+duration):
                     raise ValueError('Работа в графике заканчивается позже срока наряда.')
-            cur=c.execute('''INSERT INTO tasks(title,description,site,equipment,priority,kind,duration,day,start,deadline,worker_id,master_id,status,created)
-                             VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+            stamp=now()
+            cur=c.execute('''INSERT INTO tasks(title,description,site,equipment,priority,kind,duration,day,start,deadline,worker_id,master_id,status,created,issued_at,brigade_id,normative_id)
+                             VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
                           (title.strip(),description.strip(),site,equipment.strip(),priority,kind,duration,day,
-                           start if worker_id else None,deadline,worker_id,actor['id'],'planned' if worker_id else 'available',now()))
+                           start if worker_id else None,deadline,worker_id,actor['id'],'issued' if issued else ('planned' if worker_id else 'available'),stamp,stamp if issued else None,brigade_id,normative_id))
             self.event(c,cur.lastrowid,actor['id'],'Наряд создан'+(' и назначен сотруднику' if worker_id else ' в общем списке'))
             return cur.lastrowid
 
@@ -294,7 +310,7 @@ class Store:
         if start is None or not math.isfinite(start) or start<shift['start'] or start+duration>shift['end']:
             raise ValueError('Работа должна полностью помещаться в смену сотрудника.')
         if c.execute("""SELECT 1 FROM tasks WHERE worker_id=? AND day=? AND id!=?
-                        AND status!='cancelled' AND start IS NOT NULL AND start<? AND start+duration>?""",
+                        AND status NOT IN ('cancelled','rejected') AND start IS NOT NULL AND start<? AND start+duration>?""",
                      (wid,day,exclude,start+duration,start)).fetchone():
             raise ValueError('На это время уже запланирован другой наряд.')
 
@@ -307,8 +323,8 @@ class Store:
                 raise ValueError('Этот наряд уже назначен.')
             date.fromisoformat(day)
             self._schedule(c,actor['id'],day,start,t['duration'],tid)
-            end=datetime.fromisoformat(f'{day}T{int(start):02d}:{int(round(start%1*60)):02d}')+timedelta(hours=t['duration'])
-            if end>datetime.fromisoformat(t['deadline']): raise ValueError('Выбранное время выходит за срок наряда.')
+            end=company_time(day+'T00:00')+timedelta(hours=start+t['duration'])
+            if end>company_time(t['deadline']): raise ValueError('Выбранное время выходит за срок наряда.')
             c.execute("UPDATE tasks SET worker_id=?,day=?,start=?,status='planned' WHERE id=?",(actor['id'],day,start,tid))
             self.event(c,tid,actor['id'],'Наряд добавлен в график')
 
@@ -318,16 +334,18 @@ class Store:
             c.execute('BEGIN IMMEDIATE')
             t=c.execute('SELECT * FROM tasks WHERE id=?',(tid,)).fetchone()
             if not t or t['worker_id'] is None or (u['role']=='worker' and t['worker_id']!=u['id']): raise PermissionError('Наряд другого сотрудника.')
-            if t['status']!='planned': raise ValueError('Перенести можно только запланированный наряд.')
+            if t['status'] not in ('issued','accepted','queued','planned'): raise ValueError('Перенести можно только не начатый наряд.')
             date.fromisoformat(day)
             self._schedule(c,t['worker_id'],day,start,t['duration'],tid)
-            end=datetime.fromisoformat(f'{day}T{int(start):02d}:{int(round(start%1*60)):02d}')+timedelta(hours=t['duration'])
-            if end>datetime.fromisoformat(t['deadline']): raise ValueError('Выбранное время выходит за срок наряда.')
+            end=company_time(day+'T00:00')+timedelta(hours=start+t['duration'])
+            if end>company_time(t['deadline']): raise ValueError('Выбранное время выходит за срок наряда.')
             c.execute('UPDATE tasks SET day=?,start=? WHERE id=?',(day,start,tid))
             self.event(c,tid,actor['id'],'Изменено время в графике')
 
     def transition(self,actor,tid,status,reason=''):
-        allowed={'planned':{'inProgress'},'inProgress':{'paused'},'paused':{'inProgress'}}
+        allowed={'issued':{'accepted','queued','rejected'},'accepted':{'queued','inProgress'},
+                 'queued':{'inProgress'},'planned':{'inProgress'},'revision':{'inProgress'},
+                 'inProgress':{'paused'},'paused':{'inProgress'}}
         with self.transaction() as c:
             u=self.require(c,actor)
             c.execute('BEGIN IMMEDIATE')
@@ -335,7 +353,7 @@ class Store:
             if not t: raise ValueError('Наряд не найден.')
             if status=='cancelled':
                 self.require(c,actor,('master','admin'))
-                if t['status'] not in ('available','planned','inProgress','paused','revision'):
+                if t['status'] not in ('available','issued','accepted','queued','rejected','planned','inProgress','paused','revision'):
                     raise ValueError('Этот наряд нельзя отменить.')
                 # Возвращённые отчёты перестают числиться требующими действий.
                 c.execute("UPDATE reports SET status='cancelled' WHERE task_id=? AND status='revision'",(tid,))
@@ -347,10 +365,18 @@ class Store:
                 reason=reason.strip()
                 if not 3<=len(reason)<=1000:raise ValueError('Укажите причину паузы: от 3 до 1000 символов.')
                 c.execute('INSERT INTO pauses(task_id,actor_id,reason,started) VALUES(?,?,?,?)',(tid,actor['id'],reason,now()))
+            if status=='rejected':
+                reason=reason.strip()
+                if not 3<=len(reason)<=1000:raise ValueError('Укажите причину отказа: от 3 до 1000 символов.')
+                c.execute('UPDATE tasks SET rejected_reason=? WHERE id=?',(reason,tid))
+            if status in ('accepted','queued') and t['status']=='issued':
+                c.execute('UPDATE tasks SET accepted_at=? WHERE id=?',(now(),tid))
+            if status=='inProgress':self._open_work(c,tid,actor['id'])
+            elif status in ('paused','cancelled'):self._close_work(c,tid)
             if t['status']=='paused':
                 c.execute('UPDATE pauses SET ended=?,ended_by=? WHERE task_id=? AND ended IS NULL',(now(),actor['id'],tid))
             c.execute('UPDATE tasks SET status=? WHERE id=?',(status,tid))
-            self.event(c,tid,actor['id'],STATUS[status]+(': '+reason if status=='paused' else ''))
+            self.event(c,tid,actor['id'],STATUS[status]+(': '+reason.strip() if status in ('paused','rejected','cancelled') and reason.strip() else ''))
 
     def reports(self,actor):
         with self.transaction() as c:
@@ -363,19 +389,20 @@ class Store:
             rows=[dict(r) for r in c.execute(q+' ORDER BY r.id DESC',args)]
             for r in rows:
                 r['materials']=json.loads(r['materials']);r['photos']=json.loads(r['photos'])
+                from app.photo_checks import visible_checks
+                r['checks']=visible_checks(json.loads(r.get('checks') or '[]'),u['role'])
             return rows
 
     def latest_report(self,actor,tid):
         return next((r for r in self.reports(actor) if r['task_id']==tid),None)
 
     def submit(self,actor,tid,*,work,result,defect,hours,materials,photo_sources):
-        if len(work.strip())<10 or len(result.strip())<3:
-            raise ValueError('Опишите работы (от 10 символов) и результат (от 3 символов).')
-        if not math.isfinite(hours) or not .1<=hours<=24: raise ValueError('Укажите фактическое время от 0,1 до 24 часов.')
-        for m in materials:
-            if not m['name'].strip() or not all(math.isfinite(float(m[k])) for k in ('quantity','price')) or float(m['quantity'])<=0 or float(m['price'])<0:
-                raise ValueError('Материал: название, положительное количество и цена от 0.')
-            if not m['unit'].strip(): raise ValueError('Укажите единицу измерения материала.')
+        from app.photo_checks import inspect_report_fields
+        field_checks=inspect_report_fields(work=work,result=result,hours=hours,materials=materials)
+        blocking=next((x for x in field_checks if x.get('severity')=='block'),None)
+        if blocking:raise ValueError(blocking['message'])
+        materials=[{**m,'name':m['name'].strip(),'unit':m['unit'].strip(),
+                    'quantity':float(m['quantity']),'price':float(m.get('price',0))} for m in materials]
         if len(photo_sources)>3: raise ValueError('Можно приложить до 3 фотографий.')
         copied=[]
         try:
@@ -385,6 +412,11 @@ class Store:
                 t=c.execute('SELECT * FROM tasks WHERE id=?',(tid,)).fetchone()
                 if not t or t['worker_id'] is None or (u['role']!='admin' and t['worker_id']!=u['id']): raise PermissionError('Нет доступа к этому наряду.')
                 if t['status'] not in ('inProgress','revision'): raise ValueError('Отчёт сейчас нельзя отправить.')
+                if t['kind']=='Внеплановая' and not photo_sources:raise ValueError('Для внеплановой работы обязательно фото результата после выполнения.')
+                from app.photo_checks import inspect_submission
+                checks=inspect_submission(c,self,tid,photo_sources)+field_checks
+                blocking=next((x for x in checks if x.get('severity')=='block'),None)
+                if blocking:raise ValueError(blocking['message'])
                 stored=[]
                 for src in photo_sources:
                     p=Path(src)
@@ -404,10 +436,11 @@ class Store:
                     copied.append(target);stored.append(target.name)
                 c.execute("UPDATE reports SET status='superseded' WHERE task_id=? AND status='revision'",(tid,))
                 status=self.initial_report_status(c)
-                cur=c.execute('''INSERT INTO reports(task_id,worker_id,work,result,defect,hours,materials,photos,status,created)
-                                 VALUES(?,?,?,?,?,?,?,?,?,?)''',
-                              (tid,t['worker_id'],work.strip(),result.strip(),defect,hours,json.dumps(materials,ensure_ascii=False),json.dumps(stored),status,now()))
-                c.execute('UPDATE tasks SET status=? WHERE id=?',(status,tid))
+                cur=c.execute('''INSERT INTO reports(task_id,worker_id,work,result,defect,hours,materials,photos,status,created,checks)
+                                 VALUES(?,?,?,?,?,?,?,?,?,?,?)''',
+                              (tid,t['worker_id'],work.strip(),result.strip(),defect,hours,json.dumps(materials,ensure_ascii=False),json.dumps(stored),status,now(),json.dumps(checks,ensure_ascii=False)))
+                self._close_work(c,tid)
+                c.execute('UPDATE tasks SET status=?,completed_at=? WHERE id=?',(status,now(),tid))
                 self.report_submitted(c,cur.lastrowid)
                 self.event(c,tid,actor['id'],f'Отправлен отчёт ОТ-{cur.lastrowid:04d}'+(' на предварительную проверку ИИ' if status=='aiPending' else ' мастеру'))
                 return cur.lastrowid
@@ -439,6 +472,7 @@ class Store:
             c.execute('UPDATE reports SET status=?,score=?,comment=?,reviewer_id=?,reviewed=? WHERE id=?',
                       (status,score if approve else None,comment.strip(),actor['id'],now(),rid))
             c.execute('UPDATE tasks SET status=? WHERE id=?',(status,r['task_id']))
+            if not approve:c.execute('UPDATE tasks SET completed_at=NULL WHERE id=?',(r['task_id'],))
             self.event(c,r['task_id'],actor['id'],('Работа принята' if approve else 'Возврат на доработку')+': '+comment.strip())
 
     def events(self,actor,tid):
@@ -476,7 +510,7 @@ class Store:
         with self.transaction() as c:
             self.require(c,actor,('admin',))
             if uid==actor['id']: raise ValueError('Нельзя отключить собственный аккаунт.')
-            if not active and c.execute("SELECT 1 FROM tasks WHERE worker_id=? AND status NOT IN ('approved','cancelled')",(uid,)).fetchone():
+            if not active and c.execute("SELECT 1 FROM tasks WHERE worker_id=? AND status NOT IN ('approved','cancelled','rejected')",(uid,)).fetchone():
                 raise ValueError('У сотрудника есть текущие наряды. Сначала завершите или отмените их.')
             c.execute('UPDATE users SET active=? WHERE id=?',(int(active),uid))
 
@@ -487,7 +521,7 @@ class Store:
             writer.writerow(['Отчёт','Наряд','Работа','Сотрудник','Статус','Часы','Оценка мастера','Материалы, тг','Комментарий','Дата'])
             for r in reports:
                 values=[r['id'],r['task_id'],r['title'],r['worker_name'],STATUS[r['status']],r['hours'],r['score'],
-                        round(sum(m['quantity']*m['price'] for m in r['materials']),2),r['comment'],r['created']]
+                        f"{sum(float(m['quantity'])*float(m['price']) for m in r['materials']):.2f}".rstrip('0').rstrip('.'),r['comment'],r['created']]
                 # Текст пользователя не должен превращаться в формулу Excel.
                 writer.writerow(["'"+v if isinstance(v,str) and v.startswith(('=','+','-','@','\t','\r')) else v for v in values])
 
@@ -504,24 +538,24 @@ class Store:
         if len(reason.strip())<3:raise ValueError('Укажите причину исправления (от 3 символов).')
         if len(title.strip())<5 or len(description.strip())<10 or not equipment.strip():
             raise ValueError('Заполните название, описание и оборудование.')
-        if not math.isfinite(duration) or not .5<=duration<=10 or priority not in ('urgent','normal'):
+        if not math.isfinite(duration) or not .5<=duration<=10 or priority not in PRIORITIES:
             raise ValueError('Проверьте плановое время и приоритет.')
         if kind not in ('Плановая','Внеплановая'):raise ValueError('Проверьте участок и тип работ.')
-        date.fromisoformat(day);due=datetime.fromisoformat(deadline)
+        date.fromisoformat(day);due=company_time(deadline)
         if due.date()<date.fromisoformat(day):raise ValueError('Срок не может быть раньше дня работ.')
         with self.transaction() as c:
             self.require(c,actor,('admin',));c.execute('BEGIN IMMEDIATE')
             t=c.execute('SELECT * FROM tasks WHERE id=?',(tid,)).fetchone()
-            if not t or t['status'] not in ('available','planned','inProgress','paused','revision'):
+            if not t or t['status'] not in ('available','issued','accepted','queued','rejected','planned','inProgress','paused','revision'):
                 raise ValueError('Наряд на проверке или завершён. Исторические данные сохраняются; сначала примите решение по отчёту.')
-            if site not in SITES and site!=t['site']:raise ValueError('Проверьте участок и тип работ.')
+            if site!=t['site'] and not c.execute("SELECT 1 FROM reference_items WHERE category='sites' AND name=? AND active=1",(site,)).fetchone():raise ValueError('Проверьте участок и тип работ.')
             if t['status'] not in ('available','planned') and (worker_id!=t['worker_id'] or day!=t['day'] or start!=t['start'] or duration!=t['duration']):
                 raise ValueError('У начатой задачи нельзя менять исполнителя или график. Можно исправить описание, срок и приоритет.')
             if worker_id:
                 if not c.execute("SELECT 1 FROM users WHERE id=? AND role='worker' AND active=1",(worker_id,)).fetchone():
                     raise ValueError('Выберите действующего сотрудника.')
                 self._schedule(c,worker_id,day,start,duration,tid)
-                end=datetime.fromisoformat(f'{day}T{int(start):02d}:{int(round(start%1*60)):02d}')+timedelta(hours=duration)
+                end=company_time(day+'T00:00')+timedelta(hours=start+duration)
                 if end>due:raise ValueError('Время работы выходит за срок наряда.')
             else:start=None
             status=('planned' if worker_id else 'available') if t['status'] in ('available','planned') else t['status']

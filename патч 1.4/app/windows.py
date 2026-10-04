@@ -5,9 +5,12 @@ from PySide6.QtCore import Qt,QDate,QTimer,Signal,QObject
 from PySide6.QtGui import QPainter,QColor,QPen
 from PySide6.QtWidgets import (QMainWindow,QWidget,QVBoxLayout,QHBoxLayout,QFrame,
     QScrollArea,QLineEdit,QButtonGroup,QLabel,QDateEdit,QProgressBar,QSizePolicy,
-    QFileDialog,QMessageBox,QTableWidget,QTableWidgetItem,QHeaderView,QAbstractItemView)
+    QFileDialog,QMessageBox,QTableWidget,QTableWidgetItem,QHeaderView,QAbstractItemView,QSpinBox)
 from app.widgets import label,button,brand,card,row,avatar,tag,CardGrid,Sheet,DatePicker,motion_toggle,Toast,company_logo
 from app.theme import COLORS
+from app.domain import PRIORITIES,company_time
+from app.reference_dialogs import ReferenceEditor,NAMES
+from app.dialogs import EquipmentHistory
 from app.motion import PageTransition
 from app.store import ROLES,STATUS,EMPLOYEE_STATUS
 from app.dialogs import CreateTask,TaskDetails,ReviewReport,AddUser,EditShift,combo
@@ -21,7 +24,7 @@ def score_text(n):return '—' if n is None else f'{n:.1f}'
 
 class SnapshotLoader(QObject):
     ready=Signal(dict);failed=Signal(str);finished=Signal()
-    def __init__(self,store,day,parent):super().__init__(parent);self.store=store;self.day=day;self.running=False
+    def __init__(self,store,day,parent):super().__init__(parent);self.store=store;self.day=day;self.token=store.token;self.running=False
     def isRunning(self):return self.running
     def start(self):
         self.running=True;threading.Thread(target=self.run,daemon=True,name='client-refresh').start()
@@ -107,16 +110,16 @@ class MainWindow(QMainWindow):
     logged_out=Signal()
     def __init__(self,store,user):
         super().__init__();self.store=store;self.user=user;self.setWindowTitle('НарядAI · Костанайские Минералы');self.resize(1360,900);self.setMinimumSize(1040,760)
-        self.page_key='overview' if user['role']!='worker' else 'tasks'
-        self.task_filter='available' if user['role']=='worker' else 'all';self.report_filter='submitted';self.query='';self.priority='all';self.schedule_day=QDate.currentDate()
+        self.page_key='overview'
+        self.task_filter='mine' if user['role']=='worker' else 'all';self.report_filter='submitted';self.query='';self.priority='all';self.schedule_day=QDate.currentDate()
         host=QWidget();outer=QHBoxLayout(host);outer.setContentsMargins(0,0,0,0);outer.setSpacing(0)
         sidebar,self.side=card('sidebar',18);self.side.setSpacing(8)
         self.side.addWidget(brand());self.side.addSpacing(16);self.side.addWidget(label('Костанайские\nМинералы','title'));self.side.addWidget(label('Производственная смена','muted'));self.side.addSpacing(22)
         self.side.addWidget(label(ROLES[user['role']].upper(),'muted'));self.side.addSpacing(6)
         self.nav={}
         items=[('overview','grid','Смена'),('tasks','tasks','Наряды'),('reports','report','Отчёты'),('team','team','Команда'),('team_schedule','calendar','График команды'),('costs','chart','Материалы')]
-        if user['role']=='worker':items=[('tasks','tasks','Задачи'),('schedule','calendar','График'),('reports','report','Отчёты'),('profile','user','Профиль')]
-        elif user['role']=='admin':items += [('ai_chat','spark','Чат с ИИ'),('users','shield','Пользователи'),('integrations','spark','Подключения')]
+        if user['role']=='worker':items=[('overview','grid','Моя смена'),('tasks','tasks','Наряды'),('schedule','calendar','График'),('reports','report','Отчёты'),('profile','user','Профиль')]
+        elif user['role']=='admin':items += [('ai_chat','spark','Чат с ИИ'),('users','shield','Пользователи'),('integrations','spark','Подключения'),('references','tool','Справочники')]
         for key,ico,title in items:
             b=button(title,lambda k=key:self.navigate(k),'nav',ico);b.setCheckable(True);self.nav[key]=b;self.side.addWidget(b)
         if user['role'] in ('master','admin'):
@@ -162,13 +165,16 @@ class MainWindow(QMainWindow):
         if self.sender() is self._snapshot_loader:self._snapshot_loader=None
     def remote_snapshot(self,snapshot):
         from PySide6.QtWidgets import QApplication
+        if not self.store.actor or self.store.actor['id']!=self.user['id']:return
+        sender=self.sender()
+        if isinstance(sender,SnapshotLoader) and sender.token!=self.store.token:return
         if snapshot['day']!=self.schedule_day.toString('yyyy-MM-dd'):return
         old=self.refresh_signature;self.store._snapshot=snapshot
         if QApplication.activeModalWidget():return
         self.load(refresh_remote=False)
         self.statusBar().showMessage('Подключено к '+self.store.url,4000)
         if self.refresh_signature==old:return
-        count=sum(r['status']==('revision' if self.user['role']=='worker' else 'submitted') for r in self.reports)
+        count=sum(not a.get('acknowledged') for a in self.alerts)+sum(r['status']==('revision' if self.user['role']=='worker' else 'submitted') for r in self.reports)
         self.bell.setText(f'Уведомления · {count}' if count else 'Уведомления')
         if self.page_key=='ai_chat':return
         if self.page_key=='tasks' and hasattr(self,'search'):self.filter_cards();return
@@ -176,10 +182,10 @@ class MainWindow(QMainWindow):
         QTimer.singleShot(0,self.scroll,lambda:self.scroll.verticalScrollBar().setValue(scroll_value))
     def load(self,refresh_remote=True):
         if getattr(self.store,'is_remote',False) and refresh_remote:self.store.refresh_snapshot(self.schedule_day.toString('yyyy-MM-dd'))
-        self.tasks=self.store.tasks(self.user);self.reports=self.store.reports(self.user)
+        self.tasks=self.store.tasks(self.user);self.reports=self.store.reports(self.user);self.alerts=self.store.alerts(self.user)
         people=self.store.users(self.user,True) if self.user['role']!='worker' else [self.user]
         shifts=[self.store.shift(self.user,p['id'],self.schedule_day.toString('yyyy-MM-dd')) for p in people]
-        self.refresh_signature=repr((self.tasks,self.reports,shifts,datetime.now().strftime('%Y%m%d%H%M')))
+        self.refresh_signature=repr((self.tasks,self.reports,self.alerts,shifts,datetime.now().strftime('%Y%m%d%H%M')))
     def render(self,*,refresh_remote=True,animate=True):
         try:self.load(refresh_remote=refresh_remote)
         except PermissionError:
@@ -188,11 +194,11 @@ class MainWindow(QMainWindow):
         snapshot=self.transition.capture() if animate else None
         if not animate:self.transition.clear()
         for k,b in self.nav.items():b.setChecked(k==self.page_key)
-        count=sum(r['status']==('revision' if self.user['role']=='worker' else 'submitted') for r in self.reports)
+        count=sum(not a.get('acknowledged') for a in self.alerts)+sum(r['status']==('revision' if self.user['role']=='worker' else 'submitted') for r in self.reports)
         self.bell.setText(f'Уведомления · {count}' if count else 'Уведомления')
         page=QWidget();page.setMaximumWidth(1220);self.body=QVBoxLayout(page);self.body.setContentsMargins(36,32,36,30);self.body.setSpacing(23)
         methods={'overview':self.overview,'tasks':self.tasks_page,'reports':self.reports_page,'team':self.team_page,
-                 'schedule':self.schedule_page,'team_schedule':self.team_schedule_page,'profile':self.profile_page,'costs':self.costs_page,'users':self.users_page,'integrations':self.integrations_page,'ai_chat':self.ai_chat_page}
+                 'schedule':self.schedule_page,'team_schedule':self.team_schedule_page,'profile':self.profile_page,'costs':self.costs_page,'users':self.users_page,'integrations':self.integrations_page,'ai_chat':self.ai_chat_page,'references':self.references_page}
         methods[self.page_key]();self.body.addStretch();self.body.addWidget(label('Костанайские Минералы · НарядAI · Демонстрационная версия','muted'))
         old=self.scroll.takeWidget()
         if old:old.deleteLater()
@@ -221,14 +227,19 @@ class MainWindow(QMainWindow):
     def task_card(self,t):
         w,l=card();w.setMinimumWidth(300)
         l.addLayout(row(label(f"НР-{t['id']}",'muted'),tag(STATUS[t['status']],tone(t['status']))))
-        if t['priority']=='urgent':l.addWidget(tag('Срочный','urgent'))
+        l.addWidget(tag(PRIORITIES[t['priority']],'urgent' if t['priority']=='urgent' else 'warning' if t['priority']=='high' else 'neutral'))
         l.addWidget(label(t['title'],'title',True));l.addWidget(label(t['equipment']+' · '+t['site'],'muted',True))
         l.addWidget(label((fmt_time(t['start'])+'–'+fmt_time(t['start']+t['duration']) if t['start'] is not None else f"{t['duration']:g} ч")+'  ·  '+t['day'],'muted'))
         l.addWidget(label('Срок: '+t['deadline'].replace('T',' '),'muted'))
+        if t['status'] not in ('submitted','aiPending','approved','cancelled','rejected'):
+            minutes=round((company_time(t['deadline'])-company_time()).total_seconds()/60)
+            l.addWidget(tag('Просрочен на '+str(abs(minutes))+' мин' if minutes<0 else 'Осталось '+str(minutes)+' мин','urgent' if minutes<0 else 'warning' if minutes<=30 else 'neutral'))
         if t['status']=='paused':
             l.addWidget(tag('Приостановлен','employeeYellow'))
             l.addWidget(label('Причина: '+self.store.pauses(self.user,t['id'])[-1]['reason'],'',True))
-        l.addStretch();l.addLayout(row(label(t['worker_name'] or 'Свободный наряд','muted',True),button('Выбрать' if t['status']=='available' and self.user['role']=='worker' else 'Открыть',lambda:self.open_task(t['id']),'secondary')))
+        actions={'issued':'Принять наряд','accepted':'Начать работу','queued':'Начать работу','planned':'Начать работу','paused':'Продолжить','inProgress':'Отправить отчёт','revision':'Доработать'}
+        caption=actions.get(t['status'],'Открыть') if self.user['role']=='worker' and t['worker_id']==self.user['id'] else 'Открыть'
+        l.addStretch();l.addLayout(row(label(t['worker_name'] or 'Свободный наряд','muted',True),button(caption,lambda:self.primary_task(t),'primary' if caption!='Открыть' else 'secondary')))
         return w
     def report_card(self,r):
         w,l=card();l.addLayout(row(label(f"ОТ-{r['id']:04d} · НР-{r['task_id']}",'muted'),tag(STATUS[r['status']],tone(r['status']))))
@@ -237,14 +248,16 @@ class MainWindow(QMainWindow):
         bottom=row(label(f"{r['score']} / 100" if r['score'] is not None else 'Ожидает проверки' if r['status']=='submitted' else 'Без оценки','title'),button('Проверить' if r['status']=='submitted' and self.user['role']!='worker' else 'Открыть',lambda:self.open_report(r['id']),'secondary'))
         l.addLayout(bottom);return w
     def overview(self):
+        if self.user['role']=='worker':self.worker_overview();return
         self.heading('Обзор смены','Задачи, результаты и команда в одном месте',button('Создать наряд',self.create_task,'primary','plus'))
         pending=[r for r in self.reports if r['status']=='submitted']
         hero,l=card('hero',28);l.addWidget(label('НУЖНА ВАША ПРОВЕРКА','muted'));l.addWidget(label(f'{len(pending)} отчёта на проверке','heading'))
         l.addWidget(label('Проверьте результаты и дайте сотрудникам обратную связь.','muted',True));b=button('Перейти к проверке',lambda:self.navigate('reports'),'secondary','report');b.setMaximumWidth(250);l.addWidget(b);self.body.addWidget(hero)
         approved=[r for r in self.reports if r['status']=='approved' and (r['reviewed'] or '').startswith(date.today().isoformat())]
         self.stats([(str(sum(t['status']=='available' for t in self.tasks)),'Доступно'),
-                    (str(sum(t['status'] in ('planned','inProgress','paused','revision') for t in self.tasks)),'В плане / работе'),
+                    (str(sum(t['status'] in ('issued','accepted','queued','planned','inProgress','paused','revision') for t in self.tasks)),'В плане / работе'),
                     (str(len(pending)),'На проверке'),(str(len(approved)),'Принято сегодня')])
+        self.attention_panel()
         self.body.addWidget(label('Ожидают решения','section'))
         self.body.addWidget(CardGrid([self.report_card(r) for r in pending[:2]]) if pending else self.empty('Все отчёты проверены','Новые результаты появятся после отправки сотрудниками.'))
         w,l=card();l.addWidget(label('Команда · рейтинг по принятым отчётам','section'))
@@ -258,14 +271,14 @@ class MainWindow(QMainWindow):
         self.body.addWidget(w)
     def change_task_filter(self,k):self.task_filter=k;self.render()
     def tasks_page(self):
-        self.heading('Мои задачи' if self.user['role']=='worker' else 'Наряды','Выберите наряд или откройте текущую задачу',
+        self.heading('Мои задачи' if self.user['role']=='worker' else 'Наряды','Назначенные работы, сроки и результаты',
                      button('Создать наряд',self.create_task,'primary','plus') if self.user['role']!='worker' else button('Обновить',self.render,ico='refresh'))
         if self.user['role']!='worker':
             refresh=button('Обновить список',self.render,ico='refresh');refresh.setMaximumWidth(220);self.body.addWidget(refresh)
         self.tabs([('available','Доступные'),('mine','Мои текущие'),('all','Все') ] if self.user['role']=='worker' else [('all','Все'),('available','Свободные'),('active','Текущие'),('approved','Принятые')],self.task_filter,self.change_task_filter)
         tools=QHBoxLayout();self.search=QLineEdit(self.query);self.search.setPlaceholderText('Поиск по номеру, названию, оборудованию или участку');self.search.setClearButtonEnabled(True)
         self.search.textChanged.connect(self.on_query);tools.addWidget(self.search,1)
-        self.priority_box=combo([('Все приоритеты','all'),('Только срочные','urgent')]);self.priority_box.setCurrentIndex(1 if self.priority=='urgent' else 0)
+        self.priority_box=combo([('Все приоритеты','all')]+[(v,k) for k,v in PRIORITIES.items()]);self.priority_box.setCurrentIndex(self.priority_box.findData(self.priority))
         self.priority_box.currentIndexChanged.connect(self.on_priority);tools.addWidget(self.priority_box);self.body.addLayout(tools)
         self.cards_host=QWidget();self.cards_layout=QVBoxLayout(self.cards_host);self.cards_layout.setContentsMargins(0,0,0,0);self.body.addWidget(self.cards_host);self.filter_cards()
     def on_query(self,text):self.query=text;self.search_timer.start()
@@ -354,7 +367,7 @@ class MainWindow(QMainWindow):
         l.addWidget(label('Свободное время: '+(', '.join(fmt_time(a)+'–'+fmt_time(b) for a,b in slots) or 'Нет окон от 30 минут'),'muted',True));self.body.addWidget(w)
         if tasks:
             w,l=card();l.addWidget(Timeline(tasks,self.open_task,shift));self.body.addWidget(w)
-        else:self.body.addWidget(self.empty('Назначенных работ нет','Выберите свободный наряд в разделе «Задачи».' if shift else 'Мастер может настроить рабочую смену.'))
+        else:self.body.addWidget(self.empty('Назначенных работ нет','Новый наряд появится после назначения мастером.' if shift else 'Мастер может настроить рабочую смену.'))
     def change_schedule(self,d):self.schedule_day=d;self.render()
     def profile_page(self):
         self.heading('Мой профиль','Ваши результаты по принятым работам')
@@ -418,11 +431,20 @@ class MainWindow(QMainWindow):
     def notifications(self):
         status='revision' if self.user['role']=='worker' else 'submitted'
         items=[r for r in self.store.reports(self.user) if r['status']==status]
-        d=Sheet('Уведомления',self)
-        if not items:d.body.addWidget(label('Новых уведомлений пока нет','section'))
+        alerts=self.store.alerts(self.user);d=Sheet('Уведомления',self)
+        if not items and not alerts:d.body.addWidget(label('Новых уведомлений пока нет','section'))
+        for alert in alerts:
+            w,l=card();l.addWidget(label(f"НР-{alert['task_id']} · {alert['equipment']}",'section',True));l.addWidget(label(alert['message'],'',True))
+            l.addWidget(button('Открыть НР-'+str(alert['task_id']),lambda tid=alert['task_id']:self.open_task(tid),'secondary'))
+            if not alert.get('acknowledged'):
+                l.addWidget(button('Прочитано',lambda aid=alert['id']:self.mark_alert(aid,d),'secondary','check'))
+            d.body.addWidget(w)
         for r in items:
             d.body.addWidget(label(r['worker_name'],'muted'));d.body.addWidget(button(r['title'],lambda rid=r['id']:self.open_report(rid),'secondary'))
-        d.exec()
+        d.exec();self.render(animate=False)
+    def mark_alert(self,aid,dialog):
+        try:self.store.acknowledge_alert(self.user,aid);dialog.accept()
+        except (ValueError,PermissionError,OSError) as e:dialog.fail(e)
     def export_reports(self):
         p,_=QFileDialog.getSaveFileName(self,'Экспорт отчётов','NaryadAI_reports.csv','CSV (*.csv)')
         if p:
@@ -431,3 +453,60 @@ class MainWindow(QMainWindow):
             except OSError as e:QMessageBox.warning(self,'Экспорт',str(e))
     def notify_success(self,message):
         self.statusBar().showMessage(message,5000);self.toast.show_message(message)
+
+    def primary_task(self,t):
+        if t['worker_id']==self.user['id'] and t['status'] in ('issued','accepted','queued','planned','paused','revision'):
+            try:
+                self.store.transition(self.user,t['id'],'accepted' if t['status']=='issued' else 'inProgress')
+                self.render();self.notify_success('Наряд принят' if t['status']=='issued' else 'Работа начата')
+            except (ValueError,PermissionError,OSError) as e:QMessageBox.information(self,'Наряд',str(e))
+        else:self.open_task(t['id'])
+    def worker_overview(self):
+        self.heading('Моя смена','Назначенные наряды и ближайшие действия',button('Все наряды',lambda:self.navigate('tasks'),'secondary','tasks'))
+        own=[t for t in self.tasks if t['worker_id']==self.user['id'] and t['status'] not in ('approved','cancelled','rejected','submitted','aiPending')]
+        current=[t for t in own if t['status'] in ('inProgress','paused','revision')]
+        following=sorted([t for t in own if t not in current],key=lambda t:(t['priority']!='urgent',t['deadline']))
+        self.stats([(str(len(own)),'Назначено'),(str(sum(t['status']=='issued' for t in own)),'Ждут принятия'),
+            (str(sum(not a.get('acknowledged') for a in self.alerts)),'Уведомления')])
+        self.body.addWidget(label('Текущая работа','section'))
+        self.body.addWidget(CardGrid([self.task_card(t) for t in current]) if current else self.empty('Работа ещё не начата','Примите назначенный наряд и нажмите «Начать работу».'))
+        self.body.addWidget(label('Следующие наряды','section'))
+        self.body.addWidget(CardGrid([self.task_card(t) for t in following[:4]]) if following else self.empty('Очередь пуста','Мастер увидит вашу загрузку и назначит следующий наряд.'))
+    def attention_panel(self):
+        data=self.store.attention(self.user)
+        w,l=card();l.addWidget(label('Требуют внимания','section'))
+        alerts=[a for a in data.get('alerts',[]) if not a.get('acknowledged')]
+        for alert in alerts[:4]:l.addWidget(button(f"НР-{alert['task_id']} · {alert['equipment']} · {alert['message']}",lambda tid=alert['task_id']:self.open_task(tid),'secondary'))
+        for pause in data.get('pauses',[])[:3]:
+            l.addWidget(button(pause['equipment']+' · '+pause['reason']+' · '+str(round(pause['minutes']))+' мин',lambda tid=pause['task_id']:self.open_task(tid),'secondary','clock'))
+        for repeated in data.get('repeated_equipment',[])[:3]:
+            l.addWidget(button('Повторные неисправности · '+repeated['equipment'],lambda name=repeated['equipment']:EquipmentHistory(self.store,self.user,name,self).exec(),'secondary','tool'))
+        if not alerts and not data.get('pauses') and not data.get('repeated_equipment'):l.addWidget(label('Активных предупреждений нет','muted'))
+        l.addWidget(label('Показатели рассчитаны по нарядам и зафиксированным паузам.','muted',True));self.body.addWidget(w)
+    def references_page(self):
+        self.heading('Справочники','Демонстрационные данные; замените их согласованными данными предприятия')
+        category=getattr(self,'reference_category','sites')
+        selector=combo([(title,key) for key,title in NAMES.items()]);selector.setCurrentIndex(selector.findData(category))
+        selector.currentIndexChanged.connect(lambda:self.change_reference_category(selector.currentData()));self.body.addWidget(selector)
+        self.body.addWidget(button('Добавить запись',lambda:self.edit_reference(category),'primary','plus'))
+        for item in self.store.references(self.user,category):
+            w,l=card();l.addWidget(label(item['name'],'title',True));l.addWidget(tag('Действует' if item['active'] else 'Архив','success' if item['active'] else 'neutral'))
+            description=' · '.join(str(item[k]) for k in ('code','unit','hours') if item.get(k) is not None)
+            if description:l.addWidget(label(description,'muted'))
+            l.addWidget(button('Изменить',lambda item=item:self.edit_reference(category,item),'secondary','edit'));self.body.addWidget(w)
+            if item['active']:l.addWidget(button('Отключить запись',lambda rid=item['id']:self.archive_reference(category,rid),'danger'))
+        self.body.addWidget(button('Настроить напоминания',self.notification_preferences,'secondary','clock'))
+    def change_reference_category(self,key):self.reference_category=key;self.render()
+    def edit_reference(self,category,item=None):
+        if ReferenceEditor(self.store,self.user,category,self,item).exec():self.render();self.notify_success('Справочник обновлён')
+    def archive_reference(self,category,rid):
+        try:self.store.delete_reference(self.user,category,rid);self.render();self.notify_success('Запись отключена')
+        except (ValueError,PermissionError,OSError) as e:QMessageBox.information(self,'Справочник',str(e))
+    def notification_preferences(self):
+        settings=self.store.notification_settings(self.user);d=Sheet('Напоминания и эскалация',self)
+        fields={}
+        for key,title in [('reminder_minutes','До срока, мин'),('accept_minutes','Без принятия, мин'),('urgent_accept_minutes','Аварийный без принятия, мин')]:
+            fields[key]=QSpinBox()
+            fields[key].setRange(1,240);fields[key].setValue(settings[key]);d.field(title,fields[key])
+        d.actions.addWidget(button('Сохранить',lambda:d.run_action(lambda:self.store.set_notification_settings(self.user,**{key:field.value() for key,field in fields.items()})),'primary','check'))
+        d.exec()

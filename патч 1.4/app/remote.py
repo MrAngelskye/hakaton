@@ -1,5 +1,5 @@
 """Сетевое хранилище для существующих экранов Qt."""
-import base64,csv,json,tempfile,uuid
+import base64,csv,hashlib,json,tempfile,uuid
 from datetime import date
 from pathlib import Path
 from urllib.parse import urlparse,quote
@@ -12,7 +12,7 @@ class RemoteStore:
     def __init__(self,url,transport=None):
         self.url=url.rstrip('/');p=urlparse(self.url)
         if p.scheme not in ('http','https') or not p.hostname or p.username or p.password or p.query or p.fragment:raise ValueError('Укажите адрес сервера, например http://192.168.1.10:8000.')
-        self.token='';self.actor=None;self._snapshot=None;self._day=date.today().isoformat();self.transport=transport
+        self.token='';self.actor=None;self._snapshot=None;self._day=date.today().isoformat();self.transport=transport;self._retry_requests={}
         health=self.request('/health',auth=False)
         if not isinstance(health,dict) or health.get('ok') is not True or 'version' not in health:raise ValueError('По этому адресу не найден сервер НарядAI.')
         self._cache=tempfile.TemporaryDirectory(prefix='naryadai-client-');self.photos=Path(self._cache.name)
@@ -30,6 +30,7 @@ class RemoteStore:
             try:message=json.loads(e.read()).get('detail','Сервер отклонил запрос.')
             except (ValueError,UnicodeError):message='Сервер отклонил запрос.'
             if not isinstance(message,str):message='Проверьте заполненные поля.'
+            if e.code>=500:raise OSError('Сервер временно недоступен. Повторите то же действие после восстановления связи.') from None
             if e.code in (401,403):raise PermissionError(message) from None
             raise ValueError(message) from None
         except (URLError,TimeoutError,OSError):raise OSError('Нет связи с сервером. Проверьте интернет и адрес сервера. После простоя подключение может занять около минуты.') from None
@@ -41,8 +42,12 @@ class RemoteStore:
         if self.token:
             try:self.request('/api/logout',{})
             except (OSError,ValueError,PermissionError):pass
-        self.token='';self.actor=None;self._snapshot=None
-        for p in self.photos.glob('*'):p.unlink(missing_ok=True)
+        self.token='';self.actor=None;self._snapshot=None;self._retry_requests.clear()
+        error=None
+        for p in self.photos.glob('*'):
+            try:p.unlink(missing_ok=True)
+            except OSError as exc:error=exc
+        if error:raise error
     def refresh_snapshot(self,day=None):
         self._day=day or self._day
         snap=self.request('/api/snapshot?day='+quote(self._day,safe=''))
@@ -52,10 +57,15 @@ class RemoteStore:
         if self._snapshot is None:self.refresh_snapshot()
         return self._snapshot
     def call(self,method,*args,photos=None,**kwargs):
-        body={'args':list(args),'kwargs':kwargs,'request_id':uuid.uuid4().hex,'photos':photos or []}
-        # Повторять мутацию автоматически не будем: при обрыве сначала обновить список.
-        result=self.request('/api/call/'+method,body)['result']
-        if method not in ('task','events','pauses','shift','free_slots','employee_status'):self._snapshot=None
+        data={'args':list(args),'kwargs':kwargs,'photos':photos or []}
+        fingerprint=hashlib.sha256(json.dumps([method,data],ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+        body={**data,'request_id':self._retry_requests.get(fingerprint) or uuid.uuid4().hex}
+        try:result=self.request('/api/call/'+method,body)['result']
+        except OSError:
+            self._retry_requests[fingerprint]=body['request_id']
+            raise
+        self._retry_requests.pop(fingerprint,None)
+        if method not in ('task','events','pauses','shift','free_slots','employee_status','references','equipment_history','alerts','attention','notification_settings'):self._snapshot=None
         return result
     def tasks(self,actor):return self.snapshot()['tasks']
     def users(self,actor,workers_only=False):return [u for u in self.snapshot()['users'] if not workers_only or u['role']=='worker']
@@ -68,6 +78,18 @@ class RemoteStore:
     def latest_report(self,actor,tid):return next((r for r in self.reports(actor) if r['task_id']==tid),None)
     def events(self,actor,tid):return self.call('events',tid)
     def pauses(self,actor,tid):return self.call('pauses',tid)
+    def references(self,actor,category=None,site=None):
+        data=self.snapshot().get('references')
+        if data is not None and site is None:return data.get(category,[]) if category else data
+        return self.call('references',category=category,site=site)
+    def alerts(self,actor,at=None):
+        if at is None:return self.snapshot().get('alerts',[])
+        return self.call('alerts',at=at)
+    def attention(self,actor,at=None):
+        if at is None:return self.snapshot().get('attention',{})
+        return self.call('attention',at=at)
+    def equipment_history(self,actor,equipment):return self.call('equipment_history',equipment)
+    def notification_settings(self,actor):return self.call('notification_settings')
     def shift(self,actor,wid,day):
         s=self.snapshot()
         if day==s['day'] and str(wid) in s['shifts']:return s['shifts'][str(wid)]
@@ -108,5 +130,6 @@ def _proxy(method):
     def invoke(self,actor,*args,**kwargs):return self.call(method,*args,**kwargs)
     return invoke
 
-for _method in ('create_task','claim','reschedule','transition','review','add_user','set_active','reset_password','support_update_task','set_shift'):
+for _method in ('create_task','claim','reschedule','transition','review','add_user','set_active','reset_password','support_update_task','set_shift',
+                'reassign_task','save_reference','delete_reference','acknowledge_alert','set_notification_settings'):
     setattr(RemoteStore,_method,_proxy(_method))

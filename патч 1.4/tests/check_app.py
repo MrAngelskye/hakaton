@@ -111,9 +111,11 @@ class Checks(unittest.TestCase):
             win.hide()
     def test_gui_full_workflow(self):
         parent=self.show(MainWindow(self.store,self.master));d=self.show(CreateTask(self.store,self.master,parent))
-        d.title.setText('Проверка нового привода');d.description.setPlainText('Проверить контакты и выполнить контрольный запуск.');d.equipment.setText('Привод П-3');d.save()
+        d.title.setText('Проверка нового привода');d.description.setPlainText('Проверить контакты и выполнить контрольный запуск.')
+        d.worker.setCurrentIndex(d.worker.findData(self.worker['id']));d.save()
         self.assertEqual(d.result(),QDialog.DialogCode.Accepted)
-        tid=max(t['id'] for t in self.store.tasks(self.master));day=QDate.currentDate().toString('yyyy-MM-dd');self.store.claim(self.worker,tid,day,13)
+        tid=max(t['id'] for t in self.store.tasks(self.master));self.assertEqual(self.store.task(self.worker,tid)['status'],'issued')
+        self.store.transition(self.worker,tid,'accepted')
         self.store.transition(self.worker,tid,'inProgress')
         submit=self.show(SubmitReport(self.store,self.worker,self.store.task(self.worker,tid),parent))
         submit.work.setPlainText('Проверены контакты и выполнен контрольный запуск.');submit.result_text.setPlainText('Оборудование исправно');submit.add_material({'name':'Смазка','quantity':.2,'unit':'кг','price':1000});submit.save()

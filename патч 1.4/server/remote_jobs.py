@@ -35,7 +35,7 @@ class RemoteJobs:
             rid=j['report_id'];lease=secrets.token_urlsafe(32)
             c.execute("UPDATE ai_jobs SET status='processing',lease_token=?,lease_until=? WHERE report_id=?",(lease,time.time()+660,rid))
             r=dict(c.execute('SELECT * FROM reports WHERE id=?',(rid,)).fetchone());t=dict(c.execute('SELECT * FROM tasks WHERE id=?',(r['task_id'],)).fetchone())
-            for field in ('materials','photos'):r[field]=json.loads(r[field])
+            for field in ('materials','photos','checks'):r[field]=json.loads(r.get(field) or '[]')
             return {'report':r,'task':t,'lease':lease}
     def require_lease(self,c,rid,lease):
         j=c.execute('SELECT * FROM ai_jobs WHERE report_id=?',(rid,)).fetchone()

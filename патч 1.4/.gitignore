@@ -1,5 +1,7 @@
 .venv/
+.webvenv/
 __pycache__/
+demo_data/
 *.pyc
 *.db
 photos/

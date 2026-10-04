@@ -7,7 +7,7 @@ import psycopg
 from psycopg.rows import dict_row
 from server.store import ServerStore
 
-TABLES_WITH_IDS={'users','tasks','reports','events','pauses'}
+TABLES_WITH_IDS={'users','tasks','reports','events','pauses','reference_items','task_alerts','work_sessions'}
 
 class Row(dict):
     def __getitem__(self,key):return list(self.values())[key] if isinstance(key,int) else super().__getitem__(key)
@@ -63,6 +63,10 @@ class Connection:
             if sql.strip():self.execute(postgres_ddl(sql))
 
 class PostgresStore(ServerStore):
+    @staticmethod
+    def _columns(c,table):
+        return {r['column_name'] for r in c.execute(
+            "SELECT column_name FROM information_schema.columns WHERE table_schema='naryadai' AND table_name=?",(table,))}
     def __init__(self,directory,settings,storage):
         self.settings=settings;self.seed_password=settings.bootstrap_password;self.storage=storage
         with self._connect() as conn:

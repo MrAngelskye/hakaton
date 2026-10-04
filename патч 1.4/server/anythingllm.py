@@ -22,6 +22,12 @@ score — целое 0–100, сумма criteria. verdict — acceptable, needs
 
 class AIError(ValueError):pass
 
+CHAT_PROMPT='''Ты помощник администратора приложения ALLUR / НарядAI.
+Отвечай на русском языке обычным понятным текстом. Помогай обсуждать производственные задачи,
+отчёты и работу команды. Если информации недостаточно, уточняй. Не выдумывай сведения.
+У тебя нет автоматического доступа к базе приложения и ты не можешь менять наряды или оценки.
+Не утверждай, что выполнил действие в приложении. Решения принимает человек.'''
+
 def parse_verdict(text):
     if not isinstance(text,str) or not text.strip():raise AIError('AnythingLLM вернул пустой ответ.')
     text=re.sub(r'<think>.*?</think>','',text,flags=re.S).strip()
@@ -55,19 +61,35 @@ class AnythingLLM:
             raise AIError(f'AnythingLLM вернул HTTP {e.code}. Проверьте workspace и выбранную модель.') from None
         except (URLError,TimeoutError,OSError):raise AIError('AnythingLLM недоступен или не ответил вовремя. Проверьте, что он запущен.') from None
         except (json.JSONDecodeError,UnicodeError):raise AIError('AnythingLLM вернул ответ в неподдерживаемом формате.') from None
-    def check_workspace(self):
-        r=self.request('/workspace/'+quote(self.settings.workspace,safe=''))
+    def check_workspace(self,slug=None):
+        r=self.request('/workspace/'+quote(slug or self.settings.workspace,safe=''))
         if not isinstance(r,dict) or not r.get('workspace'):raise AIError('Рабочее пространство не найдено.')
         return r
     def workspaces(self):
         r=self.request('/workspaces')
         if not isinstance(r,dict) or not isinstance(r.get('workspaces'),list):raise AIError('Не удалось получить список рабочих пространств.')
         return [w for w in r['workspaces'] if isinstance(w,dict) and isinstance(w.get('slug'),str)]
-    def create_workspace(self,name='NaryadAI — проверка отчётов'):
-        r=self.request('/workspace/new',{'name':name,'openAiTemp':0.2,'openAiHistory':0,'openAiPrompt':SYSTEM_PROMPT,'chatMode':'chat'})
+    def create_workspace(self,name='NaryadAI — проверка отчётов',prompt=SYSTEM_PROMPT):
+        r=self.request('/workspace/new',{'name':name,'openAiTemp':0.2,'openAiHistory':0,'openAiPrompt':prompt,'chatMode':'chat'})
         w=r.get('workspace') if isinstance(r,dict) else None
         if not isinstance(w,dict) or not isinstance(w.get('slug'),str) or not w['slug']:raise AIError('AnythingLLM не создал рабочее пространство.')
         return w['slug']
+    def chat(self,message,history=None,conversation_id=''):
+        slug=self.settings.chat_workspace
+        if not slug or slug==self.settings.workspace:
+            raise AIError('Настройте отдельное пространство чата через configure_server.bat.')
+        # Контекст хранится в общей базе: смена ПК/модели не теряет диалог.
+        # Свежая API-сессия исключает повторное добавление истории AnythingLLM.
+        context={'history':history or [],'message':message}
+        r=self.request('/workspace/'+quote(slug,safe='')+'/chat',
+            {'message':CHAT_PROMPT+'\nДИАЛОГ:\n'+json.dumps(context,ensure_ascii=False),
+             'mode':'chat','sessionId':'allur-chat-'+uuid.uuid4().hex})
+        if not isinstance(r,dict) or r.get('type')=='abort' or r.get('error'):raise AIError('AnythingLLM не смог ответить в чате. Проверьте выбранную модель.')
+        text=r.get('textResponse')
+        if not isinstance(text,str):raise AIError('AnythingLLM вернул пустой ответ чата.')
+        text=re.sub(r'<think>.*?</think>','',text,flags=re.S).strip()
+        if not text or len(text)>20000:raise AIError('Ответ чата пустой или слишком большой. Попросите ответить короче.')
+        return text
     def review(self,task,report,photos_dir):
         attachments=[]
         if self.settings.send_images:

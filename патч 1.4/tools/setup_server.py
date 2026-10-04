@@ -3,7 +3,7 @@ import getpass,json,socket,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
 from server.config import Settings
-from server.anythingllm import AnythingLLM,AIError
+from server.anythingllm import AnythingLLM,AIError,CHAT_PROMPT
 
 def ask(prompt,default=''):
     answer=input(prompt+(f' [{default}]' if default else '')+': ').strip();return answer or default
@@ -20,7 +20,7 @@ def choose_workspace(ai,previous=''):
     return ai.create_workspace() if choice=='0' else spaces[int(choice)-1]['slug']
 
 def main():
-    print('Настройка сервера НарядAI. AnythingLLM должен быть запущен на этом ПК.')
+    print('Подключение AnythingLLM: проверка отчётов и чат администратора. AnythingLLM должен быть запущен на этом ПК.')
     target=ROOT/'server_config.json';old=json.loads(target.read_text(encoding='utf-8-sig')) if target.exists() else {}
     url=ask('Адрес AnythingLLM (без /api)',old.get('base_url','http://127.0.0.1:3001'))
     key=getpass.getpass('API-ключ AnythingLLM (ввод скрыт; Enter — оставить прежний): ').strip() or old.get('api_key','')
@@ -34,12 +34,18 @@ def main():
     try:
         s=Settings.load(scratch);ai=AnythingLLM(s)
         data['workspace']=choose_workspace(ai,old.get('workspace',''));s.workspace=data['workspace'];ai.check_workspace()
+        chat_slug=old.get('chat_workspace','')
+        if chat_slug and chat_slug!=data['workspace']:
+            ai.check_workspace(chat_slug)
+        else:chat_slug=ai.create_workspace('ALLUR — чат администратора',CHAT_PROMPT)
+        data['chat_workspace']=chat_slug
         scratch.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
         scratch.replace(target)
     finally:scratch.unlink(missing_ok=True)
     print('Рабочее пространство подключено. Настройки сохранены в server_config.json.')
-    print('Теперь запустите check_ai.bat, затем start_server.bat.')
-    print('Клиент на этом ПК: http://127.0.0.1:8000')
+    print('Отдельные пространства отчётов и чата готовы. Выберите в AnythingLLM модель для обоих пространств.')
+    print('Для облачного сервера: check_ai.bat → configure_worker.bat → start_worker.bat.')
+    print('Для сервера только в локальной сети: check_ai.bat → start_server.bat.')
 
 if __name__=='__main__':
     try:main()

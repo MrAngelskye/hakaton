@@ -12,6 +12,7 @@ class Settings:
     base_url: str='http://127.0.0.1:3001'
     api_key: str=''
     workspace: str='naryadai'
+    chat_workspace: str=''
     ai_enabled: bool=True
     timeout: int=180
     send_images: bool=False
@@ -52,7 +53,7 @@ class Settings:
         directory=Path(data.get('data_dir','server_data'))
         if not directory.is_absolute():directory=p.parent/directory
         obj=cls(data_dir=directory,**{k:v for k,v in data.items() if k!='data_dir'})
-        if not all(isinstance(v,str) for v in (obj.base_url,obj.workspace,obj.api_key,obj.model_label,obj.host)):
+        if not all(isinstance(v,str) for v in (obj.base_url,obj.workspace,obj.chat_workspace,obj.api_key,obj.model_label,obj.host)):
             raise ValueError('Адрес, workspace, ключ, модель и host должны быть строками.')
         url=urlparse(obj.base_url)
         if url.scheme not in ('http','https') or not url.hostname or url.username or url.password:
@@ -60,6 +61,8 @@ class Settings:
         obj.base_url=obj.base_url.rstrip('/')
         if obj.base_url.endswith('/api'):obj.base_url=obj.base_url[:-4]
         if not obj.workspace or '/' in obj.workspace:raise ValueError('Укажите slug рабочего пространства, например naryadai.')
+        if '/' in obj.chat_workspace:raise ValueError('Некорректный slug рабочего пространства чата.')
+        if obj.chat_workspace and obj.chat_workspace==obj.workspace:raise ValueError('Для чата и проверки отчётов нужны разные рабочие пространства.')
         if type(obj.ai_enabled) is not bool or type(obj.send_images) is not bool:raise ValueError('ai_enabled и send_images должны быть true/false.')
         if type(obj.timeout) is not int or type(obj.port) is not int or not 10<=obj.timeout<=600 or not 1<=obj.port<=65535:raise ValueError('Проверьте timeout и port.')
         if obj.ai_mode not in ('local','remote_worker'):raise ValueError('ai_mode: local или remote_worker.')

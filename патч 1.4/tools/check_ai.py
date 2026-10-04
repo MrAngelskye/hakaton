@@ -16,6 +16,9 @@ def main():
     with tempfile.TemporaryDirectory() as folder:r=ai.review(task,report,Path(folder))
     print('Модель ответила. Формат и сумма оценок проверены:')
     print(json.dumps(r,ensure_ascii=False,indent=2))
+    ai.check_workspace(settings.chat_workspace)
+    reply=ai.chat('Ответь одной короткой фразой: соединение с приложением работает.')
+    print('Ответ обычного чата:',reply)
     print('Можно запускать совместный тест.')
 
 if __name__=='__main__':

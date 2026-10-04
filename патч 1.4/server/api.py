@@ -34,6 +34,23 @@ class ResultBody(BaseModel):
     error:str=Field(default='',max_length=1000)
     model:str=Field(default='Модель AnythingLLM',min_length=1,max_length=200)
 
+class ChatSend(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    conversation_id:str=Field(pattern=r'^[a-f0-9]{32}$')
+    request_id:str=Field(pattern=r'^[a-f0-9]{32}$')
+    message:str=Field(min_length=1,max_length=4000)
+
+class NewChat(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    request_id:str=Field(pattern=r'^[a-f0-9]{32}$')
+
+class ChatResult(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    lease:str=Field(min_length=32,max_length=100)
+    answer:str=Field(default='',max_length=20000)
+    error:str=Field(default='',max_length=1000)
+    model:str=Field(default='Модель AnythingLLM',max_length=200)
+
 def create_app(settings,provider=None):
     if settings.database_url:
         from server.postgres import PostgresStore
@@ -47,16 +64,26 @@ def create_app(settings,provider=None):
     if remote:
         from server.remote_jobs import RemoteJobs
         jobs=RemoteJobs(store,settings)
+    from server.chat import AdminChat
+    chat=AdminChat(store,settings)
     stopping=threading.Event();rpc_lock=threading.Lock();login_lock=threading.Lock();attempts={}
 
     def ai_loop():
         while not stopping.is_set():
             try:
                 if remote:
-                    with rpc_lock:jobs.expire()
+                    with rpc_lock:jobs.expire();chat.expire()
                     stopping.wait(5);continue
                 with rpc_lock:job=store.take_ai_job()
-                if not job:stopping.wait(.5);continue
+                if not job:
+                    with rpc_lock:chat_job=chat.claim()
+                    if not chat_job:stopping.wait(.5);continue
+                    try:answer=ai.chat(chat_job['message'],chat_job['history'],chat_job['conversation_id']);error=''
+                    except AIError as e:answer='';error=str(e)
+                    except Exception:answer='';error='Не удалось получить ответ ИИ. Проверьте AnythingLLM.'
+                    if stopping.is_set():return
+                    with rpc_lock:chat.result(chat_job['id'],chat_job['lease'],answer,error,settings.model_label)
+                    continue
                 task,report=job
                 try:result=ai.review(task,report,store.photos);error=''
                 except AIError as e:result=None;error=str(e)
@@ -75,7 +102,7 @@ def create_app(settings,provider=None):
         finally:stopping.set();thread.join(timeout=2)
 
     app=FastAPI(title='НарядAI · сервер',version='1.4',lifespan=lifespan,docs_url=None,redoc_url=None,openapi_url=None)
-    app.state.store=store;app.state.provider=ai
+    app.state.store=store;app.state.provider=ai;app.state.chat=chat
 
     @app.middleware('http')
     async def body_limit(request,call_next):
@@ -111,7 +138,7 @@ def create_app(settings,provider=None):
         return dict(u)
 
     @app.get('/health')
-    def health():return {'ok':True,'version':'1.4','ai_enabled':settings.ai_enabled}
+    def health():return {'ok':True,'version':'1.4','ai_enabled':settings.ai_enabled,'features':['admin_chat']}
     @app.get('/',response_class=HTMLResponse)
     def home():return '<html><meta charset="utf-8"><title>НарядAI</title><h1>Сервер НарядAI работает</h1><p>Откройте start_client.bat в папке приложения.</p></html>'
 
@@ -149,6 +176,18 @@ def create_app(settings,provider=None):
             statuses={str(p['id']):store.employee_status(user,p['id']) for p in workers}
         return {'tasks':tasks,'reports':reports,'users':people,'day':day,'shifts':shifts,'free_slots':free,'employee_status':statuses,
                 'ai_enabled':settings.ai_enabled,'server_time':time.time()}
+
+    @app.get('/api/chat')
+    def chat_history(conversation_id:str='',user=Depends(actor)):
+        with rpc_lock:return chat.history(user,conversation_id)
+
+    @app.post('/api/chat')
+    def chat_send(body:ChatSend,user=Depends(actor)):
+        with rpc_lock:return chat.send(user,body.conversation_id,body.request_id,body.message)
+
+    @app.post('/api/chat/new')
+    def chat_new(body:NewChat,user=Depends(actor)):
+        with rpc_lock:return chat.new(user,body.request_id)
 
     @app.post('/api/call/{method}')
     def call(method:str,body:CallBody,user=Depends(actor)):
@@ -206,6 +245,18 @@ def create_app(settings,provider=None):
     @app.post('/api/ai/claim')
     def claim_ai(worker=Depends(machine)):
         with rpc_lock:return {'job':jobs.claim()}
+
+    @app.post('/api/ai/chat/claim')
+    def claim_chat(worker=Depends(machine)):
+        with rpc_lock:
+            jobs.heartbeat()
+            return {'job':chat.claim()}
+
+    @app.post('/api/ai/chat/result/{rid}')
+    def chat_result(rid:str,body:ChatResult,worker=Depends(machine)):
+        with rpc_lock:
+            chat.result(rid,body.lease,body.answer,body.error,body.model);jobs.heartbeat()
+        return {'ok':True}
 
     @app.post('/api/ai/result/{rid}')
     def ai_result(rid:int,body:ResultBody,worker=Depends(machine)):

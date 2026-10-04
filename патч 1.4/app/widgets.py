@@ -1,9 +1,11 @@
 from pathlib import Path
-from PySide6.QtCore import Qt, QSize, QByteArray, QPointF
+from PySide6.QtCore import Qt, QSize, QByteArray, QPointF, QTimer, QEvent
 from PySide6.QtGui import QIcon, QPixmap, QPainter, QWheelEvent
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (QWidget,QFrame,QLabel,QPushButton,QVBoxLayout,QHBoxLayout,
-                              QGridLayout,QScrollArea,QSizePolicy,QDialog,QApplication)
+                              QGridLayout,QScrollArea,QSizePolicy,QDialog,QApplication,QCheckBox)
+from app.theme import COLORS
+from app.motion import Reveal, preferences
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -28,7 +30,8 @@ class ScrollButton(QPushButton):
 
 
 
-def icon(name,color='#76728a'):
+def icon(name,color=None):
+    color=color or COLORS['muted']
     p=ROOT/'assets'/'icons'/f'{name}.svg'
     if not p.exists():return QIcon()
     svg=p.read_text().replace('#76728a',color).replace('currentColor',color)
@@ -47,7 +50,10 @@ def label(text,name='',wrap=False):
 def button(text,callback=None,kind='',ico=None):
     w=ScrollButton(text)
     if kind:w.setObjectName(kind)
-    if ico:w.setIcon(icon(ico,'#ffffff' if kind=='primary' else '#76728a'));w.setIconSize(QSize(20,20))
+    if ico:
+        color=COLORS['surface' if kind=='primary' else 'sidebar_muted' if kind=='nav' else 'text' if kind=='secondary' else 'muted']
+        w.setIcon(icon(ico,color));w.setIconSize(QSize(20,20))
+        if kind=='nav':w.toggled.connect(lambda checked:w.setIcon(icon(ico,COLORS['sidebar_text'] if checked else color)))
     w.setCursor(Qt.CursorShape.PointingHandCursor)
     if callback:w.clicked.connect(lambda checked=False:callback())
     return w
@@ -79,10 +85,15 @@ def tag(text,tone='neutral'):
 
 def brand():
     w=QWidget();w.setObjectName("brandContainer");l=QHBoxLayout(w);l.setContentsMargins(0,0,0,0);l.setSpacing(10)
-    mark=QLabel();mark.setFixedSize(40,40);mark.setPixmap(icon('brand','#ffffff').pixmap(28,28))
-    mark.setAlignment(Qt.AlignmentFlag.AlignCenter);mark.setStyleSheet('background:#302262;border-radius:13px;')
+    mark=QLabel();mark.setFixedSize(48,48);mark.setPixmap(QIcon(str(ROOT/'assets/branding/allur-vector.svg')).pixmap(32,32))
+    mark.setAlignment(Qt.AlignmentFlag.AlignCenter);mark.setObjectName('brandMark')
     l.addWidget(mark);l.addWidget(label('НарядAI','brand'));l.addStretch()
     return w
+
+
+def allur_wordmark():
+    w=QLabel();w.setPixmap(QIcon(str(ROOT/'assets/branding/allur-wordmark-white.svg')).pixmap(101,40))
+    w.setFixedSize(101,40);w.setAccessibleName('Allur');return w
 
 
 class CardGrid(QWidget):
@@ -101,17 +112,57 @@ class CardGrid(QWidget):
         self.arrange(2 if self.width()>=750 else 1);super().resizeEvent(e)
 
 
-class Sheet(QDialog):
+def motion_toggle():
+    w=QCheckBox('Уменьшить анимации');w.setObjectName('motionToggle')
+    w.setToolTip('Мгновенные переходы между разделами и окнами. Настройка сохраняется на этом устройстве.')
+    w.setChecked(preferences().reduced)
+    w.toggled.connect(preferences().set_reduced)
+    preferences().changed.connect(w.setChecked)
+    return w
+
+
+class AnimatedDialog(QDialog):
+    def __init__(self,parent=None):
+        super().__init__(parent)
+        outer=QVBoxLayout(self);outer.setContentsMargins(0,0,0,0)
+        self.content=QWidget();outer.addWidget(self.content)
+        self.reveal=Reveal(self.content)
+    def showEvent(self,event):
+        super().showEvent(event);self.reveal.start()
+
+
+class Toast(QFrame):
+    """Brief feedback for completed actions, with no input interception."""
+    def __init__(self,parent):
+        super().__init__(parent);self.setObjectName('toast')
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        layout=QHBoxLayout(self);layout.setContentsMargins(16,12,16,12)
+        check=QLabel();check.setPixmap(icon('check',COLORS['success']).pixmap(20,20));layout.addWidget(check)
+        self.message=label('');layout.addWidget(self.message)
+        self.timer=QTimer(self);self.timer.setSingleShot(True);self.timer.timeout.connect(self.hide)
+        self.reveal=Reveal(self);parent.installEventFilter(self);self.hide()
+    def show_message(self,text):
+        if not text:return
+        self.message.setText(text);self.adjustSize();self.position();self.show();self.raise_()
+        self.reveal.start();self.timer.start(3200)
+    def position(self):self.move(max(12,self.parentWidget().width()-self.width()-28),94)
+    def eventFilter(self,watched,event):
+        if event.type()==QEvent.Type.Resize:self.position()
+        elif event.type()==QEvent.Type.Hide:self.hide();self.timer.stop()
+        return False
+
+
+class Sheet(AnimatedDialog):
     def __init__(self,title,parent=None):
         super().__init__(parent);self.setWindowTitle(title);self.resize(680,760)
         self.setMinimumWidth(580)
-        main=QVBoxLayout(self);main.setContentsMargins(24,20,24,20);main.setSpacing(18)
+        main=QVBoxLayout(self.content);main.setContentsMargins(24,20,24,20);main.setSpacing(18)
         top=row(label(title,'section'));top.addStretch()
         close=button('Закрыть',self.reject);top.addWidget(close);main.addLayout(top)
         scroll=QScrollArea();scroll.setWidgetResizable(True)
         body=QWidget();self.body=QVBoxLayout(body);self.body.setContentsMargins(0,0,12,0);self.body.setSpacing(16)
         scroll.setWidget(body);main.addWidget(scroll)
-        self.error=label('','',True);self.error.setStyleSheet('color:#ac4264;');self.error.hide();main.addWidget(self.error)
+        self.error=label('','error',True);self.error.hide();main.addWidget(self.error)
         self.actions=QHBoxLayout();self.actions.setSpacing(12);main.addLayout(self.actions)
     def fail(self,e):
         self.error.setText(str(e));self.error.show()
@@ -143,10 +194,10 @@ MONTHS=('январь','февраль','март','апрель','май','ию
         'июль','август','сентябрь','октябрь','ноябрь','декабрь')
 
 
-class CalendarDialog(QDialog):
+class CalendarDialog(AnimatedDialog):
     def __init__(self,value,parent=None):
         super().__init__(parent);self.setWindowTitle('Выберите дату');self.resize(600,480)
-        main=QVBoxLayout(self);main.setContentsMargins(24,24,24,24);main.setSpacing(16)
+        main=QVBoxLayout(self.content);main.setContentsMargins(24,24,24,24);main.setSpacing(16)
         main.addWidget(label('Выберите дату','section'))
         self.calendar=QCalendarWidget();self.calendar.setLocale(QLocale("ru_RU"));self.calendar.setNavigationBarVisible(False)
         self.calendar.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader)
@@ -187,10 +238,10 @@ class DatePicker(QWidget):
     def wheelEvent(self,event):scroll_page(self,event)
 
 
-class TimeDialog(QDialog):
+class TimeDialog(AnimatedDialog):
     def __init__(self,value,parent=None):
         super().__init__(parent);self.setWindowTitle('Выберите время');self.resize(560,580)
-        self.value=QTime(value);main=QVBoxLayout(self);main.setContentsMargins(24,24,24,24);main.setSpacing(15)
+        self.value=QTime(value);main=QVBoxLayout(self.content);main.setContentsMargins(24,24,24,24);main.setSpacing(15)
         self.preview=label(self.value.toString('HH:mm'),'heading');self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main.addWidget(self.preview);main.addWidget(label('Часы','section'))
         hours=QGridLayout();hours.setSpacing(8);self.hour_group=QButtonGroup(self)

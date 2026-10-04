@@ -16,7 +16,7 @@ class Worker:
         if p.scheme!='https' and not (p.scheme=='http' and p.hostname in ('127.0.0.1','localhost')):raise ValueError('Облачный адрес должен начинаться с https://.')
         if not p.hostname or p.username or p.password or p.query or p.fragment or p.path not in ('','/'):raise ValueError('Некорректный адрес сервера.')
         if len(token)<32:raise ValueError('Ключ обработчика ИИ должен содержать не меньше 32 символов.')
-        self.server=server.rstrip('/');self.token=token;self.ai=ai
+        self.server=server.rstrip('/');self.token=token;self.ai=ai;self._prefer_chat=False
     def request(self,path,payload=None,lease=None,binary=False):
         headers={'Authorization':'Bearer '+self.token,'Content-Type':'application/json'}
         if lease:headers['X-Job-Lease']=lease
@@ -33,8 +33,12 @@ class Worker:
             raise OSError(f'Сервер приложения вернул HTTP {e.code}.') from None
         except (URLError,TimeoutError):raise OSError('Сервер приложения пока недоступен; подключение будет повторено.') from None
     def run_once(self):
+        if self._prefer_chat:
+            self._prefer_chat=False
+            if self.run_chat_once():return True
         job=self.request('/api/ai/claim',{})['job']
-        if not job:return False
+        if not job:return self.run_chat_once()
+        self._prefer_chat=True
         report=job['report'];rid=report['id'];lease=job['lease'];result=None;error=''
         LOG.info('Получен отчёт ОТ-%04d',rid)
         with tempfile.TemporaryDirectory(prefix='naryadai-ai-') as folder:
@@ -54,6 +58,20 @@ class Worker:
                     if attempt==2:raise
                     time.sleep(2)
         LOG.info('Отчёт ОТ-%04d передан мастеру%s',rid,' с оценкой ИИ' if result else ' для ручной проверки')
+        return True
+    def run_chat_once(self):
+        job=self.request('/api/ai/chat/claim',{})['job']
+        if not job:return False
+        LOG.info('Получено сообщение администратора')
+        try:answer=self.ai.chat(job['message'],job['history'],job['conversation_id']);error=''
+        except (AIError,OSError) as e:answer='';error=str(e)
+        body={'lease':job['lease'],'answer':answer,'error':error,'model':self.ai.settings.model_label[:200]}
+        for attempt in range(3):
+            try:self.request('/api/ai/chat/result/'+job['id'],body);break
+            except OSError:
+                if attempt==2:raise
+                time.sleep(2)
+        LOG.info('Ответ чата передан в приложение')
         return True
     def run(self):
         stop=threading.Event()

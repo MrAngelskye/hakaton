@@ -17,7 +17,8 @@ from app.windows import LoginWindow,MainWindow
 from app.dialogs import CreateTask,TaskDetails,SubmitReport,ReviewReport,AddUser
 
 APP=QApplication.instance() or QApplication([])
-APP.setStyle('Fusion');APP.setStyleSheet((ROOT/'assets'/'styles.qss').read_text())
+from app.theme import apply_theme
+APP.setStyle('Fusion');apply_theme(APP)
 
 
 class Checks(unittest.TestCase):

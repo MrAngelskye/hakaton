@@ -49,7 +49,7 @@ class Checks(unittest.TestCase):
         with self.assertRaises(ValueError):self.store.claim(self.other,tid,day,13)
         with self.assertRaises(PermissionError):self.store.task(self.other,tid)
         with self.assertRaises(PermissionError):self.store.transition(self.other,tid,'inProgress')
-        self.store.transition(self.worker,tid,'inProgress');self.store.transition(self.worker,tid,'paused');self.store.transition(self.worker,tid,'inProgress')
+        self.store.transition(self.worker,tid,'inProgress');self.store.transition(self.worker,tid,'paused','Ожидание материалов');self.store.transition(self.worker,tid,'inProgress')
         rid=self.report(tid)
         with self.assertRaises(PermissionError):self.store.review(self.worker,rid,True,90,'Нельзя')
         with self.assertRaises(ValueError):self.store.review(self.master,rid,True,101,'Оценка')

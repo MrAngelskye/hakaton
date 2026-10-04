@@ -14,6 +14,10 @@ QLabel#tag { background: #eeedff; color: #4b50dc; border-radius: 8px; padding: 5
 QLabel#tag[tone="urgent"] { background: #fbecf1; color: #ac4264; }
 QLabel#tag[tone="success"] { background: #e9f4f3; color: #26777c; }
 QLabel#tag[tone="neutral"] { background: #f1f0f8; color: #68617e; }
+QLabel#tag[tone="employeeGreen"] { background: #e4f5e8; color: #23643a; }
+QLabel#tag[tone="employeeYellow"] { background: #fff1bd; color: #735400; }
+QLabel#tag[tone="employeeBlue"] { background: #e2eeff; color: #245ca6; }
+QLabel#tag[tone="employeeGray"] { background: #ebedf0; color: #5b6370; }
 QFrame#card, QFrame#stat { background: white; border: 1px solid #e8e6f0; border-radius: 22px; }
 QFrame#card:hover { border-color: #c8c2ef; }
 QFrame#sidebar { background: white; border-right: 1px solid #e8e6f0; }

@@ -1,12 +1,13 @@
-from datetime import date
+import math
+from datetime import date,datetime
 from PySide6.QtCore import Qt,QDate,QTimer,Signal
 from PySide6.QtGui import QPainter,QColor,QPen
 from PySide6.QtWidgets import (QMainWindow,QWidget,QVBoxLayout,QHBoxLayout,QFrame,
     QScrollArea,QLineEdit,QButtonGroup,QLabel,QDateEdit,QProgressBar,QSizePolicy,
     QFileDialog,QMessageBox,QTableWidget,QTableWidgetItem,QHeaderView,QAbstractItemView)
 from app.widgets import label,button,brand,card,row,avatar,tag,CardGrid,Sheet,DatePicker
-from app.store import ROLES,STATUS
-from app.dialogs import CreateTask,TaskDetails,ReviewReport,AddUser,combo
+from app.store import ROLES,STATUS,EMPLOYEE_STATUS
+from app.dialogs import CreateTask,TaskDetails,ReviewReport,AddUser,EditShift,combo
 from app.integrations import INTEGRATION_AREAS
 
 
@@ -54,8 +55,10 @@ class LoginWindow(QMainWindow):
 
 
 class Timeline(QWidget):
-    def __init__(self,tasks,open_task):
-        super().__init__();self.setMinimumHeight(850);self.events=[]
+    def __init__(self,tasks,open_task,shift=None):
+        super().__init__();self.first=math.floor(shift['start']) if shift else 8
+        self.last=math.ceil(shift['end']) if shift else 18
+        self.setMinimumHeight((self.last-self.first)*80+50);self.events=[]
         for t in tasks:
             if t['start'] is None:continue
             b=button(fmt_time(t['start'])+'–'+fmt_time(t['start']+t['duration'])+'  ·  '+STATUS[t['status']]+'\n'+t['title'],lambda tid=t['id']:open_task(tid))
@@ -63,12 +66,12 @@ class Timeline(QWidget):
             self.events.append((t,b))
     def resizeEvent(self,e):
         for t,b in self.events:
-            b.setGeometry(62,int((t['start']-8)*80+4),max(100,self.width()-76),max(25,int(t['duration']*80-8)))
+            b.setGeometry(62,int((t['start']-self.first)*80+4),max(100,self.width()-76),max(25,int(t['duration']*80-8)))
         super().resizeEvent(e)
     def paintEvent(self,e):
         p=QPainter(self);p.setPen(QPen(QColor('#e8e6f0')))
-        for i in range(11):
-            y=i*80+2;p.drawLine(60,y,self.width()-12,y);p.setPen(QColor('#9992ae'));p.drawText(0,y+15,f'{i+8:02d}:00');p.setPen(QColor('#e8e6f0'))
+        for i in range(self.last-self.first+1):
+            y=i*80+2;p.drawLine(60,y,self.width()-12,y);p.setPen(QColor('#9992ae'));p.drawText(0,y+15,f'{i+self.first:02d}:00');p.setPen(QColor('#e8e6f0'))
         p.end()
 
 
@@ -83,7 +86,7 @@ class MainWindow(QMainWindow):
         self.side.addWidget(brand());self.side.addSpacing(16);self.side.addWidget(label('ALLUR','title'));self.side.addWidget(label('Производственная смена','muted'));self.side.addSpacing(22)
         self.side.addWidget(label(ROLES[user['role']].upper(),'muted'));self.side.addSpacing(6)
         self.nav={}
-        items=[('overview','grid','Смена'),('tasks','tasks','Наряды'),('reports','report','Отчёты'),('team','team','Команда'),('costs','chart','Материалы')]
+        items=[('overview','grid','Смена'),('tasks','tasks','Наряды'),('reports','report','Отчёты'),('team','team','Команда'),('team_schedule','calendar','График команды'),('costs','chart','Материалы')]
         if user['role']=='worker':items=[('tasks','tasks','Задачи'),('schedule','calendar','График'),('reports','report','Отчёты'),('profile','user','Профиль')]
         elif user['role']=='admin':items += [('users','shield','Пользователи'),('integrations','spark','Подключения')]
         for key,ico,title in items:
@@ -106,11 +109,11 @@ class MainWindow(QMainWindow):
         from PySide6.QtWidgets import QApplication
         if QApplication.activeModalWidget():return
         if self.page_key not in ('tasks','users'):
-            old_signature=repr((self.tasks,self.reports))
+            old_signature=self.refresh_signature
             try:self.load()
             except PermissionError:
                 self.render();return
-            if repr((self.tasks,self.reports))!=old_signature:
+            if self.refresh_signature!=old_signature:
                 scroll_value=self.scroll.verticalScrollBar().value()
                 self.render()
                 QTimer.singleShot(0,lambda:self.scroll.verticalScrollBar().setValue(scroll_value))
@@ -119,6 +122,9 @@ class MainWindow(QMainWindow):
         self.page_key=key;self.query='';self.render()
     def load(self):
         self.tasks=self.store.tasks(self.user);self.reports=self.store.reports(self.user)
+        people=self.store.users(self.user,True) if self.user['role']!='worker' else [self.user]
+        shifts=[self.store.shift(self.user,p['id'],self.schedule_day.toString('yyyy-MM-dd')) for p in people]
+        self.refresh_signature=repr((self.tasks,self.reports,shifts,datetime.now().strftime('%Y%m%d%H%M')))
     def render(self):
         try:self.load()
         except PermissionError:
@@ -128,7 +134,7 @@ class MainWindow(QMainWindow):
         self.bell.setText(f'Уведомления · {count}' if count else 'Уведомления')
         page=QWidget();page.setMaximumWidth(1220);self.body=QVBoxLayout(page);self.body.setContentsMargins(36,32,36,30);self.body.setSpacing(23)
         methods={'overview':self.overview,'tasks':self.tasks_page,'reports':self.reports_page,'team':self.team_page,
-                 'schedule':self.schedule_page,'profile':self.profile_page,'costs':self.costs_page,'users':self.users_page,'integrations':self.integrations_page}
+                 'schedule':self.schedule_page,'team_schedule':self.team_schedule_page,'profile':self.profile_page,'costs':self.costs_page,'users':self.users_page,'integrations':self.integrations_page}
         methods[self.page_key]();self.body.addStretch();self.body.addWidget(label('ALLUR · НарядAI · Демонстрационная версия','muted'))
         old=self.scroll.takeWidget()
         if old:old.deleteLater()
@@ -152,6 +158,9 @@ class MainWindow(QMainWindow):
         l.addWidget(label(t['title'],'title',True));l.addWidget(label(t['equipment']+' · '+t['site'],'muted',True))
         l.addWidget(label((fmt_time(t['start'])+'–'+fmt_time(t['start']+t['duration']) if t['start'] is not None else f"{t['duration']:g} ч")+'  ·  '+t['day'],'muted'))
         l.addWidget(label('Срок: '+t['deadline'].replace('T',' '),'muted'))
+        if t['status']=='paused':
+            l.addWidget(tag('Приостановлен','employeeYellow'))
+            l.addWidget(label('Причина: '+self.store.pauses(self.user,t['id'])[-1]['reason'],'',True))
         l.addStretch();l.addLayout(row(label(t['worker_name'] or 'Свободный наряд','muted',True),button('Выбрать' if t['status']=='available' and self.user['role']=='worker' else 'Открыть',lambda:self.open_task(t['id']),'secondary')))
         return w
     def report_card(self,r):
@@ -219,9 +228,42 @@ class MainWindow(QMainWindow):
         cards=[]
         for p in people:
             w,l=card();l.addLayout(row(avatar(p['name'],52),label(p['name'],'title',True)));l.addWidget(label(p['job'],'muted',True))
+            l.addWidget(tag(*EMPLOYEE_STATUS[p['employee_status']]))
             l.addWidget(label(f"{p['done']} принято  ·  {score_text(p['score'])} / 100  ·  {p['active_count']} текущих",'',True))
             l.addWidget(button('Статистика сотрудника',lambda person=p:self.person(person),'secondary'));cards.append(w)
         self.body.addWidget(CardGrid(cards))
+        self.body.addWidget(button('Посмотреть свободное время команды',lambda:self.navigate('team_schedule'),'secondary','calendar'))
+
+    def team_schedule_page(self):
+        self.heading('График команды','Настройте смену и назначьте наряд на свободное время')
+        selector=DatePicker(self.schedule_day);selector.dateChanged.connect(self.change_schedule);self.body.addWidget(selector)
+        legend=row(*[tag(*v) for v in EMPLOYEE_STATUS.values()]);self.body.addLayout(legend)
+        self.body.addWidget(label('Цвет показывает состояние сейчас. Интервалы ниже относятся к выбранной дате; отображаются окна от 30 минут.','muted',True))
+        day=self.schedule_day.toString('yyyy-MM-dd')
+        for p in self.store.users(self.user,True):
+            if not p['active']:continue
+            w,l=card();l.addLayout(row(avatar(p['name']),label(p['name'],'title',True),tag(*EMPLOYEE_STATUS[self.store.employee_status(self.user,p['id'])])))
+            shift=self.store.shift(self.user,p['id'],day)
+            l.addLayout(row(label('Смена '+fmt_time(shift['start'])+'–'+fmt_time(shift['end']) if shift else 'Не на смене в выбранный день','muted'),
+                button('Изменить смену',lambda person=p:self.edit_shift(person,day),'secondary','edit')))
+            for t in self.tasks:
+                if t['worker_id']==p['id'] and t['day']==day and t['status']!='cancelled':
+                    l.addWidget(button(f"{fmt_time(t['start'])}–{fmt_time(t['start']+t['duration'])} · НР-{t['id']} · {STATUS[t['status']]} · {t['title']}",lambda tid=t['id']:self.open_task(tid),'secondary'))
+                    if t['status']=='paused':l.addWidget(label('Причина паузы: '+self.store.pauses(self.user,t['id'])[-1]['reason'],'',True))
+            l.addWidget(label('Свободное время','section'))
+            slots=self.store.free_slots(self.user,p['id'],day)
+            for start,end in slots:
+                l.addLayout(row(tag(fmt_time(start)+'–'+fmt_time(end),'employeeGreen'),
+                    button('Назначить на это время',lambda wid=p['id'],a=start,b=end:self.assign_slot(wid,day,a,b),'primary','plus')))
+            if not slots:l.addWidget(label('Нет свободных окон от 30 минут. При просроченной активной работе сначала завершите её или обновите график.','muted',True))
+            self.body.addWidget(w)
+
+    def edit_shift(self,worker,day):
+        if EditShift(self.store,self.user,worker,day,self).exec():self.render()
+
+    def assign_slot(self,wid,day,start,end):
+        if CreateTask(self.store,self.user,self,assignment=(wid,day,start,end)).exec():
+            self.render();self.statusBar().showMessage('Наряд назначен в график',5000)
     def person(self,p):
         d=Sheet(p['name'],self);d.body.addWidget(label(p['job'],'muted'));d.body.addWidget(label(f"Принято: {p['done']} · Средняя оценка: {score_text(p['score'])}",'title',True))
         for t in self.tasks:
@@ -231,14 +273,20 @@ class MainWindow(QMainWindow):
             if r['worker_id']==p['id']:d.body.addWidget(label(f"ОТ-{r['id']:04d} · {STATUS[r['status']]} · {r['title']}",'',True))
         d.exec()
     def schedule_page(self):
-        self.heading('Мой график','Смена 08:00–18:00 · нажмите на задачу, чтобы открыть наряд')
+        self.heading('Мой график','Смена и назначенные работы · нажмите на задачу, чтобы открыть наряд')
         selector=DatePicker(self.schedule_day);selector.dateChanged.connect(self.change_schedule);self.body.addWidget(selector)
         tasks=[t for t in self.tasks if t['worker_id']==self.user['id'] and t['day']==self.schedule_day.toString('yyyy-MM-dd') and t['status']!='cancelled']
-        hours=sum(t['duration'] for t in tasks);w,l=card();l.addWidget(label(f'Загрузка смены: {hours:g} ч из 10','title'))
-        bar=QProgressBar();bar.setRange(0,100);bar.setValue(round(hours*10));bar.setTextVisible(False);l.addWidget(bar);self.body.addWidget(w)
+        day=self.schedule_day.toString('yyyy-MM-dd');shift=self.store.shift(self.user,self.user['id'],day)
+        hours=sum(t['duration'] for t in tasks);total=shift['end']-shift['start'] if shift else 0
+        w,l=card();l.addWidget(tag(*EMPLOYEE_STATUS[self.store.employee_status(self.user,self.user['id'])]))
+        l.addWidget(label('Смена '+fmt_time(shift['start'])+'–'+fmt_time(shift['end']) if shift else 'В выбранный день вы не на смене','title'))
+        l.addWidget(label(f'В графике: {hours:g} ч из {total:g}','muted'))
+        bar=QProgressBar();bar.setRange(0,100);bar.setValue(round(hours/total*100) if total else 0);bar.setTextVisible(False);l.addWidget(bar)
+        slots=self.store.free_slots(self.user,self.user['id'],day)
+        l.addWidget(label('Свободное время: '+(', '.join(fmt_time(a)+'–'+fmt_time(b) for a,b in slots) or 'Нет окон от 30 минут'),'muted',True));self.body.addWidget(w)
         if tasks:
-            w,l=card();l.addWidget(Timeline(tasks,self.open_task));self.body.addWidget(w)
-        else:self.body.addWidget(self.empty('Ваша смена пока свободна','Выберите свободный наряд в разделе «Задачи».'))
+            w,l=card();l.addWidget(Timeline(tasks,self.open_task,shift));self.body.addWidget(w)
+        else:self.body.addWidget(self.empty('Назначенных работ нет','Выберите свободный наряд в разделе «Задачи».' if shift else 'Мастер может настроить рабочую смену.'))
     def change_schedule(self,d):self.schedule_day=d;self.render()
     def profile_page(self):
         self.heading('Мой профиль','Ваши результаты по принятым работам')

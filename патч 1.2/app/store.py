@@ -17,6 +17,8 @@ STATUS = {'available':'Доступен', 'planned':'В графике', 'inProg
           'revision':'Доработка', 'cancelled':'Отменён', 'superseded':'Предыдущая версия'}
 ROLES = {'worker':'Сотрудник', 'master':'Мастер', 'admin':'Администратор'}
 SITES = ['Сборочный цех','Сварочный цех','Окрасочный цех','Участок контроля качества']
+EMPLOYEE_STATUS = {'free':('Свободен','employeeGreen'), 'busy':('В работе','employeeYellow'),
+                   'queued':('Есть в очереди','employeeBlue'), 'off':('Не на смене','employeeGray')}
 
 
 def now():
@@ -58,8 +60,94 @@ class Store:
               id INTEGER PRIMARY KEY AUTOINCREMENT, task_id INTEGER NOT NULL REFERENCES tasks(id),
               actor_id INTEGER NOT NULL REFERENCES users(id), message TEXT NOT NULL, created TEXT NOT NULL);
             CREATE INDEX IF NOT EXISTS report_task ON reports(task_id);
+            CREATE TABLE IF NOT EXISTS shift_rules(
+              worker_id INTEGER NOT NULL REFERENCES users(id), weekday INTEGER NOT NULL,
+              start REAL NOT NULL, end REAL NOT NULL, PRIMARY KEY(worker_id,weekday));
+            CREATE TABLE IF NOT EXISTS shifts(
+              worker_id INTEGER NOT NULL REFERENCES users(id), day TEXT NOT NULL,
+              start REAL, end REAL, updated_by INTEGER REFERENCES users(id), updated TEXT,
+              PRIMARY KEY(worker_id,day));
+            CREATE TABLE IF NOT EXISTS pauses(
+              id INTEGER PRIMARY KEY AUTOINCREMENT, task_id INTEGER NOT NULL REFERENCES tasks(id),
+              actor_id INTEGER NOT NULL REFERENCES users(id), reason TEXT NOT NULL,
+              started TEXT NOT NULL, ended TEXT, ended_by INTEGER REFERENCES users(id));
+            CREATE UNIQUE INDEX IF NOT EXISTS one_open_pause ON pauses(task_id) WHERE ended IS NULL;
             ''')
         self.seed()
+        self.migrate_schedules()
+
+    def migrate_schedules(self):
+        # Идемпотентное обновление 1.1: существующие наряды и фото сохраняются.
+        with self.transaction() as c:
+            for u in c.execute("SELECT id FROM users WHERE role='worker'").fetchall():
+                for weekday in range(7):
+                    c.execute('INSERT OR IGNORE INTO shift_rules VALUES(?,?,8,18)',(u['id'],weekday))
+            for t in c.execute("SELECT id FROM tasks WHERE status='paused'").fetchall():
+                if not c.execute('SELECT 1 FROM pauses WHERE task_id=? AND ended IS NULL',(t['id'],)).fetchone():
+                    c.execute("INSERT INTO pauses(task_id,actor_id,reason,started) VALUES(?,(SELECT master_id FROM tasks WHERE id=?),?,?)",
+                              (t['id'],t['id'],'Пауза из версии 1.1: причина не была указана',now()))
+
+    @staticmethod
+    def _shift(c,wid,day):
+        override=c.execute('SELECT start,end FROM shifts WHERE worker_id=? AND day=?',(wid,day)).fetchone()
+        if override is not None:return dict(override) if override['start'] is not None else None
+        r=c.execute('SELECT start,end FROM shift_rules WHERE worker_id=? AND weekday=?',
+                    (wid,date.fromisoformat(day).weekday())).fetchone()
+        return dict(r) if r else None
+
+    def shift(self,actor,wid,day):
+        date.fromisoformat(day)
+        with self.transaction() as c:
+            u=self.require(c,actor)
+            if u['role']=='worker' and u['id']!=wid:raise PermissionError('Доступен только собственный график.')
+            return self._shift(c,wid,day)
+
+    def set_shift(self,actor,wid,day,start=None,end=None):
+        date.fromisoformat(day)
+        if (start is None)!=(end is None) or (start is not None and
+            (not all(math.isfinite(v) for v in (start,end)) or not 0<=start<end<24)):
+            raise ValueError('Выберите начало и конец смены в пределах одного дня.')
+        with self.transaction() as c:
+            self.require(c,actor,('master','admin'));c.execute('BEGIN IMMEDIATE')
+            if not c.execute("SELECT 1 FROM users WHERE id=? AND role='worker' AND active=1",(wid,)).fetchone():
+                raise ValueError('Выберите действующего сотрудника.')
+            tasks=c.execute("SELECT * FROM tasks WHERE worker_id=? AND day=? AND status!='cancelled' AND start IS NOT NULL",(wid,day)).fetchall()
+            if any(start is None or t['start']<start or t['start']+t['duration']>end for t in tasks):
+                raise ValueError('Новая смена исключает назначенные работы. Сначала перенесите или отмените наряды.')
+            c.execute('INSERT INTO shifts VALUES(?,?,?,?,?,?) ON CONFLICT(worker_id,day) DO UPDATE SET start=excluded.start,end=excluded.end,updated_by=excluded.updated_by,updated=excluded.updated',
+                      (wid,day,start,end,actor['id'],now()))
+
+    def free_slots(self,actor,wid,day,at=None):
+        at=at or datetime.now();shift=self.shift(actor,wid,day)
+        if not shift or date.fromisoformat(day)<at.date():return []
+        with self.transaction() as c:
+            tasks=c.execute("SELECT start,duration,status FROM tasks WHERE worker_id=? AND day=? AND status!='cancelled' AND start IS NOT NULL ORDER BY start",(wid,day)).fetchall()
+        cursor=shift['start']
+        if day==at.date().isoformat():
+            # Следующая пятиминутка; продолжающаяся работа удерживает время до завершения.
+            cursor=max(cursor,math.ceil((at.hour*60+at.minute+at.second/60)/5)*5/60)
+            if any(t['status'] in ('inProgress','paused') and t['start']+t['duration']<=cursor for t in tasks):return []
+        result=[]
+        for t in tasks:
+            if t['start']>cursor:result.append((cursor,min(t['start'],shift['end'])))
+            cursor=max(cursor,t['start']+t['duration'])
+        if cursor<shift['end']:result.append((cursor,shift['end']))
+        return [(a,b) for a,b in result if b-a>=.5-1e-8]
+
+    def employee_status(self,actor,wid,at=None):
+        at=at or datetime.now();day=at.date().isoformat();shift=self.shift(actor,wid,day)
+        hour=at.hour+at.minute/60+at.second/3600
+        active=next((u for u in self.users(actor,True) if u['id']==wid),None)
+        if not active or not active['active'] or not shift or not shift['start']<=hour<shift['end']:return 'off'
+        tasks=[t for t in self.tasks(actor) if t['worker_id']==wid]
+        if any(t['status'] in ('inProgress','paused') or (t['day']==day and t['start'] is not None and t['start']<=hour<t['start']+t['duration'] and t['status']=='planned') for t in tasks):return 'busy'
+        if any(t['status'] in ('planned','revision') for t in tasks):return 'queued'
+        return 'free'
+
+    def pauses(self,actor,tid):
+        self.task(actor,tid)
+        with self.transaction() as c:
+            return [dict(r) for r in c.execute('SELECT * FROM pauses WHERE task_id=? ORDER BY id',(tid,))]
 
     @contextmanager
     def transaction(self):
@@ -199,8 +287,10 @@ class Store:
 
     @staticmethod
     def _schedule(c,wid,day,start,duration,exclude=-1):
-        if start is None or not math.isfinite(start) or start<8 or start+duration>18:
-            raise ValueError('Работа должна помещаться в смену 08:00–18:00.')
+        shift=Store._shift(c,wid,day)
+        if not shift:raise ValueError('На этот день сотрудник не на смене. Мастер должен настроить график.')
+        if start is None or not math.isfinite(start) or start<shift['start'] or start+duration>shift['end']:
+            raise ValueError('Работа должна полностью помещаться в смену сотрудника.')
         if c.execute("""SELECT 1 FROM tasks WHERE worker_id=? AND day=? AND id!=?
                         AND status!='cancelled' AND start IS NOT NULL AND start<? AND start+duration>?""",
                      (wid,day,exclude,start+duration,start)).fetchone():
@@ -222,10 +312,10 @@ class Store:
 
     def reschedule(self,actor,tid,day,start):
         with self.transaction() as c:
-            u=self.require(c,actor,('worker','admin'))
+            u=self.require(c,actor,('worker','master','admin'))
             c.execute('BEGIN IMMEDIATE')
             t=c.execute('SELECT * FROM tasks WHERE id=?',(tid,)).fetchone()
-            if not t or t['worker_id'] is None or (u['role']!='admin' and t['worker_id']!=u['id']): raise PermissionError('Наряд другого сотрудника.')
+            if not t or t['worker_id'] is None or (u['role']=='worker' and t['worker_id']!=u['id']): raise PermissionError('Наряд другого сотрудника.')
             if t['status']!='planned': raise ValueError('Перенести можно только запланированный наряд.')
             date.fromisoformat(day)
             self._schedule(c,t['worker_id'],day,start,t['duration'],tid)
@@ -234,7 +324,7 @@ class Store:
             c.execute('UPDATE tasks SET day=?,start=? WHERE id=?',(day,start,tid))
             self.event(c,tid,actor['id'],'Изменено время в графике')
 
-    def transition(self,actor,tid,status):
+    def transition(self,actor,tid,status,reason=''):
         allowed={'planned':{'inProgress'},'inProgress':{'paused'},'paused':{'inProgress'}}
         with self.transaction() as c:
             u=self.require(c,actor)
@@ -251,8 +341,14 @@ class Store:
                 u=self.require(c,actor,('worker','admin'))
                 if t['worker_id'] is None or (u['role']!='admin' and t['worker_id']!=u['id']): raise PermissionError('Наряд другого сотрудника.')
                 if status not in allowed.get(t['status'],set()): raise ValueError('Действие недоступно в текущем статусе.')
+            if status=='paused':
+                reason=reason.strip()
+                if not 3<=len(reason)<=1000:raise ValueError('Укажите причину паузы: от 3 до 1000 символов.')
+                c.execute('INSERT INTO pauses(task_id,actor_id,reason,started) VALUES(?,?,?,?)',(tid,actor['id'],reason,now()))
+            if t['status']=='paused':
+                c.execute('UPDATE pauses SET ended=?,ended_by=? WHERE task_id=? AND ended IS NULL',(now(),actor['id'],tid))
             c.execute('UPDATE tasks SET status=? WHERE id=?',(status,tid))
-            self.event(c,tid,actor['id'],STATUS[status])
+            self.event(c,tid,actor['id'],STATUS[status]+(': '+reason if status=='paused' else ''))
 
     def reports(self,actor):
         with self.transaction() as c:
@@ -339,7 +435,7 @@ class Store:
         out=[]
         for u in people:
             rr=[r for r in reports if r['worker_id']==u['id'] and r['status']=='approved']
-            out.append({**u,'done':len(rr),'score':sum(r['score'] for r in rr)/len(rr) if rr else None,
+            out.append({**u,'employee_status':self.employee_status(actor,u['id']),'done':len(rr),'score':sum(r['score'] for r in rr)/len(rr) if rr else None,
                         'hours':sum(r['hours'] for r in rr),
                         'active_count':sum(t['worker_id']==u['id'] and t['status'] not in ('approved','cancelled') for t in tasks)})
         return sorted(out,key=lambda u:u['score'] if u['score'] is not None else -1,reverse=True)
@@ -353,6 +449,9 @@ class Store:
             try:
                 c.execute('INSERT INTO users(username,name,job,role,salt,password_hash) VALUES(?,?,?,?,?,?)',
                           (username.strip(),name.strip(),job.strip(),role,salt,password_hash(password,salt)))
+                if role=='worker':
+                    uid=c.execute('SELECT id FROM users WHERE username=?',(username.strip(),)).fetchone()[0]
+                    c.executemany('INSERT INTO shift_rules VALUES(?,?,8,18)',[(uid,d) for d in range(7)])
             except sqlite3.IntegrityError as e: raise ValueError('Этот логин уже занят.') from e
 
     def set_active(self,actor,uid,active):

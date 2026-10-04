@@ -23,7 +23,7 @@ def time_value(w):
 
 
 class CreateTask(Sheet):
-    def __init__(self,store,user,parent):
+    def __init__(self,store,user,parent,assignment=None):
         super().__init__('Исправление наряда' if hasattr(self,'t') else 'Новый наряд',parent);self.store=store;self.user=user
         self.title=self.field('Название задачи *',QLineEdit());self.title.setMaxLength(120)
         self.description=self.field('Описание работ *',QTextEdit());self.description.setFixedHeight(105)
@@ -38,6 +38,13 @@ class CreateTask(Sheet):
         self.field('День работ',self.day)
         self.start=TimePicker(QTime(8,0));self.field('Начало при назначении сотруднику',self.start)
         self.deadline=DateTimePicker(QDateTime(QDate.currentDate(),QTime(18,0)));self.field('Срок выполнения',self.deadline)
+        if assignment:
+            wid,day,start,end=assignment
+            self.worker.setCurrentIndex(self.worker.findData(wid));self.day.setDate(QDate.fromString(day,'yyyy-MM-dd'))
+            self.start.setTime(QTime(int(start),round(start%1*60)))
+            self.duration.setValue(min(1,end-start))
+            self.deadline.setDateTime(QDateTime(self.day.date(),QTime(int(end),round(end%1*60))))
+            self.body.addWidget(label(f'Выбрано свободное время: {self.start.time().toString("HH:mm")}–{QTime(int(end),round(end%1*60)).toString("HH:mm")}','muted',True))
         self.actions.addWidget(button('Отмена',self.reject));self.actions.addWidget(button('Создать наряд',self.save,'primary','plus'))
     def save(self):
         self.run_action(lambda:self.store.create_task(self.user,title=self.title.text(),description=self.description.toPlainText(),
@@ -55,6 +62,11 @@ class TaskDetails(Sheet):
                     ('Плановое время',f"{t['duration']:g} ч"),('Срок',t['deadline'].replace('T',' · '))]:
             self.body.addWidget(label(k,'muted'));self.body.addWidget(label(v,'',True))
         latest=store.latest_report(user,tid)
+        if t['status']=='paused':
+            pause=store.pauses(user,tid)[-1]
+            notice,l=card();l.addWidget(label('Причина приостановки','title'))
+            l.addWidget(label(pause['reason'],'',True));l.addWidget(label('С '+pause['started'].replace('T',' '),'muted'))
+            self.body.addWidget(notice)
         if latest and latest['status']=='revision':
             notice,l=card();l.addWidget(label('Комментарий мастера','title'));l.addWidget(label(latest['comment'],'',True));self.body.addWidget(notice)
         if user['role']=='worker' or (user['role']=='admin' and t['worker_id'] is not None):
@@ -68,13 +80,17 @@ class TaskDetails(Sheet):
                     lambda:self.run_action(lambda:action(user,tid,self.day.date().toString('yyyy-MM-dd'),time_value(self.start))),'secondary','calendar'))
             if t['worker_id']==user['id'] or user['role']=='admin':
                 if t['status'] in ('planned','paused'):
-                    self.actions.addWidget(button('Начать работу',lambda:self.run_action(lambda:store.transition(user,tid,'inProgress')),'primary','play'))
+                    self.actions.addWidget(button('Продолжить работу' if t['status']=='paused' else 'Начать работу',lambda:self.run_action(lambda:store.transition(user,tid,'inProgress')),'primary','play'))
                 if t['status']=='inProgress':
-                    self.actions.addWidget(button('Пауза',lambda:self.run_action(lambda:store.transition(user,tid,'paused')),'secondary','clock'))
+                    self.actions.addWidget(button('Приостановить',lambda:self.pause(store,user,tid),'secondary','clock'))
                 if t['status'] in ('inProgress','revision'):
                     self.actions.addWidget(button('Отправить отчёт',lambda:self.report(store,user,t,parent),'primary','report'))
         if user['role'] in ('master','admin') and t['status'] not in ('submitted','approved','cancelled'):
             self.body.addWidget(button('Отменить наряд',lambda:self.cancel(store,user,tid),'danger'))
+        if user['role']=='master' and t['status']=='planned':
+            self.day=DatePicker(QDate.fromString(t['day'],'yyyy-MM-dd'));self.field('Новый день в графике',self.day)
+            self.start=TimePicker(QTime(int(t['start']),round(t['start']%1*60)));self.field('Новое начало',self.start)
+            self.actions.addWidget(button('Перенести',lambda:self.run_action(lambda:store.reschedule(user,tid,self.day.date().toString('yyyy-MM-dd'),time_value(self.start))),'secondary','calendar'))
         if user['role']=='admin':
             self.body.addWidget(label('Инструменты поддержки','section'))
             self.body.addWidget(label('Действия администратора записываются в историю наряда.','muted',True))
@@ -86,6 +102,8 @@ class TaskDetails(Sheet):
         for e in store.events(user,tid):
             self.body.addWidget(label(e['created'].replace('T',' ')+' · '+e['name'],'muted',True))
             self.body.addWidget(label(e['message'],'',True))
+    def pause(self,store,user,tid):
+        if PauseTask(store,user,tid,self).exec():self.accept()
     def support(self,store,user,t,parent):
         if SupportTask(store,user,t,parent).exec():self.accept()
     def report(self,store,user,t,parent):
@@ -98,6 +116,42 @@ class TaskDetails(Sheet):
         if QMessageBox.question(self,'Отмена наряда','Отменить этот наряд? История останется.',
             QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.No)==QMessageBox.StandardButton.Yes:
             self.run_action(lambda:store.transition(user,tid,'cancelled'))
+
+
+class PauseTask(Sheet):
+    def __init__(self,store,user,tid,parent):
+        super().__init__('Приостановить работу',parent);self.store=store;self.user=user;self.tid=tid
+        self.cause=self.field('Причина',combo([(v,v) for v in ['Ожидание материалов','Неисправность оборудования','Нужна помощь мастера','Другое']]))
+        self.reason=self.field('Что произошло? *',QTextEdit());self.reason.setFixedHeight(115)
+        self.body.addWidget(label('Опишите причину. Мастер увидит её в наряде; время паузы сохранится в истории.','muted',True))
+        self.actions.addWidget(button('Отмена',self.reject));self.actions.addWidget(button('Приостановить',self.save,'primary','clock'))
+    def save(self):
+        def action():
+            text=self.reason.toPlainText().strip()
+            if not 3<=len(text)<=900:raise ValueError('Добавьте пояснение от 3 до 900 символов.')
+            self.store.transition(self.user,self.tid,'paused',self.cause.currentData()+': '+text)
+        self.run_action(action)
+
+
+class EditShift(Sheet):
+    def __init__(self,store,user,worker,day,parent):
+        super().__init__('Смена · '+worker['name'],parent);self.store=store;self.user=user;self.worker=worker;self.day=day
+        shift=store.shift(user,worker['id'],day)
+        self.body.addWidget(label('Дата: '+QDate.fromString(day,'yyyy-MM-dd').toString('dd.MM.yyyy'),'title'))
+        self.mode=self.field('Режим',combo([('Рабочая смена','work'),('Не на смене / выходной','off')]))
+        if not shift:self.mode.setCurrentIndex(1)
+        a,b=(shift['start'],shift['end']) if shift else (8,18)
+        self.start=self.field('Начало смены',TimePicker(QTime(int(a),round(a%1*60))))
+        self.end=self.field('Конец смены',TimePicker(QTime(int(b),round(b%1*60))))
+        self.mode.currentIndexChanged.connect(self.update_fields);self.update_fields()
+        self.body.addWidget(label('Изменение действует на выбранную дату. Назначенные наряды должны помещаться в смену.','muted',True))
+        self.actions.addWidget(button('Отмена',self.reject));self.actions.addWidget(button('Сохранить смену',self.save,'primary','calendar'))
+    def update_fields(self):
+        enabled=self.mode.currentData()=='work';self.start.setEnabled(enabled);self.end.setEnabled(enabled)
+    def save(self):
+        self.run_action(lambda:self.store.set_shift(self.user,self.worker['id'],self.day,
+            time_value(self.start) if self.mode.currentData()=='work' else None,
+            time_value(self.end) if self.mode.currentData()=='work' else None))
 
 
 class SubmitReport(Sheet):

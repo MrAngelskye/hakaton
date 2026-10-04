@@ -17,7 +17,8 @@ STATUS = {'available':'Доступен', 'planned':'В графике', 'inProg
           'paused':'Приостановлен', 'submitted':'На проверке', 'approved':'Принят',
           'revision':'Доработка', 'cancelled':'Отменён', 'superseded':'Предыдущая версия'}
 ROLES = {'worker':'Сотрудник', 'master':'Мастер', 'admin':'Администратор'}
-SITES = ['Сборочный цех','Сварочный цех','Окрасочный цех','Участок контроля качества']
+# Illustrative demo sites; replace with the organiser's actual reference data.
+SITES = ['Горный участок','Участок дробления','Участок обогащения','Ремонтный участок']
 EMPLOYEE_STATUS = {'free':('Свободен','employeeGreen'), 'busy':('В работе','employeeYellow'),
                    'queued':('Есть в очереди','employeeBlue'), 'off':('Не на смене','employeeGray')}
 
@@ -181,25 +182,25 @@ class Store:
                 return
             for username,name,job,role in [
                 ('master','Мария Соколова','Мастер смены','master'),
-                ('worker1','Александр Иванов','Механик · сборочный цех','worker'),
-                ('worker2','Данияр Ахметов','Электрик · сборочный цех','worker'),
-                ('worker3','Елена Ким','Наладчик · сварочный цех','worker'),
-                ('worker4','Руслан Омаров','Механик · окрасочный цех','worker'),
+                ('worker1','Александр Иванов','Механик · горный участок','worker'),
+                ('worker2','Данияр Ахметов','Электрик · участок дробления','worker'),
+                ('worker3','Елена Ким','Наладчик · участок обогащения','worker'),
+                ('worker4','Руслан Омаров','Механик · ремонтный участок','worker'),
                 ('admin','Администратор','Управление доступом','admin')]:
                 salt=secrets.token_hex(16)
                 c.execute('INSERT INTO users(username,name,job,role,salt,password_hash) VALUES(?,?,?,?,?,?)',
                           (username,name,job,role,salt,password_hash(getattr(self,'seed_password','1234'),salt)))
             today = date.today()
             samples=[
-                (1048,'Проверить привод сборочного конвейера',0,'Конвейер СЛ-03',2,'urgent',None,'available',None),
-                (1049,'Проверить динамометрический инструмент',0,'Пост сборки №12',1,'normal',None,'available',None),
-                (1050,'Обслужить маркировочный принтер',3,'Принтер МП-07',1.5,'normal',None,'available',None),
-                (1051,'Осмотреть пневматическую линию',1,'Пневмолиния ПЛ-02',1,'normal',None,'available',None),
-                (1052,'Устранить сбой сканера VIN',3,'Сканер СК-04',1,'urgent',None,'available',None),
-                (1046,'Осмотреть ролики конвейера',0,'Конвейер СЛ-01',1.5,'normal',2,'planned',8),
-                (1047,'Проверить датчик на посту сборки',0,'Пост сборки №08',1,'normal',2,'inProgress',10),
-                (1044,'Обслужить привод сварочного стенда',1,'Стенд СВ-02',1.5,'normal',4,'submitted',8),
-                (1045,'Проверить блок считывания маркировки',0,'Пост сборки №15',1,'normal',3,'submitted',9),
+                (1048,'Проверить привод ленточного конвейера',1,'Конвейер ЛК-03',2,'urgent',None,'available',None),
+                (1049,'Осмотреть гидравлическую систему экскаватора',0,'Экскаватор ЭК-12',1,'normal',None,'available',None),
+                (1050,'Обслужить компрессор ремонтного участка',3,'Компрессор КМ-07',1.5,'normal',None,'available',None),
+                (1051,'Осмотреть систему аспирации',2,'Аспирационная установка АУ-02',1,'normal',None,'available',None),
+                (1052,'Проверить сигнал датчика дробилки',1,'Дробилка ДР-04',1,'urgent',None,'available',None),
+                (1046,'Осмотреть ролики конвейера',1,'Конвейер ЛК-01',1.5,'normal',2,'planned',8),
+                (1047,'Проверить датчик вибрации грохота',2,'Грохот ГР-08',1,'normal',2,'inProgress',10),
+                (1044,'Обслужить электропривод дробилки',1,'Дробилка ДР-02',1.5,'normal',4,'submitted',8),
+                (1045,'Проверить насос гидравлической системы',0,'Насос НС-15',1,'normal',3,'submitted',9),
             ]
             for tid,title,site,equipment,duration,priority,wid,status,start in samples:
                 c.execute('''INSERT INTO tasks(id,title,description,site,equipment,priority,kind,duration,day,start,deadline,worker_id,master_id,status,created)
@@ -215,8 +216,8 @@ class Store:
                 day=(today-timedelta(days=1+i%3)).isoformat()
                 c.execute('''INSERT INTO tasks(id,title,description,site,equipment,priority,kind,duration,day,start,deadline,worker_id,master_id,status,created)
                              VALUES(?,?,?,?,?,'normal','Плановая',1,?,8,?,?,1,'approved',?)''',
-                          (tid,['Осмотр электропривода','Проверка датчиков линии','Обслуживание поста'][i%3],
-                           'Провести плановый осмотр.',SITES[i%4],f'Пост №{i+1}',day,day+'T18:00',wid,now()))
+                          (tid,['Осмотр электропривода','Проверка датчиков линии','Обслуживание узла'][i%3],
+                           'Провести плановый осмотр.',SITES[i%4],f'Привод ПР-{i+1:02d}',day,day+'T18:00',wid,now()))
                 self._seed_report(c,tid,wid,1,'approved',score)
                 self.event(c,tid,1,'Работа принята мастером (демонстрационные данные)')
 
@@ -505,7 +506,7 @@ class Store:
             raise ValueError('Заполните название, описание и оборудование.')
         if not math.isfinite(duration) or not .5<=duration<=10 or priority not in ('urgent','normal'):
             raise ValueError('Проверьте плановое время и приоритет.')
-        if site not in SITES or kind not in ('Плановая','Внеплановая'):raise ValueError('Проверьте участок и тип работ.')
+        if kind not in ('Плановая','Внеплановая'):raise ValueError('Проверьте участок и тип работ.')
         date.fromisoformat(day);due=datetime.fromisoformat(deadline)
         if due.date()<date.fromisoformat(day):raise ValueError('Срок не может быть раньше дня работ.')
         with self.transaction() as c:
@@ -513,6 +514,7 @@ class Store:
             t=c.execute('SELECT * FROM tasks WHERE id=?',(tid,)).fetchone()
             if not t or t['status'] not in ('available','planned','inProgress','paused','revision'):
                 raise ValueError('Наряд на проверке или завершён. Исторические данные сохраняются; сначала примите решение по отчёту.')
+            if site not in SITES and site!=t['site']:raise ValueError('Проверьте участок и тип работ.')
             if t['status'] not in ('available','planned') and (worker_id!=t['worker_id'] or day!=t['day'] or start!=t['start'] or duration!=t['duration']):
                 raise ValueError('У начатой задачи нельзя менять исполнителя или график. Можно исправить описание, срок и приоритет.')
             if worker_id:

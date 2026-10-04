@@ -19,7 +19,7 @@ def main():
     args=parser.parse_args()
     app=QApplication(sys.argv[:1]);app.setApplicationName('NaryadAI');app.setOrganizationName('NaryadAI')
     app.setStyle('Fusion');app.setFont(QFont('Segoe UI',10));apply_theme(app)
-    app.setWindowIcon(QIcon(str(ROOT/'assets/branding/allur-vector.svg')))
+    app.setWindowIcon(QIcon(str(ROOT/'assets/branding/km-mark-blue.svg')))
     app.setQuitOnLastWindowClosed(False)
     data=args.data_dir or Path(os.environ.get('NARYADAI_DATA_DIR') or QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppLocalDataLocation))
     try:

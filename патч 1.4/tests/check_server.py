@@ -43,11 +43,11 @@ class LocalAnythingAPI:
             def do_POST(self):
                 body=json.loads(self.rfile.read(int(self.headers['Content-Length'])))
                 if self.path.endswith('/workspace/new'):
-                    owner.workspace_configs.append(body);self.send({'workspace':{'slug':'allur-admin-chat' if 'чат' in body.get('name','') else 'naryadai'}});return
+                    owner.workspace_configs.append(body);self.send({'workspace':{'slug':'naryadai-admin-chat' if 'чат' in body.get('name','') else 'naryadai'}});return
                 owner.payloads.append((self.path,self.headers.get('Authorization'),body))
                 owner.started.set();owner.allow.wait(5)
                 if owner.mode=='http_error':self.send({'error':'not available'},503)
-                else:self.send({'type':'textResponse','textResponse':('Связь работает. Чем помочь?' if '/allur-admin-chat/chat' in self.path else json.dumps(VERDICT,ensure_ascii=False)) if owner.mode=='ok' else 'Я не вернул JSON','error':None})
+                else:self.send({'type':'textResponse','textResponse':('Связь работает. Чем помочь?' if '/naryadai-admin-chat/chat' in self.path else json.dumps(VERDICT,ensure_ascii=False)) if owner.mode=='ok' else 'Я не вернул JSON','error':None})
         self.http=ThreadingHTTPServer(('127.0.0.1',0),Handler);self.url=f'http://127.0.0.1:{self.http.server_port}'
         self.thread=threading.Thread(target=self.http.serve_forever,daemon=True);self.thread.start()
     def close(self):self.allow.set();self.http.shutdown();self.http.server_close();self.thread.join()

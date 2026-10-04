@@ -6,7 +6,7 @@ from PySide6.QtGui import QPainter,QColor,QPen
 from PySide6.QtWidgets import (QMainWindow,QWidget,QVBoxLayout,QHBoxLayout,QFrame,
     QScrollArea,QLineEdit,QButtonGroup,QLabel,QDateEdit,QProgressBar,QSizePolicy,
     QFileDialog,QMessageBox,QTableWidget,QTableWidgetItem,QHeaderView,QAbstractItemView)
-from app.widgets import label,button,brand,card,row,avatar,tag,CardGrid,Sheet,DatePicker,motion_toggle,Toast,allur_wordmark
+from app.widgets import label,button,brand,card,row,avatar,tag,CardGrid,Sheet,DatePicker,motion_toggle,Toast,company_logo
 from app.theme import COLORS
 from app.motion import PageTransition
 from app.store import ROLES,STATUS,EMPLOYEE_STATUS
@@ -44,12 +44,12 @@ class LoginWindow(QMainWindow):
     def __init__(self,store):
         super().__init__();self.store=store;self.setWindowTitle('НарядAI · Вход');self.resize(1140,800);self.setMinimumSize(930,740)
         host=QWidget();layout=QHBoxLayout(host);layout.setContentsMargins(36,36,36,36);layout.setSpacing(56)
-        story,l=card('story',36);story.setMinimumWidth(450);l.addWidget(brand());l.addWidget(allur_wordmark());l.addStretch()
-        l.addWidget(label('ALLUR · Производственная смена','',True))
-        l.addWidget(label('Ваша смена.\nВсё по плану.','heading',True))
-        l.addWidget(label('Выбирайте задачи, планируйте время\nи делитесь результатами работы.','muted',True))
+        story,l=card('story',36);story.setMinimumWidth(450);l.addWidget(brand());l.addWidget(company_logo());l.addStretch()
+        l.addWidget(label('АО «Костанайские Минералы»','',True))
+        l.addWidget(label('Наряд выдан.\nИИ на контроле.','heading',True))
+        l.addWidget(label('Наряды, сроки и результаты ремонта\nв одном рабочем пространстве.','muted',True))
         steps,s=card('storySteps',22);s.addWidget(label('Рабочий день под контролем','title'))
-        for i,(title,sub) in enumerate([('Выбрать наряд на участке','Сборка, сварка, окраска и контроль'),
+        for i,(title,sub) in enumerate([('Работать с нарядом на участке','Добыча, дробление, обогащение и ремонт'),
                                        ('Выполнить и отправить отчёт','Работы, время, материалы и фото'),
                                        ('Получить обратную связь','Комментарий и оценка мастера')],1):
             s.addWidget(label(f'{i:02d}  {title}','',True));s.addWidget(label(sub,'muted',True))
@@ -106,12 +106,12 @@ class Timeline(QWidget):
 class MainWindow(QMainWindow):
     logged_out=Signal()
     def __init__(self,store,user):
-        super().__init__();self.store=store;self.user=user;self.setWindowTitle('НарядAI · Allur');self.resize(1360,900);self.setMinimumSize(1040,760)
+        super().__init__();self.store=store;self.user=user;self.setWindowTitle('НарядAI · Костанайские Минералы');self.resize(1360,900);self.setMinimumSize(1040,760)
         self.page_key='overview' if user['role']!='worker' else 'tasks'
         self.task_filter='available' if user['role']=='worker' else 'all';self.report_filter='submitted';self.query='';self.priority='all';self.schedule_day=QDate.currentDate()
         host=QWidget();outer=QHBoxLayout(host);outer.setContentsMargins(0,0,0,0);outer.setSpacing(0)
         sidebar,self.side=card('sidebar',18);self.side.setSpacing(8)
-        self.side.addWidget(brand());self.side.addSpacing(16);self.side.addWidget(label('ALLUR','title'));self.side.addWidget(label('Производственная смена','muted'));self.side.addSpacing(22)
+        self.side.addWidget(brand());self.side.addSpacing(16);self.side.addWidget(label('Костанайские\nМинералы','title'));self.side.addWidget(label('Производственная смена','muted'));self.side.addSpacing(22)
         self.side.addWidget(label(ROLES[user['role']].upper(),'muted'));self.side.addSpacing(6)
         self.nav={}
         items=[('overview','grid','Смена'),('tasks','tasks','Наряды'),('reports','report','Отчёты'),('team','team','Команда'),('team_schedule','calendar','График команды'),('costs','chart','Материалы')]
@@ -129,7 +129,7 @@ class MainWindow(QMainWindow):
         sidebar_scroll.setWidget(sidebar);outer.addWidget(sidebar_scroll)
         content=QWidget();c=QVBoxLayout(content);c.setContentsMargins(0,0,0,0);c.setSpacing(0)
         top=QFrame();top.setObjectName('topbar');top.setFixedHeight(86);tl=QHBoxLayout(top);tl.setContentsMargins(34,0,34,0)
-        tl.addWidget(label('ALLUR  ·  Производственная смена','muted'));tl.addStretch();tl.addWidget(tag(ROLES[user['role']]))
+        tl.addWidget(label('Костанайские Минералы · Смена','muted'));tl.addStretch();tl.addWidget(tag(ROLES[user['role']]))
         self.bell=button('Уведомления',self.notifications,ico='bell');tl.addWidget(self.bell);tl.addWidget(avatar(user['name']))
         c.addWidget(top);self.scroll=QScrollArea();self.scroll.setWidgetResizable(True);c.addWidget(self.scroll,1)
         outer.addWidget(content,1);self.setCentralWidget(host)
@@ -193,14 +193,14 @@ class MainWindow(QMainWindow):
         page=QWidget();page.setMaximumWidth(1220);self.body=QVBoxLayout(page);self.body.setContentsMargins(36,32,36,30);self.body.setSpacing(23)
         methods={'overview':self.overview,'tasks':self.tasks_page,'reports':self.reports_page,'team':self.team_page,
                  'schedule':self.schedule_page,'team_schedule':self.team_schedule_page,'profile':self.profile_page,'costs':self.costs_page,'users':self.users_page,'integrations':self.integrations_page,'ai_chat':self.ai_chat_page}
-        methods[self.page_key]();self.body.addStretch();self.body.addWidget(label('ALLUR · НарядAI · Демонстрационная версия','muted'))
+        methods[self.page_key]();self.body.addStretch();self.body.addWidget(label('Костанайские Минералы · НарядAI · Демонстрационная версия','muted'))
         old=self.scroll.takeWidget()
         if old:old.deleteLater()
         self.scroll.setWidget(page)
         self.transition.start(snapshot)
     def heading(self,title,subtitle,action=None):
         w=QWidget();l=QHBoxLayout(w);l.setContentsMargins(0,0,0,0)
-        left=QVBoxLayout();left.addWidget(label('ALLUR · '+ROLES[self.user['role']],'eyebrow'));left.addWidget(label(title,'heading'));left.addWidget(label(subtitle,'muted',True));l.addLayout(left,1)
+        left=QVBoxLayout();left.addWidget(label('Костанайские Минералы · '+ROLES[self.user['role']],'eyebrow'));left.addWidget(label(title,'heading'));left.addWidget(label(subtitle,'muted',True));l.addLayout(left,1)
         if action:l.addWidget(action)
         else:l.addWidget(tag(date.today().strftime('%d.%m.%Y')))
         self.body.addWidget(w)

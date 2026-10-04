@@ -288,6 +288,8 @@ class SupportTask(CreateTask):
         super().__init__(store,user,parent)
         self.setWindowTitle('Поддержка · исправление наряда')
         self.title.setText(t['title']);self.description.setPlainText(t['description'])
+        # Preserve the site of an existing order from an earlier demo database.
+        if self.site.findText(t['site'])<0:self.site.addItem(t['site'],t['site'])
         self.site.setCurrentText(t['site']);self.equipment.setText(t['equipment'])
         self.priority.setCurrentIndex(self.priority.findData(t['priority']))
         self.kind.setCurrentText(t['kind']);self.duration.setValue(t['duration'])

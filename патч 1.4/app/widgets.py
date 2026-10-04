@@ -85,15 +85,15 @@ def tag(text,tone='neutral'):
 
 def brand():
     w=QWidget();w.setObjectName("brandContainer");l=QHBoxLayout(w);l.setContentsMargins(0,0,0,0);l.setSpacing(10)
-    mark=QLabel();mark.setFixedSize(48,48);mark.setPixmap(QIcon(str(ROOT/'assets/branding/allur-vector.svg')).pixmap(32,32))
+    mark=QLabel();mark.setFixedSize(48,48);mark.setPixmap(QIcon(str(ROOT/'assets/branding/km-mark-white.svg')).pixmap(32,32))
     mark.setAlignment(Qt.AlignmentFlag.AlignCenter);mark.setObjectName('brandMark')
     l.addWidget(mark);l.addWidget(label('НарядAI','brand'));l.addStretch()
     return w
 
 
-def allur_wordmark():
-    w=QLabel();w.setPixmap(QIcon(str(ROOT/'assets/branding/allur-wordmark-white.svg')).pixmap(101,40))
-    w.setFixedSize(101,40);w.setAccessibleName('Allur');return w
+def company_logo():
+    w=QLabel();w.setPixmap(QIcon(str(ROOT/'assets/branding/km-logo-white.svg')).pixmap(148,96))
+    w.setFixedSize(148,96);w.setAccessibleName('АО «Костанайские Минералы»');return w
 
 
 class CardGrid(QWidget):

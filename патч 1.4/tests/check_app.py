@@ -14,7 +14,7 @@ from PySide6.QtWidgets import QApplication,QDialog
 from app.store import Store,SITES
 from app.widgets import ROOT
 from app.windows import LoginWindow,MainWindow
-from app.dialogs import CreateTask,TaskDetails,SubmitReport,ReviewReport,AddUser
+from app.dialogs import CreateTask,TaskDetails,SubmitReport,ReviewReport,AddUser,SupportTask
 
 APP=QApplication.instance() or QApplication([])
 from app.theme import apply_theme
@@ -69,6 +69,21 @@ class Checks(unittest.TestCase):
         export=self.folder/'reports.csv';again.export_reports(self.master,export)
         with export.open(encoding='utf-8-sig') as f:rows=list(csv.reader(f,delimiter=';'))
         self.assertTrue(any(row[1]==str(tid) and row[6]=='87' and row[7]=='100' for row in rows[1:]))
+    def test_existing_site_survives_update_and_support_edit(self):
+        with self.store.transaction() as c:
+            c.execute("UPDATE tasks SET site='Сборочный цех' WHERE id=1048")
+        again=Store(self.folder)
+        task=again.task(self.admin,1048)
+        self.assertEqual(task['site'],'Сборочный цех')
+        dialog=self.show(SupportTask(again,self.admin,task,None))
+        self.assertEqual(dialog.site.currentData(),'Сборочный цех')
+        values={key:task[key] for key in ('title','description','site','equipment','priority','kind','duration','day','start','deadline','worker_id')}
+        values.update(description=task['description']+' Уточнение.',reason='Уточнить описание')
+        again.support_update_task(self.admin,1048,**values)
+        self.assertEqual(again.task(self.admin,1048)['site'],'Сборочный цех')
+        values.update(site='Произвольный неизвестный участок')
+        with self.assertRaises(ValueError):again.support_update_task(self.admin,1048,**values)
+
     def test_admin_and_photos(self):
         self.store.add_user(self.admin,'new','Тестовый Сотрудник','Механик','worker','4321')
         new=self.store.authenticate('new','4321','worker');self.store.set_active(self.admin,new['id'],False)

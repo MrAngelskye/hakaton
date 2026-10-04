@@ -22,7 +22,7 @@ score — целое 0–100, сумма criteria. verdict — acceptable, needs
 
 class AIError(ValueError):pass
 
-CHAT_PROMPT='''Ты помощник администратора приложения ALLUR / НарядAI.
+CHAT_PROMPT='''Ты помощник администратора приложения «НарядAI» для АО «Костанайские Минералы».
 Отвечай на русском языке обычным понятным текстом. Помогай обсуждать производственные задачи,
 отчёты и работу команды. Если информации недостаточно, уточняй. Не выдумывай сведения.
 У тебя нет автоматического доступа к базе приложения и ты не можешь менять наряды или оценки.
@@ -83,7 +83,7 @@ class AnythingLLM:
         context={'history':history or [],'message':message}
         r=self.request('/workspace/'+quote(slug,safe='')+'/chat',
             {'message':CHAT_PROMPT+'\nДИАЛОГ:\n'+json.dumps(context,ensure_ascii=False),
-             'mode':'chat','sessionId':'allur-chat-'+uuid.uuid4().hex})
+             'mode':'chat','sessionId':'naryadai-chat-'+uuid.uuid4().hex})
         if not isinstance(r,dict) or r.get('type')=='abort' or r.get('error'):raise AIError('AnythingLLM не смог ответить в чате. Проверьте выбранную модель.')
         text=r.get('textResponse')
         if not isinstance(text,str):raise AIError('AnythingLLM вернул пустой ответ чата.')

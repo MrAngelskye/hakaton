@@ -389,12 +389,16 @@ class Store:
                     p=Path(src)
                     if not p.is_file() or p.suffix.lower() not in ('.png','.jpg','.jpeg','.webp') or p.stat().st_size>8*1024*1024:
                         raise ValueError('Фото: JPG, PNG или WebP до 8 МБ.')
-                    # Проверяем содержимое средствами Qt без отдельной зависимости Pillow.
-                    from PySide6.QtGui import QImageReader
-                    reader=QImageReader(str(p))
-                    size=reader.size()
-                    if not reader.canRead() or size.width()*size.height()>40_000_000 or reader.read().isNull():
-                        raise ValueError('Файл не является поддерживаемой фотографией (до 40 Мп).')
+                    # Серверу не нужен графический Qt: та же проверка через Pillow.
+                    from PIL import Image
+                    try:
+                        with Image.open(p) as image:
+                            if image.format not in ('JPEG','PNG','WEBP') or image.width*image.height>40_000_000:
+                                raise ValueError('Неподдерживаемый формат или размер фото.')
+                            image.verify()
+                        with Image.open(p) as image:image.load()
+                    except (OSError,ValueError,Image.DecompressionBombError):
+                        raise ValueError('Файл не является поддерживаемой фотографией (до 40 Мп).') from None
                     target=self.save_photo(p)
                     copied.append(target);stored.append(target.name)
                 c.execute("UPDATE reports SET status='superseded' WHERE task_id=? AND status='revision'",(tid,))

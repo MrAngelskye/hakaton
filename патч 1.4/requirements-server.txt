@@ -1,2 +1,4 @@
--r requirements.txt
+fastapi==0.142.2
+uvicorn==0.54.0
+Pillow==12.3.0
 psycopg[binary]==3.3.3

@@ -48,8 +48,9 @@ Render с перезапуском сервиса; кнопка админист
    `install.bat`, затем `generate_cloud_secrets.bat`. Файл `cloud-secrets.txt`
    содержит два различных случайных секрета. Он исключён из GitHub; в чат его не отправлять.
 5. В Render создать **Web Service**, выбрать `MrAngelskye/hakaton`, ветку
-   `cloud-1.4`, **Root Directory: `патч 1.4`**, **Runtime: Docker**, **Free**,
-   регион Frankfurt. Dockerfile: `./Dockerfile`, Health Check: `/health`.
+   `cloud-1.4`, **Root Directory: `патч 1.4`**, **Runtime: Python**, **Free**,
+   регион Frankfurt. Build Command: `pip install -r requirements-server.txt`,
+   Start Command: `python run_server.py`, Health Check: `/health`.
    Также приложен `render.yaml` для Blueprint; путь к нему `патч 1.4/render.yaml`.
 6. В **Environment** Render внести значения из таблицы ниже. Сохранить и запустить
    развёртывание. Адрес вида `https://ИМЯ.onrender.com` скопировать после успеха.
@@ -63,6 +64,13 @@ Render с перезапуском сервиса; кнопка админист
 | `AI_WORKER_TOKEN` | Из `cloud-secrets.txt`; только для домашнего обработчика |
 | `BOOTSTRAP_PASSWORD` | Из `cloud-secrets.txt`; начальный пароль тестовых аккаунтов |
 | `AI_ENABLED` | `true` для ИИ, `false` для ручной проверки |
+| `PYTHON_VERSION` | `3.12.13` |
+| `TZ` | `Asia/Almaty` |
+
+Если сервис создаётся через подключение без Root Directory, команды такие:
+`cd 'патч 1.4' && pip install -r requirements-server.txt` и
+`cd 'патч 1.4' && python run_server.py`. Сервер не устанавливает графический Qt;
+настольные клиенты используют прежний PySide6. Dockerfile оставлен как запасной способ.
 
 `PORT` задаёт Render автоматически. Ничего из перечисленных секретов не вносить
 в исходники, GitHub, архив для товарища или публичный `client_config.json`.
@@ -143,7 +151,9 @@ Render Free засыпает после 15 минут без входящих з
 
 Установка тестовых зависимостей: `python -m pip install -r requirements-test.txt`.
 Проверки: `tests/check_app.py`, `check_schedule.py`, `check_server.py`,
-`check_live_server.py`, `check_cloud.py`, `check_storage.py`.
+`check_live_server.py`, `check_cloud.py`, `check_storage.py`, `check_headless_server.py`.
+Последняя проверка запускается в отдельном окружении только с серверными
+зависимостями и httpx; она проверяет HTTP, фото и ручную оценку без Qt.
 Облачный тест действительно запускает HTTP-сервер, два клиента и обработчик, но
 использует тестовый HTTP-ответ AnythingLLM. Качество настоящей модели он не доказывает.
 Для `TEST_DATABASE_URL` допускается только локальная тестовая база: тесты пересоздают

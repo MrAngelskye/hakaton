@@ -1,0 +1,14 @@
+.git
+.venv
+__pycache__
+*.pyc
+*.db*
+*.log
+.env
+*.env
+server_config*.json
+worker_config.json
+client_config.json
+cloud-secrets.txt
+server_data
+photos

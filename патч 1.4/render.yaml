@@ -1,13 +1,18 @@
 services:
   - type: web
     name: naryadai
-    runtime: docker
+    runtime: python
     rootDir: "патч 1.4"
     plan: free
     region: frankfurt
     healthCheckPath: /health
-    dockerfilePath: ./Dockerfile
+    buildCommand: pip install -r requirements-server.txt
+    startCommand: python run_server.py
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.13"
+      - key: TZ
+        value: Asia/Almaty
       - key: DATABASE_URL
         sync: false
       - key: SUPABASE_URL

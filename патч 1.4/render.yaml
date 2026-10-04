@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: naryadai
+    runtime: docker
+    rootDir: "патч 1.4"
+    plan: free
+    region: frankfurt
+    healthCheckPath: /health
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: AI_WORKER_TOKEN
+        sync: false
+      - key: BOOTSTRAP_PASSWORD
+        sync: false
+      - key: AI_ENABLED
+        value: "true"

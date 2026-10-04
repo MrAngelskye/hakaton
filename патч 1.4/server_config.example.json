@@ -1,0 +1,12 @@
+{
+  "data_dir": "server_data",
+  "base_url": "http://127.0.0.1:3001",
+  "api_key": "YOUR_ANYTHINGLLM_API_KEY",
+  "workspace": "naryadai",
+  "ai_enabled": true,
+  "timeout": 180,
+  "send_images": false,
+  "model_label": "Модель рабочего пространства AnythingLLM",
+  "host": "0.0.0.0",
+  "port": 8000
+}

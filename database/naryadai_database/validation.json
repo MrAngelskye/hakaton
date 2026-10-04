@@ -1,0 +1,145 @@
+{
+  "engine": "PGlite 0.5.8, PostgreSQL-compatible WASM engine; not a deployed PostgreSQL server",
+  "counts": {
+    "sites": 4,
+    "equipment": 25,
+    "masters": 2,
+    "workers": 15,
+    "tasks": 608,
+    "reports": 655,
+    "photos": 705,
+    "material_rows": 1310
+  },
+  "repeated_import": "passed",
+  "schema_repeat": "passed",
+  "constraints": [
+    "invalid_score",
+    "negative_material_quantity",
+    "missing_worker_foreign_key",
+    "equipment_site_mismatch",
+    "duplicate_username",
+    "second_approved_report",
+    "rls_default_deny"
+  ],
+  "invariants": {
+    "wrong_worker": 0,
+    "missing_after_photo": 0,
+    "schedule_overlaps": 0,
+    "wrong_photo_task": 0
+  },
+  "patterns": {
+    "frequent_failures": [
+      {
+        "id": 1,
+        "inventory_number": "DEMO-0001",
+        "name": "Конвейер К-01",
+        "site": "Участок дробления",
+        "unplanned_repairs": 100,
+        "closed_tasks": 100
+      },
+      {
+        "id": 7,
+        "inventory_number": "DEMO-0007",
+        "name": "Насос Н-07",
+        "site": "Участок обогащения",
+        "unplanned_repairs": 47,
+        "closed_tasks": 47
+      },
+      {
+        "id": 3,
+        "inventory_number": "DEMO-0003",
+        "name": "Грохот ГР-03",
+        "site": "Участок дробления",
+        "unplanned_repairs": 24,
+        "closed_tasks": 29
+      }
+    ],
+    "recurring_defect": [
+      {
+        "equipment": "Конвейер К-01",
+        "code": "М-01",
+        "occurrences": 100
+      },
+      {
+        "equipment": "Насос Н-07",
+        "code": "Г-01",
+        "occurrences": 47
+      },
+      {
+        "equipment": "Компрессор КМ-16",
+        "code": "Г-03",
+        "occurrences": 5
+      }
+    ],
+    "late_reports": [
+      {
+        "username": "worker15",
+        "closed_tasks": 60,
+        "on_time_tasks": 0,
+        "late_pct": "100.0"
+      },
+      {
+        "username": "worker6",
+        "closed_tasks": 48,
+        "on_time_tasks": 40,
+        "late_pct": "16.7"
+      },
+      {
+        "username": "worker3",
+        "closed_tasks": 35,
+        "on_time_tasks": 30,
+        "late_pct": "14.3"
+      }
+    ],
+    "material_overuse": [
+      {
+        "equipment": "Конвейер К-01",
+        "average_quantity": 3
+      },
+      {
+        "equipment": "Дробилка Д-02",
+        "average_quantity": 0.25
+      },
+      {
+        "equipment": "Грохот ГР-09",
+        "average_quantity": 0.25
+      }
+    ]
+  },
+  "application_compatibility": [
+    "SQLite: authentication / historical metrics",
+    "SQLite: forbidden foreign task",
+    "SQLite: scheduling conflict",
+    "SQLite: create / pause / report / photo / review",
+    "PostgreSQL adapter through PGlite socket: authentication / historical metrics",
+    "PostgreSQL adapter through PGlite socket: forbidden foreign task",
+    "PostgreSQL adapter through PGlite socket: scheduling conflict",
+    "PostgreSQL adapter through PGlite socket: create / pause / report / photo / review",
+    "native DATE / TIMESTAMPTZ / JSONB wire compatibility",
+    "catalog resolution / normalized material trigger",
+    "JSONB null RPC result",
+    "reopen store preserves accepted report"
+  ],
+  "limits": [
+    "PGlite is not a deployed PostgreSQL/Supabase server; concurrency, network and real Storage/LLM still require live validation.",
+    "SQLite mirror is for preview; normalized-detail synchronization is implemented in PostgreSQL triggers."
+  ],
+  "http_and_tools": [
+    "installer: applies / backs up / repeats safely",
+    "installer: refuses changed source",
+    "PostgreSQL loader: repeat import preserves existing fixture/application records",
+    "HTTP: login / native-type snapshot",
+    "HTTP: create and repeat RPC / JSONB null RPC result",
+    "HTTP: report / photo / master review",
+    "HTTP: foreign task and photo denied"
+  ],
+  "local_snapshot_seconds": 1.437,
+  "storage_test": "In-memory test storage; Supabase network upload not exercised.",
+  "http_test_mode": "FastAPI TestClient without the concurrent AI lifespan loop; PGlite accepts one connection.",
+  "integration_files": [
+    "app/store.py",
+    "app/dialogs.py",
+    "server/postgres.py",
+    "requirements-server.txt"
+  ]
+}

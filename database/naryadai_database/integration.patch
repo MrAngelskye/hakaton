@@ -1,0 +1,86 @@
+--- a/app/store.py
++++ b/app/store.py
+@@ -17,7 +17,7 @@
+           'paused':'Приостановлен', 'submitted':'На проверке', 'approved':'Принят',
+           'revision':'Доработка', 'cancelled':'Отменён', 'superseded':'Предыдущая версия'}
+ ROLES = {'worker':'Сотрудник', 'master':'Мастер', 'admin':'Администратор'}
+-SITES = ['Сборочный цех','Сварочный цех','Окрасочный цех','Участок контроля качества']
++SITES = ['Участок дробления','Участок обогащения','Ремонтно-механический цех','Транспортный участок']
+ EMPLOYEE_STATUS = {'free':('Свободен','employeeGreen'), 'busy':('В работе','employeeYellow'),
+                    'queued':('Есть в очереди','employeeBlue'), 'off':('Не на смене','employeeGray')}
+ 
+--- a/app/dialogs.py
++++ b/app/dialogs.py
+@@ -164,7 +164,7 @@
+         if old:self.body.addWidget(label('Нужна доработка: '+old['comment'],'',True))
+         self.work=self.field('Выполненные работы *',QTextEdit());self.work.setFixedHeight(110)
+         self.result_text=self.field('Результат контрольной проверки *',QTextEdit());self.result_text.setFixedHeight(85)
+-        self.defect=self.field('Дефект',combo([(s,s) for s in ['D-00 · Дефектов нет','D-01 · Износ узла','D-02 · Сбой датчика','D-03 · Загрязнение','D-04 · Другое']]))
++        self.defect=self.field('Дефект',combo([(s,s) for s in ['Нет · Дефектов нет','М-01 · Износ подшипника','М-02 · Ослабление крепления','М-03 · Несоосность привода','М-04 · Повреждение ремня','Э-01 · Загрязнение контактов','Э-02 · Обрыв кабеля','Э-03 · Неисправность датчика','Э-04 · Перегрев электродвигателя','Г-01 · Утечка масла','Г-02 · Падение давления','Г-03 · Износ уплотнения','Г-04 · Загрязнение фильтра','П-01 · Утечка воздуха','П-02 · Неисправность клапана','П-03 · Повреждение шланга','П-04 · Сбой регулятора','С-01 · Недостаточная смазка','С-02 · Загрязнение масла','С-03 · Засорение канала','С-04 · Повреждение маслёнки']]))
+         self.hours=self.field('Фактическое время, ч',number(t['duration'],.1,24,.1))
+         self.body.addWidget(label('Материалы и стоимость','section'))
+         self.table=QTableWidget(0,4);self.table.setHorizontalHeaderLabels(['Материал','Кол-во','Ед.','Цена, тг'])
+--- a/server/postgres.py
++++ b/server/postgres.py
+@@ -1,7 +1,10 @@
+ """PostgreSQL-адаптер для сохранения проверенных правил Store.
+ Все пользовательские значения передаются параметрами. Схема изолирована от Data API.
+ """
+-import re,sqlite3
++import re,sqlite3,json
++from datetime import date,datetime
++from decimal import Decimal
++from zoneinfo import ZoneInfo
+ from contextlib import contextmanager
+ import psycopg
+ from psycopg.rows import dict_row
+@@ -10,6 +13,19 @@
+ TABLES_WITH_IDS={'users','tasks','reports','events','pauses'}
+ 
+ class Row(dict):
++    """Keep the cloud-1.4 wire format while PostgreSQL stores native types."""
++    def __init__(self,values,json_columns=()):
++        normalized={}
++        for key,value in values.items():
++            if key in json_columns:
++                value=json.dumps(value,ensure_ascii=False)
++            elif isinstance(value,datetime):
++                if value.tzinfo is not None:value=value.astimezone(ZoneInfo('Asia/Qyzylorda')).replace(tzinfo=None)
++                value=value.isoformat(timespec='seconds')
++            elif isinstance(value,date):value=value.isoformat()
++            elif isinstance(value,Decimal):value=float(value)
++            normalized[key]=value
++        super().__init__(normalized)
+     def __getitem__(self,key):return list(self.values())[key] if isinstance(key,int) else super().__getitem__(key)
+ 
+ def postgres_sql(sql):
+@@ -40,9 +56,12 @@
+ 
+ class Cursor:
+     def __init__(self,cursor,lastrowid=None):self.cursor=cursor;self.lastrowid=lastrowid
++    def _row(self,row):
++        json_columns={column.name for column in self.cursor.description if column.type_code in (114,3802)}
++        return Row(row,json_columns)
+     def fetchone(self):
+-        row=self.cursor.fetchone();return Row(row) if row is not None else None
+-    def fetchall(self):return [Row(row) for row in self.cursor.fetchall()]
++        row=self.cursor.fetchone();return self._row(row) if row is not None else None
++    def fetchall(self):return [self._row(row) for row in self.cursor.fetchall()]
+     def __iter__(self):return iter(self.fetchall())
+ 
+ class Connection:
+@@ -83,6 +102,7 @@
+     def transaction(self):
+         with self._connect() as conn:
+             conn.execute('SET search_path TO naryadai,public')
++            conn.execute("SET LOCAL TIME ZONE 'Asia/Qyzylorda'")
+             # Один короткий общий замок: атомарные назначения и очередь даже при перезапуске процесса.
+             conn.execute('SELECT pg_advisory_xact_lock(77410312)')
+             yield Connection(conn)
+--- a/requirements-server.txt
++++ b/requirements-server.txt
+@@ -2,3 +2,4 @@
+ uvicorn==0.54.0
+ Pillow==12.3.0
+ psycopg[binary]==3.3.3
++tzdata>=2025.2

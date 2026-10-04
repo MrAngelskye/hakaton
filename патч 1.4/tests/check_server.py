@@ -25,7 +25,8 @@ from tools.setup_server import choose_workspace
 from unittest.mock import patch
 
 APP=QApplication.instance() or QApplication([])
-APP.setStyle('Fusion');APP.setStyleSheet((ROOT/'assets/styles.qss').read_text())
+from app.theme import apply_theme
+APP.setStyle('Fusion');apply_theme(APP)
 VERDICT={'score':78,'verdict':'needs_clarification','summary':'Описание понятное, но нужно уточнить нагрузку при запуске.',
          'findings':['Укажите нагрузку при контрольной проверке.'],
          'criteria':{'description':20,'matching':20,'verification':22,'materials_time':16}}

@@ -3,11 +3,13 @@ import os
 import sys
 from pathlib import Path
 from PySide6.QtCore import QStandardPaths
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont,QIcon
 from PySide6.QtWidgets import QApplication,QMessageBox
 from app.store import Store
-from app.widgets import ROOT,icon
+from app.widgets import ROOT
 from app.windows import LoginWindow,MainWindow
+from app.theme import apply_theme
+from app.motion import preferences
 
 
 def main():
@@ -16,8 +18,8 @@ def main():
     parser.add_argument('--server',help='Адрес общего сервера, например http://192.168.1.10:8000')
     args=parser.parse_args()
     app=QApplication(sys.argv[:1]);app.setApplicationName('NaryadAI');app.setOrganizationName('NaryadAI')
-    app.setStyle('Fusion');app.setFont(QFont('Segoe UI',10));app.setStyleSheet((ROOT/'assets'/'styles.qss').read_text(encoding='utf-8'))
-    app.setWindowIcon(icon('brand','#4b50dc'))
+    app.setStyle('Fusion');app.setFont(QFont('Segoe UI',10));apply_theme(app)
+    app.setWindowIcon(QIcon(str(ROOT/'assets/branding/allur-vector.svg')))
     app.setQuitOnLastWindowClosed(False)
     data=args.data_dir or Path(os.environ.get('NARYADAI_DATA_DIR') or QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppLocalDataLocation))
     try:
@@ -27,6 +29,7 @@ def main():
         else:store=Store(data)
     except Exception as e:
         QMessageBox.critical(None,'Не удалось открыть данные',str(e));return 1
+    data.mkdir(parents=True,exist_ok=True);preferences().configure(data/'ui.ini')
     windows={}
     def login_screen():
         if windows.get('main'):

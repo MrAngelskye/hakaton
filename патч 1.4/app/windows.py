@@ -6,14 +6,16 @@ from PySide6.QtGui import QPainter,QColor,QPen
 from PySide6.QtWidgets import (QMainWindow,QWidget,QVBoxLayout,QHBoxLayout,QFrame,
     QScrollArea,QLineEdit,QButtonGroup,QLabel,QDateEdit,QProgressBar,QSizePolicy,
     QFileDialog,QMessageBox,QTableWidget,QTableWidgetItem,QHeaderView,QAbstractItemView)
-from app.widgets import label,button,brand,card,row,avatar,tag,CardGrid,Sheet,DatePicker
+from app.widgets import label,button,brand,card,row,avatar,tag,CardGrid,Sheet,DatePicker,motion_toggle,Toast,allur_wordmark
+from app.theme import COLORS
+from app.motion import PageTransition
 from app.store import ROLES,STATUS,EMPLOYEE_STATUS
 from app.dialogs import CreateTask,TaskDetails,ReviewReport,AddUser,EditShift,combo
 from app.integrations import INTEGRATION_AREAS
 
 
 def fmt_time(n):return f'{int(n):02d}:{int(round(n%1*60)):02d}'
-def tone(status):return 'success' if status=='approved' else 'urgent' if status=='revision' else 'neutral' if status in ('cancelled','paused','available') else 'purple'
+def tone(status):return {'approved':'success','revision':'urgent','paused':'warning','inProgress':'info','planned':'purple','submitted':'info','aiPending':'purple'}.get(status,'neutral')
 def score_text(n):return '—' if n is None else f'{n:.1f}'
 
 
@@ -42,7 +44,7 @@ class LoginWindow(QMainWindow):
     def __init__(self,store):
         super().__init__();self.store=store;self.setWindowTitle('НарядAI · Вход');self.resize(1140,800);self.setMinimumSize(930,740)
         host=QWidget();layout=QHBoxLayout(host);layout.setContentsMargins(36,36,36,36);layout.setSpacing(56)
-        story,l=card('story',36);story.setMinimumWidth(450);l.addWidget(brand());l.addStretch()
+        story,l=card('story',36);story.setMinimumWidth(450);l.addWidget(brand());l.addWidget(allur_wordmark());l.addStretch()
         l.addWidget(label('ALLUR · Производственная смена','',True))
         l.addWidget(label('Ваша смена.\nВсё по плану.','heading',True))
         l.addWidget(label('Выбирайте задачи, планируйте время\nи делитесь результатами работы.','muted',True))
@@ -63,10 +65,10 @@ class LoginWindow(QMainWindow):
         self.roles.button(0).setChecked(True);self.role='worker'
         f.addWidget(label('Логин'));self.username=QLineEdit('worker1');self.username.setObjectName('username');self.username.setPlaceholderText('worker1');f.addWidget(self.username)
         f.addWidget(label('Пароль'));self.password=QLineEdit('' if getattr(store,'is_remote',False) else '1234');self.password.setObjectName('password');self.password.setEchoMode(QLineEdit.EchoMode.Password);f.addWidget(self.password)
-        self.error=label('','',True);self.error.setStyleSheet('color:#ac4264;');self.error.hide();f.addWidget(self.error)
+        self.error=label('','error',True);self.error.hide();f.addWidget(self.error)
         self.enter=button('Войти',self.login,'primary');self.enter.setObjectName('primary');self.enter.setDefault(True);f.addWidget(self.enter)
         self.password.returnPressed.connect(self.login);self.username.returnPressed.connect(self.login)
-        f.addWidget(label('Тестовые аккаунты: master, worker1–worker4, admin.\n'+('Пароль выдаёт администратор сервера.' if getattr(store,'is_remote',False) else 'Пароль для всех: 1234.'),'muted',True));f.addStretch()
+        f.addWidget(label('Тестовые аккаунты: master, worker1–worker4, admin.\n'+('Пароль выдаёт администратор сервера.' if getattr(store,'is_remote',False) else 'Пароль для всех: 1234.'),'muted',True));f.addWidget(motion_toggle());f.addStretch()
         layout.addWidget(form,1);self.setCentralWidget(host)
     def choose_role(self,role):
         self.role=role;self.username.setText({'worker':'worker1','master':'master','admin':'admin'}[role]);self.error.hide()
@@ -82,17 +84,22 @@ class Timeline(QWidget):
         self.setMinimumHeight((self.last-self.first)*80+50);self.events=[]
         for t in tasks:
             if t['start'] is None:continue
-            b=button(fmt_time(t['start'])+'–'+fmt_time(t['start']+t['duration'])+'  ·  '+STATUS[t['status']]+'\n'+t['title'],lambda tid=t['id']:open_task(tid))
-            b.setParent(self);b.setToolTip(t['title']);b.setStyleSheet('text-align:left;background:#eeedff;color:#514475;border:1px solid #dedaef;border-left:4px solid #7970dc;border-radius:12px;padding:8px 12px;')
+            b=button('',lambda tid=t['id']:open_task(tid),'timeline')
+            b.setProperty('tone',tone(t['status']))
+            b.setParent(self);b.setToolTip(fmt_time(t['start'])+'–'+fmt_time(t['start']+t['duration'])+' · '+STATUS[t['status']]+'\n'+t['title'])
             self.events.append((t,b))
     def resizeEvent(self,e):
         for t,b in self.events:
             b.setGeometry(62,int((t['start']-self.first)*80+4),max(100,self.width()-76),max(25,int(t['duration']*80-8)))
+            time=fmt_time(t['start'])+'–'+fmt_time(t['start']+t['duration'])
+            text=time+' · '+t['title'] if t['duration']<1 else t['title']
+            text=b.fontMetrics().elidedText(text,Qt.TextElideMode.ElideRight,max(20,b.width()-32))
+            b.setText(text if t['duration']<1 else time+' · '+STATUS[t['status']]+'\n'+text)
         super().resizeEvent(e)
     def paintEvent(self,e):
-        p=QPainter(self);p.setPen(QPen(QColor('#e8e6f0')))
+        p=QPainter(self);p.setPen(QPen(QColor(COLORS['border'])))
         for i in range(self.last-self.first+1):
-            y=i*80+2;p.drawLine(60,y,self.width()-12,y);p.setPen(QColor('#9992ae'));p.drawText(0,y+15,f'{i+self.first:02d}:00');p.setPen(QColor('#e8e6f0'))
+            y=i*80+2;p.drawLine(60,y,self.width()-12,y);p.setPen(QColor(COLORS['muted']));p.drawText(0,y+15,f'{i+self.first:02d}:00');p.setPen(QColor(COLORS['border']))
         p.end()
 
 
@@ -103,7 +110,7 @@ class MainWindow(QMainWindow):
         self.page_key='overview' if user['role']!='worker' else 'tasks'
         self.task_filter='available' if user['role']=='worker' else 'all';self.report_filter='submitted';self.query='';self.priority='all';self.schedule_day=QDate.currentDate()
         host=QWidget();outer=QHBoxLayout(host);outer.setContentsMargins(0,0,0,0);outer.setSpacing(0)
-        sidebar,self.side=card('sidebar',24);sidebar.setFixedWidth(244);self.side.setSpacing(8)
+        sidebar,self.side=card('sidebar',18);self.side.setSpacing(8)
         self.side.addWidget(brand());self.side.addSpacing(16);self.side.addWidget(label('ALLUR','title'));self.side.addWidget(label('Производственная смена','muted'));self.side.addSpacing(22)
         self.side.addWidget(label(ROLES[user['role']].upper(),'muted'));self.side.addSpacing(6)
         self.nav={}
@@ -116,13 +123,17 @@ class MainWindow(QMainWindow):
             self.create_button=button('Создать наряд',self.create_task,'primary','plus');self.side.addWidget(self.create_button)
         self.side.addStretch();self.side.addWidget(label('Поддержка и полный доступ' if user['role']=='admin' else 'Демонстрационная версия','muted',True))
         account=row(avatar(user['name']),label(user['name'].split()[0]+'\n'+ROLES[user['role']],'muted'));self.side.addLayout(account)
-        self.side.addWidget(button('Выйти',self.logged_out.emit,'nav','logout'));outer.addWidget(sidebar)
+        self.side.addWidget(motion_toggle());self.side.addWidget(button('Выйти',self.logged_out.emit,'nav','logout'))
+        sidebar_scroll=QScrollArea();sidebar_scroll.setObjectName('sidebarScroll');sidebar_scroll.setFixedWidth(246)
+        sidebar_scroll.setWidgetResizable(True);sidebar_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        sidebar_scroll.setWidget(sidebar);outer.addWidget(sidebar_scroll)
         content=QWidget();c=QVBoxLayout(content);c.setContentsMargins(0,0,0,0);c.setSpacing(0)
         top=QFrame();top.setObjectName('topbar');top.setFixedHeight(86);tl=QHBoxLayout(top);tl.setContentsMargins(34,0,34,0)
         tl.addWidget(label('ALLUR  ·  Производственная смена','muted'));tl.addStretch();tl.addWidget(tag(ROLES[user['role']]))
         self.bell=button('Уведомления',self.notifications,ico='bell');tl.addWidget(self.bell);tl.addWidget(avatar(user['name']))
         c.addWidget(top);self.scroll=QScrollArea();self.scroll.setWidgetResizable(True);c.addWidget(self.scroll,1)
         outer.addWidget(content,1);self.setCentralWidget(host)
+        self.transition=PageTransition(self.scroll.viewport());self.toast=Toast(self)
         self.search_timer=QTimer(self);self.search_timer.setSingleShot(True);self.search_timer.setInterval(180);self.search_timer.timeout.connect(self.filter_cards)
         self.refresh_timer=QTimer(self);self.refresh_timer.setInterval(3000 if getattr(store,'is_remote',False) else 15000);self.refresh_timer.timeout.connect(self.refresh_if_idle);self.refresh_timer.start()
         self._snapshot_loader=None;self.refresh_signature='';self.tasks=[];self.reports=[]
@@ -142,8 +153,8 @@ class MainWindow(QMainWindow):
                 self.render();return
             if self.refresh_signature!=old_signature:
                 scroll_value=self.scroll.verticalScrollBar().value()
-                self.render()
-                QTimer.singleShot(0,lambda:self.scroll.verticalScrollBar().setValue(scroll_value))
+                self.render(animate=False)
+                QTimer.singleShot(0,self.scroll,lambda:self.scroll.verticalScrollBar().setValue(scroll_value))
     def navigate(self,key):
         if key not in self.nav:return
         self.page_key=key;self.query='';self.render()
@@ -160,19 +171,21 @@ class MainWindow(QMainWindow):
         count=sum(r['status']==('revision' if self.user['role']=='worker' else 'submitted') for r in self.reports)
         self.bell.setText(f'Уведомления · {count}' if count else 'Уведомления')
         if self.page_key=='tasks' and hasattr(self,'search'):self.filter_cards();return
-        scroll_value=self.scroll.verticalScrollBar().value();self.render(refresh_remote=False)
-        QTimer.singleShot(0,lambda:self.scroll.verticalScrollBar().setValue(scroll_value))
+        scroll_value=self.scroll.verticalScrollBar().value();self.render(refresh_remote=False,animate=False)
+        QTimer.singleShot(0,self.scroll,lambda:self.scroll.verticalScrollBar().setValue(scroll_value))
     def load(self,refresh_remote=True):
         if getattr(self.store,'is_remote',False) and refresh_remote:self.store.refresh_snapshot(self.schedule_day.toString('yyyy-MM-dd'))
         self.tasks=self.store.tasks(self.user);self.reports=self.store.reports(self.user)
         people=self.store.users(self.user,True) if self.user['role']!='worker' else [self.user]
         shifts=[self.store.shift(self.user,p['id'],self.schedule_day.toString('yyyy-MM-dd')) for p in people]
         self.refresh_signature=repr((self.tasks,self.reports,shifts,datetime.now().strftime('%Y%m%d%H%M')))
-    def render(self,*,refresh_remote=True):
+    def render(self,*,refresh_remote=True,animate=True):
         try:self.load(refresh_remote=refresh_remote)
         except PermissionError:
             QMessageBox.information(self,'Доступ','Аккаунт отключён.');self.logged_out.emit();return
         except (ValueError,OSError) as e:self.statusBar().showMessage(str(e),7000);return
+        snapshot=self.transition.capture() if animate else None
+        if not animate:self.transition.clear()
         for k,b in self.nav.items():b.setChecked(k==self.page_key)
         count=sum(r['status']==('revision' if self.user['role']=='worker' else 'submitted') for r in self.reports)
         self.bell.setText(f'Уведомления · {count}' if count else 'Уведомления')
@@ -183,6 +196,7 @@ class MainWindow(QMainWindow):
         old=self.scroll.takeWidget()
         if old:old.deleteLater()
         self.scroll.setWidget(page)
+        self.transition.start(snapshot)
     def heading(self,title,subtitle,action=None):
         w=QWidget();l=QHBoxLayout(w);l.setContentsMargins(0,0,0,0)
         left=QVBoxLayout();left.addWidget(label('ALLUR · '+ROLES[self.user['role']],'eyebrow'));left.addWidget(label(title,'heading'));left.addWidget(label(subtitle,'muted',True));l.addLayout(left,1)
@@ -193,12 +207,13 @@ class MainWindow(QMainWindow):
         w,l=card();l.addWidget(label(title,'section',True));l.addWidget(label(sub,'muted',True));return w
     def stats(self,items):
         l=QHBoxLayout();l.setSpacing(16)
-        for value,title in items:
-            w,c=card('stat');c.addWidget(label(value,'number'));c.addWidget(label(title,'muted',True));l.addWidget(w,1)
+        for i,(value,title) in enumerate(items):
+            w,c=card('stat');w.setProperty('accent',i==0);c.addWidget(label(value,'number'));c.addWidget(label(title,'muted',True));l.addWidget(w,1)
         self.body.addLayout(l)
     def task_card(self,t):
         w,l=card();w.setMinimumWidth(300)
-        l.addLayout(row(label(f"НР-{t['id']}",'muted'),tag('Срочный','urgent') if t['priority']=='urgent' else tag(STATUS[t['status']],tone(t['status']))))
+        l.addLayout(row(label(f"НР-{t['id']}",'muted'),tag(STATUS[t['status']],tone(t['status']))))
+        if t['priority']=='urgent':l.addWidget(tag('Срочный','urgent'))
         l.addWidget(label(t['title'],'title',True));l.addWidget(label(t['equipment']+' · '+t['site'],'muted',True))
         l.addWidget(label((fmt_time(t['start'])+'–'+fmt_time(t['start']+t['duration']) if t['start'] is not None else f"{t['duration']:g} ч")+'  ·  '+t['day'],'muted'))
         l.addWidget(label('Срок: '+t['deadline'].replace('T',' '),'muted'))
@@ -308,7 +323,7 @@ class MainWindow(QMainWindow):
 
     def assign_slot(self,wid,day,start,end):
         if CreateTask(self.store,self.user,self,assignment=(wid,day,start,end)).exec():
-            self.render();self.statusBar().showMessage('Наряд назначен в график',5000)
+            self.render();self.notify_success('Наряд назначен в график')
     def person(self,p):
         d=Sheet(p['name'],self);d.body.addWidget(label(p['job'],'muted'));d.body.addWidget(label(f"Принято: {p['done']} · Средняя оценка: {score_text(p['score'])}",'title',True))
         for t in self.tasks:
@@ -362,9 +377,9 @@ class MainWindow(QMainWindow):
         d=Sheet('Новый пароль',self);password=QLineEdit();password.setEchoMode(QLineEdit.EchoMode.Password)
         d.field('Новый пароль (от 4 символов)',password)
         d.actions.addWidget(button('Сохранить пароль',lambda:d.run_action(lambda:self.store.reset_password(self.user,uid,password.text())),'primary'))
-        if d.exec():self.statusBar().showMessage('Пароль обновлён',5000)
+        if d.exec():self.notify_success('Пароль обновлён')
     def add_user(self):
-        if AddUser(self.store,self.user,self).exec():self.render();self.statusBar().showMessage('Аккаунт создан',5000)
+        if AddUser(self.store,self.user,self).exec():self.render();self.notify_success('Аккаунт создан')
     def toggle_user(self,u):
         try:self.store.set_active(self.user,u['id'],not u['active']);self.render()
         except (ValueError,PermissionError) as e:QMessageBox.information(self,'Пользователь',str(e))
@@ -380,17 +395,17 @@ class MainWindow(QMainWindow):
             l.addWidget(label(description,'muted',True));self.body.addWidget(w)
         self.body.addWidget(label('Этот раздел доступен только администратору.','muted',True))
     def create_task(self):
-        if CreateTask(self.store,self.user,self).exec():self.render();self.statusBar().showMessage('Наряд создан',5000)
+        if CreateTask(self.store,self.user,self).exec():self.render();self.notify_success('Наряд создан')
     def open_task(self,tid):
         try:
-            if TaskDetails(self.store,self.user,tid,self).exec():self.render();self.statusBar().showMessage('Изменения сохранены',5000)
+            if TaskDetails(self.store,self.user,tid,self).exec():self.render();self.notify_success('Изменения сохранены')
         except (ValueError,PermissionError,OSError) as e:QMessageBox.information(self,'Наряд',str(e))
     def open_report(self,rid):
         # Всегда открываем свежие данные — другой пользователь мог уже проверить отчёт.
         try:
             if getattr(self.store,'is_remote',False):self.store.refresh_snapshot(self.schedule_day.toString('yyyy-MM-dd'))
             r=next((r for r in self.store.reports(self.user) if r['id']==rid),None)
-            if r and ReviewReport(self.store,self.user,r,self).exec():self.render();self.statusBar().showMessage('Решение сохранено',5000)
+            if r and ReviewReport(self.store,self.user,r,self).exec():self.render();self.notify_success('Решение сохранено')
         except (ValueError,PermissionError,OSError) as e:QMessageBox.information(self,'Отчёт',str(e))
     def notifications(self):
         status='revision' if self.user['role']=='worker' else 'submitted'
@@ -404,5 +419,7 @@ class MainWindow(QMainWindow):
         p,_=QFileDialog.getSaveFileName(self,'Экспорт отчётов','NaryadAI_reports.csv','CSV (*.csv)')
         if p:
             if not p.lower().endswith('.csv'):p+='.csv'
-            try:self.store.export_reports(self.user,p);self.statusBar().showMessage('Отчёты экспортированы',5000)
+            try:self.store.export_reports(self.user,p);self.notify_success('Отчёты экспортированы')
             except OSError as e:QMessageBox.warning(self,'Экспорт',str(e))
+    def notify_success(self,message):
+        self.statusBar().showMessage(message,5000);self.toast.show_message(message)

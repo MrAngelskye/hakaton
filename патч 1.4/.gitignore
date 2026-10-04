@@ -14,3 +14,5 @@ worker_config.json
 .env
 *.env
 cloud-secrets.txt
+ui.ini
+ui-previews/

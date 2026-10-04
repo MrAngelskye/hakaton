@@ -13,7 +13,8 @@ from app.windows import MainWindow
 from app.dialogs import PauseTask,CreateTask,EditShift,TaskDetails
 
 APP=QApplication.instance() or QApplication([])
-APP.setStyle('Fusion');APP.setStyleSheet((ROOT/'assets/styles.qss').read_text())
+from app.theme import apply_theme
+APP.setStyle('Fusion');apply_theme(APP)
 
 class ScheduleChecks(unittest.TestCase):
     def setUp(self):

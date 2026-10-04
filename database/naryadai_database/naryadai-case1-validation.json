@@ -1,0 +1,20 @@
+{
+  "postgres": {
+    "tests_run": 17,
+    "skipped": 1,
+    "failures": [],
+    "errors": [],
+    "passed": true,
+    "engine": "PGlite 0.5.8 / PostgreSQL wire protocol",
+    "scope": "Local synthetic fixtures; no cloud, Android push, real model accuracy or concurrent PostgreSQL sessions tested"
+  },
+  "sqlite": {
+    "tests_run": 17,
+    "skipped": 1,
+    "failures": [],
+    "errors": [],
+    "passed": true,
+    "engine": "Python sqlite3",
+    "scope": "Local synthetic fixtures; no cloud, Android push, real model accuracy or concurrent PostgreSQL sessions tested"
+  }
+}

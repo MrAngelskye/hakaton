@@ -69,8 +69,10 @@ def load(data_dir,variable,upload_photos,bucket):
     seed=(data_dir/'seed.sql').read_text(encoding='utf-8')
     storage=None; committed=False
     with postgres_connection(variable) as c:
-        c.execute(schema,prepare=False)
+        exists=c.execute("SELECT to_regclass('naryadai.schema_migrations')").fetchone()[0]
+        if not exists:c.execute(schema,prepare=False)
         c.execute("SET search_path TO naryadai,public")
+        upgraded=c.execute("SELECT 1 FROM schema_migrations WHERE version='002'").fetchone()
         users=c.execute('SELECT count(*) FROM users').fetchone()[0]
         existing=c.execute("SELECT value->>'dataset_id' FROM demo_metadata WHERE key='dataset'").fetchone()
         if users and (not existing or existing[0]!=manifest['dataset_id']):
@@ -86,7 +88,17 @@ def load(data_dir,variable,upload_photos,bucket):
                     if hashlib.sha256(raw).hexdigest()!=photo['sha256']: raise ValueError('Photo hash mismatch: '+key)
                     storage.upload(key,raw)
                     if index%100==0: print('Demo images checked/uploaded:',index)
-            c.execute(seed,prepare=False); committed=True
+            if not upgraded:c.execute(seed,prepare=False)
+            committed=True
+            if not upgraded:
+                sys.path.insert(0,str(ROOT))
+                from migrate_v2 import migrate
+                from psycopg.rows import dict_row
+                original_factory=c.row_factory;c.row_factory=dict_row
+                try:
+                    with c.transaction():
+                        c.execute('SET LOCAL search_path TO naryadai,public');c.execute("SET LOCAL TIME ZONE 'Asia/Qyzylorda'");migrate(c,True)
+                finally:c.row_factory=original_factory
             result=c.execute('SELECT count(*) FROM tasks').fetchone()[0]
             print('PostgreSQL import complete. Tasks:',result)
             print('Synthetic history:',manifest['history_from'],'through',manifest['history_until'])

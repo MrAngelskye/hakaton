@@ -1,0 +1,7 @@
+{
+  "files": 27,
+  "applies": true,
+  "repeat_no_change": true,
+  "backups": true,
+  "refuses_modified_source_without_writes": true
+}

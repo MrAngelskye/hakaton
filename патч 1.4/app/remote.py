@@ -6,6 +6,7 @@ from urllib.parse import urlparse,quote
 from urllib.request import Request,urlopen
 from urllib.error import HTTPError,URLError
 from app.store import STATUS
+from app.photo_pipeline import encode_photo
 
 class RemoteStore:
     is_remote=True
@@ -61,10 +62,7 @@ class RemoteStore:
     def users(self,actor,workers_only=False):return [u for u in self.snapshot()['users'] if not workers_only or u['role']=='worker']
     def reports(self,actor):return self.snapshot()['reports']
     def task(self,actor,tid):
-        self.refresh_snapshot()
-        t=next((t for t in self.tasks(actor) if t['id']==tid),None)
-        if t is None:raise PermissionError('Наряд не найден или недоступен.')
-        return t
+        return self.call('task',tid)
     def latest_report(self,actor,tid):return next((r for r in self.reports(actor) if r['task_id']==tid),None)
     def events(self,actor,tid):return self.call('events',tid)
     def pauses(self,actor,tid):return self.call('pauses',tid)
@@ -77,19 +75,18 @@ class RemoteStore:
         if at is None and day==s['day'] and str(wid) in s['free_slots']:return s['free_slots'][str(wid)]
         return self.call('free_slots',wid,day)
     def employee_status(self,actor,wid,at=None):return self.snapshot()['employee_status'].get(str(wid),'off')
-    def metrics(self,actor):
-        tasks=self.tasks(actor);reports=self.reports(actor);out=[]
-        for u in self.users(actor,True):
-            rr=[r for r in reports if r['worker_id']==u['id'] and r['status']=='approved']
-            out.append({**u,'employee_status':self.employee_status(actor,u['id']),'done':len(rr),'score':sum(r['score'] for r in rr)/len(rr) if rr else None,
-                'hours':sum(r['hours'] for r in rr),'active_count':sum(t['worker_id']==u['id'] and t['status'] not in ('approved','cancelled') for t in tasks)})
-        return sorted(out,key=lambda u:u['score'] if u['score'] is not None else -1,reverse=True)
+    def metrics(self,actor):return self.snapshot()['metrics']
+    def catalogs(self,actor):return self.request('/api/catalogs')
+    def notifications(self,actor):return self.request('/api/notifications')['items']
+    def analytics(self,actor,start,end,**filters):return self.call('analytics',start,end,**filters)
+    def photos_for_task(self,actor,tid):return self.call('photos_for_task',tid)
+    def create_task(self,actor,*,photo_sources=(),**kwargs):
+        photos=[]
+        for source in photo_sources:photos.append(encode_photo(source))
+        return self.call('create_task',photos=photos,**kwargs)
     def submit(self,actor,tid,*,photo_sources,**kwargs):
         photos=[]
-        for source in photo_sources:
-            p=Path(source)
-            if not p.is_file() or p.stat().st_size>8*1024*1024:raise ValueError('Фото должно быть не больше 8 МБ.')
-            photos.append({'name':p.name,'content':base64.b64encode(p.read_bytes()).decode()})
+        for source in photo_sources:photos.append(encode_photo(source))
         return self.call('submit',tid,photos=photos,**kwargs)
     def ensure_photos(self,report):
         for name in report['photos']:
@@ -100,7 +97,10 @@ class RemoteStore:
         self.refresh_snapshot()
         with open(path,'w',encoding='utf-8-sig',newline='') as f:
             writer=csv.writer(f,delimiter=';');writer.writerow(['Отчёт','Наряд','Работа','Сотрудник','Статус','Часы','Оценка мастера','Материалы, тг','Комментарий','Дата'])
-            for r in self.reports(actor):
+            reports=[];offset=0
+            while offset is not None:
+                page=self.request('/api/reports?limit=200&offset='+str(offset));reports.extend(page['items']);offset=page['next_offset']
+            for r in reports:
                 values=[r['id'],r['task_id'],r['title'],r['worker_name'],STATUS[r['status']],r['hours'],r['score'],round(sum(m['quantity']*m['price'] for m in r['materials']),2),r['comment'],r['created']]
                 writer.writerow(["'"+v if isinstance(v,str) and v.startswith(('=','+','-','@','\t','\r')) else v for v in values])
 
@@ -108,5 +108,5 @@ def _proxy(method):
     def invoke(self,actor,*args,**kwargs):return self.call(method,*args,**kwargs)
     return invoke
 
-for _method in ('create_task','claim','reschedule','transition','review','add_user','set_active','reset_password','support_update_task','set_shift'):
+for _method in ('claim','reschedule','transition','review','add_user','set_active','reset_password','support_update_task','set_shift','reassign_task','change_priority','catalog_upsert','set_material_norm','set_employee_profile','start_downtime','end_downtime','assess_refusal','confirm_repeat','acknowledge_notification'):
     setattr(RemoteStore,_method,_proxy(_method))

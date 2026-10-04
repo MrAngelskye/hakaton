@@ -45,7 +45,7 @@ class Worker:
             folder=Path(folder)
             try:
                 if self.ai.settings.send_images:
-                    for name in report['photos']:
+                    for name in report.get('before_photos',[])+report['photos']:
                         if Path(name).name!=name:raise AIError('Некорректное имя фотографии.')
                         raw=self.request(f'/api/ai/photo/{rid}/'+quote(name,safe=''),lease=lease,binary=True)
                         (folder/name).write_bytes(raw)

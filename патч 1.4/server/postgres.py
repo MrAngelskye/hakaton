@@ -1,15 +1,32 @@
 """PostgreSQL-адаптер для сохранения проверенных правил Store.
 Все пользовательские значения передаются параметрами. Схема изолирована от Data API.
 """
-import re,sqlite3
+import re,sqlite3,json,threading
+from datetime import date,datetime
+from decimal import Decimal
+from zoneinfo import ZoneInfo
 from contextlib import contextmanager
 import psycopg
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 from server.store import ServerStore
 
-TABLES_WITH_IDS={'users','tasks','reports','events','pauses'}
+TABLES_WITH_IDS={'users','tasks','reports','events','pauses','sites','equipment','materials','defect_codes','brigades','work_norms','task_photos','task_assignments','brigade_memberships','equipment_downtimes','notification_outbox','task_refusals'}
 
 class Row(dict):
+    """Keep the cloud-1.4 wire format while PostgreSQL stores native types."""
+    def __init__(self,values,json_columns=()):
+        normalized={}
+        for key,value in values.items():
+            if key in json_columns:
+                value=json.dumps(value,ensure_ascii=False)
+            elif isinstance(value,datetime):
+                if value.tzinfo is not None:value=value.astimezone(ZoneInfo('Asia/Qyzylorda')).replace(tzinfo=None)
+                value=value.isoformat(timespec='seconds')
+            elif isinstance(value,date):value=value.isoformat()
+            elif isinstance(value,Decimal):value=float(value)
+            normalized[key]=value
+        super().__init__(normalized)
     def __getitem__(self,key):return list(self.values())[key] if isinstance(key,int) else super().__getitem__(key)
 
 def postgres_sql(sql):
@@ -40,14 +57,23 @@ def postgres_ddl(sql):
 
 class Cursor:
     def __init__(self,cursor,lastrowid=None):self.cursor=cursor;self.lastrowid=lastrowid
+    def _row(self,row):
+        json_columns={column.name for column in self.cursor.description if column.type_code in (114,3802)}
+        return Row(row,json_columns)
     def fetchone(self):
-        row=self.cursor.fetchone();return Row(row) if row is not None else None
-    def fetchall(self):return [Row(row) for row in self.cursor.fetchall()]
+        row=self.cursor.fetchone();return self._row(row) if row is not None else None
+    def fetchall(self):return [self._row(row) for row in self.cursor.fetchall()]
     def __iter__(self):return iter(self.fetchall())
 
 class Connection:
-    def __init__(self,connection):self.connection=connection
+    def __init__(self,connection):self.connection=connection;self.write_locked=False
     def execute(self,sql,args=()):
+        if not self.write_locked and re.match(r'\s*(INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|BEGIN IMMEDIATE)',sql,re.I):
+            # Serialize short mutations (including schedule validation) across server processes.
+            # Read transactions never acquire this exclusive lock.
+            self.connection.execute('SELECT pg_advisory_xact_lock(77410312)')
+            self.connection.execute("SELECT set_config('naryadai.service_write','1',true)")
+            self.write_locked=True
         sql=postgres_sql(sql);match=re.match(r'INSERT INTO\s+(\w+)',sql,re.I)
         returning=bool(match and match[1] in TABLES_WITH_IDS and 'RETURNING' not in sql.upper())
         if returning:sql+=' RETURNING id'
@@ -65,6 +91,9 @@ class Connection:
 class PostgresStore(ServerStore):
     def __init__(self,directory,settings,storage):
         self.settings=settings;self.seed_password=settings.bootstrap_password;self.storage=storage
+        self._local=threading.local()
+        self.pool=ConnectionPool(settings.database_url,min_size=0,max_size=settings.database_pool_size,timeout=15,
+           kwargs={'row_factory':dict_row,'connect_timeout':10,'prepare_threshold':None},open=True)
         with self._connect() as conn:
             conn.execute('CREATE SCHEMA IF NOT EXISTS naryadai')
             conn.execute('REVOKE ALL ON SCHEMA naryadai FROM PUBLIC')
@@ -80,12 +109,25 @@ class PostgresStore(ServerStore):
         try:return psycopg.connect(self.settings.database_url,row_factory=dict_row,connect_timeout=10,prepare_threshold=None)
         except psycopg.Error:raise sqlite3.OperationalError('PostgreSQL недоступен. Проверьте настройки соединения.') from None
     @contextmanager
-    def transaction(self):
-        with self._connect() as conn:
-            conn.execute('SET search_path TO naryadai,public')
-            # Один короткий общий замок: атомарные назначения и очередь даже при перезапуске процесса.
-            conn.execute('SELECT pg_advisory_xact_lock(77410312)')
-            yield Connection(conn)
+    def transaction(self,write=False):
+        current=getattr(self._local,'connection',None)
+        if current is not None:
+            yield current;return
+        try:
+            with self.pool.connection() as conn:
+                conn.execute('SET LOCAL search_path TO naryadai,public')
+                conn.execute("SET LOCAL TIME ZONE 'Asia/Qyzylorda'")
+                wrapped=Connection(conn)
+                if write:wrapped.execute('BEGIN IMMEDIATE')
+                self._local.connection=wrapped;self._local.after_commit=[]
+                try:
+                    yield wrapped
+                    conn.commit()
+                    for fn in self._local.after_commit:fn()
+                except Exception:conn.rollback();raise
+                finally:self._local.connection=None;self._local.after_commit=[]
+        except psycopg.OperationalError:raise sqlite3.OperationalError('PostgreSQL временно недоступен.') from None
+    def close(self):self.pool.close()
     def save_photo(self,p):
         import uuid
         target=self.photos/(uuid.uuid4().hex+p.suffix.lower());self.storage.upload(target.name,p.read_bytes());return target

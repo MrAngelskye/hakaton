@@ -1,0 +1,31 @@
+{
+  "sqlite_preview_upgrade": {
+    "passed": true,
+    "original_tasks_preserved": 608,
+    "original_reports_preserved": 655,
+    "duplicate_equipment_name": true,
+    "reassignment_with_historical_report": true,
+    "foreign_keys_valid": true
+  },
+  "source_counts": {
+    "users": 19,
+    "tasks": 609,
+    "reports": 656,
+    "task_photos": 705,
+    "equipment": 26,
+    "task_assignments": 609
+  },
+  "sqlite_to_postgresql": {
+    "passed": true,
+    "counts_preserved": {
+      "users": 19,
+      "tasks": 609,
+      "reports": 656,
+      "task_photos": 705,
+      "equipment": 26,
+      "task_assignments": 609
+    },
+    "photos_backed_up": 705,
+    "cloud_photos_uploaded": false
+  }
+}

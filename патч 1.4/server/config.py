@@ -27,6 +27,21 @@ class Settings:
     worker_token: str=''
     bootstrap_password: str=''
     offline_wait: int=120
+    database_pool_size: int=8
+    acceptance_minutes: int=10
+    urgent_acceptance_minutes: int=3
+    deadline_reminder_minutes: int=30
+    overdue_repeat_minutes: int=30
+    notification_webhook: str=''
+    notification_webhook_key: str=''
+
+    def validate_case(self):
+        if type(self.database_pool_size) is not int or not 1<=self.database_pool_size<=32:raise ValueError('Размер пула PostgreSQL: 1–32.')
+        for value in (self.acceptance_minutes,self.urgent_acceptance_minutes,self.deadline_reminder_minutes,self.overdue_repeat_minutes):
+            if type(value) is not int or not 1<=value<=1440:raise ValueError('Пороги уведомлений: 1–1440 минут.')
+        if self.notification_webhook:
+            url=urlparse(self.notification_webhook)
+            if url.scheme!='https' or not url.hostname or url.username or url.password or len(self.notification_webhook_key)<32:raise ValueError('Webhook: HTTPS-адрес и ключ подписи не короче 32 символов.')
 
     @classmethod
     def load(cls,path=None):
@@ -43,6 +58,10 @@ class Settings:
             if not obj.supabase_url.startswith('https://') or not obj.supabase_secret_key:raise ValueError('Задайте SUPABASE_URL и SUPABASE_SECRET_KEY на сервере.')
             if len(obj.worker_token)<32:raise ValueError('AI_WORKER_TOKEN должен содержать не меньше 32 символов.')
             if len(obj.bootstrap_password)<12:raise ValueError('BOOTSTRAP_PASSWORD должен содержать не меньше 12 символов.')
+            for field,variable in [('database_pool_size','DATABASE_POOL_SIZE'),('acceptance_minutes','ACCEPTANCE_MINUTES'),('urgent_acceptance_minutes','URGENT_ACCEPTANCE_MINUTES'),('deadline_reminder_minutes','DEADLINE_REMINDER_MINUTES'),('overdue_repeat_minutes','OVERDUE_REPEAT_MINUTES')]:
+                if variable in os.environ:setattr(obj,field,int(os.environ[variable]))
+            obj.notification_webhook=os.environ.get('NOTIFICATION_WEBHOOK','');obj.notification_webhook_key=os.environ.get('NOTIFICATION_WEBHOOK_KEY','')
+            obj.validate_case()
             return obj
         p=Path(path or os.environ.get('NARYADAI_SERVER_CONFIG') or ROOT/'server_config.json')
         if not p.is_file():raise ValueError('Сначала запустите configure_server.bat — он создаст server_config.json.')

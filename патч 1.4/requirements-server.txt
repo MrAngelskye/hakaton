@@ -2,3 +2,5 @@ fastapi==0.142.2
 uvicorn==0.54.0
 Pillow==12.3.0
 psycopg[binary]==3.3.3
+tzdata>=2025.2
+psycopg-pool>=3.3,<4

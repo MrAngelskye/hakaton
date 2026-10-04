@@ -12,25 +12,26 @@ from contextlib import contextmanager
 from datetime import datetime, date, timedelta
 from pathlib import Path
 
-STATUS = {'available':'Доступен', 'planned':'В графике', 'inProgress':'В работе',
+STATUS = {'available':'Выдан без исполнителя', 'planned':'Выдан', 'accepted':'Принят в работу', 'queued':'В очереди', 'rejected':'Отклонён', 'inProgress':'В работе',
           'aiPending':'Проверяет ИИ',
-          'paused':'Приостановлен', 'submitted':'На проверке', 'approved':'Принят',
+          'paused':'Приостановлен', 'submitted':'На проверке', 'approved':'Закрыт',
           'revision':'Доработка', 'cancelled':'Отменён', 'superseded':'Предыдущая версия'}
-ROLES = {'worker':'Сотрудник', 'master':'Мастер', 'admin':'Администратор'}
-SITES = ['Сборочный цех','Сварочный цех','Окрасочный цех','Участок контроля качества']
+ROLES = {'worker':'Сотрудник', 'master':'Мастер', 'admin':'Администратор','manager':'Руководитель'}
+SITES = ['Карьер','Дробильно-сортировочный комплекс','Обогатительная фабрика','Ремонтно-механический цех']
 EMPLOYEE_STATUS = {'free':('Свободен','employeeGreen'), 'busy':('В работе','employeeYellow'),
                    'queued':('Есть в очереди','employeeBlue'), 'off':('Не на смене','employeeGray')}
 
 
 def now():
-    return datetime.now().isoformat(timespec='seconds')
+    from app.case_store import stamp
+    return stamp()
 
 
 def password_hash(password, salt):
     return hashlib.pbkdf2_hmac('sha256', password.encode(), bytes.fromhex(salt), 200_000).hex()
 
 
-class Store:
+class LegacyStore:
     def __init__(self, directory):
         self.directory = Path(directory)
         self.directory.mkdir(parents=True, exist_ok=True)
@@ -74,6 +75,7 @@ class Store:
               started TEXT NOT NULL, ended TEXT, ended_by INTEGER REFERENCES users(id));
             CREATE UNIQUE INDEX IF NOT EXISTS one_open_pause ON pauses(task_id) WHERE ended IS NULL;
             ''')
+        self.migrate_case()
         self.seed()
         self.migrate_schedules()
 
@@ -530,3 +532,10 @@ class Store:
             c.execute('''UPDATE tasks SET title=?,description=?,site=?,equipment=?,priority=?,kind=?,duration=?,day=?,start=?,deadline=?,worker_id=?,status=? WHERE id=?''',
                       (*values.values(),tid))
             self.event(c,tid,actor['id'],'Исправление поддержкой: '+reason.strip()+'\n'+json.dumps(changes,ensure_ascii=False))
+
+
+
+from app.case_store import CaseWorkflow
+
+class Store(CaseWorkflow, LegacyStore):
+    pass

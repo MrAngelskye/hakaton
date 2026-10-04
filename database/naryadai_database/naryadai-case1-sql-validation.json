@@ -1,0 +1,177 @@
+{
+  "engine": "PGlite 0.5.8 in-process PostgreSQL engine",
+  "passed": true,
+  "checks": [
+    {
+      "name": "illegal_planned_to_approved_rejected",
+      "expected_accept": false,
+      "accepted": false,
+      "pass": true,
+      "rows": null,
+      "error": {
+        "message": "Illegal task transition",
+        "sqlstate": "23514"
+      }
+    },
+    {
+      "name": "unknown_equipment_rejected",
+      "expected_accept": false,
+      "accepted": false,
+      "pass": true,
+      "rows": null,
+      "error": {
+        "message": "Select equipment by catalog ID",
+        "sqlstate": "23514"
+      }
+    },
+    {
+      "name": "worker_cannot_be_issuer",
+      "expected_accept": false,
+      "accepted": false,
+      "pass": true,
+      "rows": null,
+      "error": {
+        "message": "Invalid issuer or worker role",
+        "sqlstate": "23514"
+      }
+    },
+    {
+      "name": "unplanned_closure_without_after_photo_rejected",
+      "expected_accept": false,
+      "accepted": false,
+      "pass": true,
+      "rows": null,
+      "error": {
+        "message": "After photo required for closure",
+        "sqlstate": "23514"
+      }
+    },
+    {
+      "name": "future_capture_rejected",
+      "expected_accept": false,
+      "accepted": false,
+      "pass": true,
+      "rows": null,
+      "error": {
+        "message": "new row for relation \"task_photos\" violates check constraint \"photo_time_v2\"",
+        "sqlstate": "23514"
+      }
+    },
+    {
+      "name": "high_priority_supported",
+      "expected_accept": true,
+      "accepted": true,
+      "pass": true,
+      "rows": null,
+      "error": null
+    },
+    {
+      "name": "queued_state_supported",
+      "expected_accept": true,
+      "accepted": true,
+      "pass": true,
+      "rows": [
+        {
+          "timestamp_recorded": true
+        }
+      ],
+      "error": null
+    },
+    {
+      "name": "night_shift_supported",
+      "expected_accept": true,
+      "accepted": true,
+      "pass": true,
+      "rows": null,
+      "error": null
+    },
+    {
+      "name": "material_grams_normalized",
+      "expected_accept": true,
+      "accepted": true,
+      "pass": true,
+      "rows": [
+        {
+          "quantity": "1.000",
+          "unit": "кг",
+          "unit_price": "2292.00"
+        }
+      ],
+      "error": null
+    },
+    {
+      "name": "incompatible_unit_rejected",
+      "expected_accept": false,
+      "accepted": false,
+      "pass": true,
+      "rows": null,
+      "error": {
+        "message": "Incompatible material unit",
+        "sqlstate": "23514"
+      }
+    },
+    {
+      "name": "photo_metadata_removed_with_json",
+      "expected_accept": true,
+      "accepted": true,
+      "pass": true,
+      "rows": [
+        {
+          "n": 0
+        }
+      ],
+      "error": null
+    },
+    {
+      "name": "downtime_wrong_task_equipment_rejected",
+      "expected_accept": false,
+      "accepted": false,
+      "pass": true,
+      "rows": null,
+      "error": {
+        "message": "Downtime equipment/task mismatch",
+        "sqlstate": "23514"
+      }
+    },
+    {
+      "name": "public_search_path_supported",
+      "expected_accept": true,
+      "accepted": true,
+      "pass": true,
+      "rows": null,
+      "error": null
+    },
+    {
+      "name": "direct_sql_change_audited",
+      "expected_accept": true,
+      "accepted": true,
+      "pass": true,
+      "rows": [
+        {
+          "action": "db_change",
+          "actor_kind": "integration"
+        }
+      ],
+      "error": null
+    },
+    {
+      "name": "view_does_not_bypass_table_access",
+      "expected_accept": false,
+      "accepted": false,
+      "pass": true,
+      "rows": null,
+      "error": {
+        "message": "permission denied for table users",
+        "sqlstate": "42501"
+      }
+    },
+    {
+      "name": "duplicate_equipment_names_supported",
+      "expected_accept": true,
+      "accepted": true,
+      "pass": true,
+      "rows": null,
+      "error": null
+    }
+  ]
+}

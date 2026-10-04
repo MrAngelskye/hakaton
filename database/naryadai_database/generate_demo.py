@@ -99,7 +99,7 @@ def make_data(as_of,count,seed,password,photos_dir):
         data['materials'].append({'id':i,'code':f'MAT-{i:03}','name':name,'unit':unit,'unit_price':float(100+i*137)})
     people=[('master','Демо Мастер 01','Мастер смены','master'),('master2','Демо Мастер 02','Мастер смены','master')]
     people += [(f'worker{i}',f'Демо Исполнитель {i:02}', ['Слесарь','Электрик','Сварщик'][(i-1)%3],'worker') for i in range(1,16)]
-    people += [('admin','Демо Администратор','Управление справочниками','admin')]
+    people += [('admin','Демо Администратор','Управление справочниками','admin'),('manager','Демо Руководитель','Руководитель','manager')]
     for i,(username,name,job,role) in enumerate(people,1):
         salt=hashlib.sha256(f'demo-only:{seed}:{username}'.encode()).hexdigest()[:32]
         digest=hashlib.pbkdf2_hmac('sha256',password.encode(),bytes.fromhex(salt),200_000).hex()
@@ -225,7 +225,7 @@ def make_data(as_of,count,seed,password,photos_dir):
         data['tasks'].append(task)
         event(tid,task['master_id'],created,'issued',None,task['status'],'[ДЕМО] Открытый наряд для живой проверки.')
 
-    dataset_id=hashlib.sha256(f'case1:{as_of}:{count}:{seed}:{password}'.encode()).hexdigest()
+    dataset_id=hashlib.sha256(f'case1-v2:{as_of}:{count}:{seed}:{password}'.encode()).hexdigest()
     data['demo_metadata']=[{'key':'dataset','value':{'dataset_id':dataset_id,'as_of':iso(as_of),'history_from':iso(first),
         'history_until':iso(as_of-timedelta(days=1)),'seed':seed,'historical_tasks':count,'synthetic':True}}]
     stats={k:len(v) for k,v in data.items()}

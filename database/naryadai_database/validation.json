@@ -1,145 +1,333 @@
 {
-  "engine": "PGlite 0.5.8, PostgreSQL-compatible WASM engine; not a deployed PostgreSQL server",
+  "application_version": "1.5",
+  "migration": "002",
+  "dataset_id": "61733e7270926e57b62c2054cde9ee517b74ec9ac44076085be53be6c9d8073f",
   "counts": {
     "sites": 4,
+    "brigades": 3,
     "equipment": 25,
-    "masters": 2,
-    "workers": 15,
+    "defect_codes": 20,
+    "materials": 40,
+    "users": 19,
+    "shift_rules": 105,
+    "shifts": 0,
     "tasks": 608,
     "reports": 655,
-    "photos": 705,
-    "material_rows": 1310
+    "events": 3978,
+    "pauses": 75,
+    "ai_jobs": 655,
+    "report_materials": 1310,
+    "task_photos": 705,
+    "equipment_downtimes": 535,
+    "demo_metadata": 1
   },
-  "repeated_import": "passed",
-  "schema_repeat": "passed",
-  "constraints": [
-    "invalid_score",
-    "negative_material_quantity",
-    "missing_worker_foreign_key",
-    "equipment_site_mismatch",
-    "duplicate_username",
-    "second_approved_report",
-    "rls_default_deny"
-  ],
-  "invariants": {
-    "wrong_worker": 0,
-    "missing_after_photo": 0,
-    "schedule_overlaps": 0,
-    "wrong_photo_task": 0
+  "checks": {
+    "naryadai-case1-validation": {
+      "postgres": {
+        "tests_run": 17,
+        "skipped": 1,
+        "failures": [],
+        "errors": [],
+        "passed": true,
+        "engine": "PGlite 0.5.8 / PostgreSQL wire protocol",
+        "scope": "Local synthetic fixtures; no cloud, Android push, real model accuracy or concurrent PostgreSQL sessions tested"
+      },
+      "sqlite": {
+        "tests_run": 17,
+        "skipped": 1,
+        "failures": [],
+        "errors": [],
+        "passed": true,
+        "engine": "Python sqlite3",
+        "scope": "Local synthetic fixtures; no cloud, Android push, real model accuracy or concurrent PostgreSQL sessions tested"
+      }
+    },
+    "naryadai-case1-sql-validation": {
+      "engine": "PGlite 0.5.8 in-process PostgreSQL engine",
+      "passed": true,
+      "checks": [
+        {
+          "name": "illegal_planned_to_approved_rejected",
+          "expected_accept": false,
+          "accepted": false,
+          "pass": true,
+          "rows": null,
+          "error": {
+            "message": "Illegal task transition",
+            "sqlstate": "23514"
+          }
+        },
+        {
+          "name": "unknown_equipment_rejected",
+          "expected_accept": false,
+          "accepted": false,
+          "pass": true,
+          "rows": null,
+          "error": {
+            "message": "Select equipment by catalog ID",
+            "sqlstate": "23514"
+          }
+        },
+        {
+          "name": "worker_cannot_be_issuer",
+          "expected_accept": false,
+          "accepted": false,
+          "pass": true,
+          "rows": null,
+          "error": {
+            "message": "Invalid issuer or worker role",
+            "sqlstate": "23514"
+          }
+        },
+        {
+          "name": "unplanned_closure_without_after_photo_rejected",
+          "expected_accept": false,
+          "accepted": false,
+          "pass": true,
+          "rows": null,
+          "error": {
+            "message": "After photo required for closure",
+            "sqlstate": "23514"
+          }
+        },
+        {
+          "name": "future_capture_rejected",
+          "expected_accept": false,
+          "accepted": false,
+          "pass": true,
+          "rows": null,
+          "error": {
+            "message": "new row for relation \"task_photos\" violates check constraint \"photo_time_v2\"",
+            "sqlstate": "23514"
+          }
+        },
+        {
+          "name": "high_priority_supported",
+          "expected_accept": true,
+          "accepted": true,
+          "pass": true,
+          "rows": null,
+          "error": null
+        },
+        {
+          "name": "queued_state_supported",
+          "expected_accept": true,
+          "accepted": true,
+          "pass": true,
+          "rows": [
+            {
+              "timestamp_recorded": true
+            }
+          ],
+          "error": null
+        },
+        {
+          "name": "night_shift_supported",
+          "expected_accept": true,
+          "accepted": true,
+          "pass": true,
+          "rows": null,
+          "error": null
+        },
+        {
+          "name": "material_grams_normalized",
+          "expected_accept": true,
+          "accepted": true,
+          "pass": true,
+          "rows": [
+            {
+              "quantity": "1.000",
+              "unit": "кг",
+              "unit_price": "2292.00"
+            }
+          ],
+          "error": null
+        },
+        {
+          "name": "incompatible_unit_rejected",
+          "expected_accept": false,
+          "accepted": false,
+          "pass": true,
+          "rows": null,
+          "error": {
+            "message": "Incompatible material unit",
+            "sqlstate": "23514"
+          }
+        },
+        {
+          "name": "photo_metadata_removed_with_json",
+          "expected_accept": true,
+          "accepted": true,
+          "pass": true,
+          "rows": [
+            {
+              "n": 0
+            }
+          ],
+          "error": null
+        },
+        {
+          "name": "downtime_wrong_task_equipment_rejected",
+          "expected_accept": false,
+          "accepted": false,
+          "pass": true,
+          "rows": null,
+          "error": {
+            "message": "Downtime equipment/task mismatch",
+            "sqlstate": "23514"
+          }
+        },
+        {
+          "name": "public_search_path_supported",
+          "expected_accept": true,
+          "accepted": true,
+          "pass": true,
+          "rows": null,
+          "error": null
+        },
+        {
+          "name": "direct_sql_change_audited",
+          "expected_accept": true,
+          "accepted": true,
+          "pass": true,
+          "rows": [
+            {
+              "action": "db_change",
+              "actor_kind": "integration"
+            }
+          ],
+          "error": null
+        },
+        {
+          "name": "view_does_not_bypass_table_access",
+          "expected_accept": false,
+          "accepted": false,
+          "pass": true,
+          "rows": null,
+          "error": {
+            "message": "permission denied for table users",
+            "sqlstate": "42501"
+          }
+        },
+        {
+          "name": "duplicate_equipment_names_supported",
+          "expected_accept": true,
+          "accepted": true,
+          "pass": true,
+          "rows": null,
+          "error": null
+        }
+      ]
+    },
+    "naryadai-ui-validation": {
+      "tests_run": 4,
+      "passed": true,
+      "failures": [],
+      "errors": [],
+      "mode": "Qt offscreen; real interactive browser/Android not tested"
+    },
+    "naryadai-release-paths": {
+      "sqlite_preview_upgrade": {
+        "passed": true,
+        "original_tasks_preserved": 608,
+        "original_reports_preserved": 655,
+        "duplicate_equipment_name": true,
+        "reassignment_with_historical_report": true,
+        "foreign_keys_valid": true
+      },
+      "source_counts": {
+        "users": 19,
+        "tasks": 609,
+        "reports": 656,
+        "task_photos": 705,
+        "equipment": 26,
+        "task_assignments": 609
+      },
+      "sqlite_to_postgresql": {
+        "passed": true,
+        "counts_preserved": {
+          "users": 19,
+          "tasks": 609,
+          "reports": 656,
+          "task_photos": 705,
+          "equipment": 26,
+          "task_assignments": 609
+        },
+        "photos_backed_up": 705,
+        "cloud_photos_uploaded": false
+      }
+    },
+    "naryadai-loader-validation": {
+      "first_import": {
+        "users": 19,
+        "tasks": 608,
+        "reports": 655,
+        "task_photos": 705,
+        "task_assignments": 607
+      },
+      "repeat_import": {
+        "users": 19,
+        "tasks": 608,
+        "reports": 655,
+        "task_photos": 705,
+        "task_assignments": 607
+      },
+      "versions": [
+        "001",
+        "002"
+      ],
+      "unchanged_on_repeat": true,
+      "photos": "metadata only; local JPEG verified separately, no Supabase credentials used"
+    },
+    "naryadai-installer-validation": {
+      "files": 27,
+      "applies": true,
+      "repeat_no_change": true,
+      "backups": true,
+      "refuses_modified_source_without_writes": true
+    }
   },
-  "patterns": {
-    "frequent_failures": [
-      {
-        "id": 1,
-        "inventory_number": "DEMO-0001",
-        "name": "Конвейер К-01",
-        "site": "Участок дробления",
-        "unplanned_repairs": 100,
-        "closed_tasks": 100
-      },
-      {
-        "id": 7,
-        "inventory_number": "DEMO-0007",
-        "name": "Насос Н-07",
-        "site": "Участок обогащения",
-        "unplanned_repairs": 47,
-        "closed_tasks": 47
-      },
-      {
-        "id": 3,
-        "inventory_number": "DEMO-0003",
-        "name": "Грохот ГР-03",
-        "site": "Участок дробления",
-        "unplanned_repairs": 24,
-        "closed_tasks": 29
-      }
-    ],
-    "recurring_defect": [
-      {
-        "equipment": "Конвейер К-01",
-        "code": "М-01",
-        "occurrences": 100
-      },
-      {
-        "equipment": "Насос Н-07",
-        "code": "Г-01",
-        "occurrences": 47
-      },
-      {
-        "equipment": "Компрессор КМ-16",
-        "code": "Г-03",
-        "occurrences": 5
-      }
-    ],
-    "late_reports": [
-      {
-        "username": "worker15",
-        "closed_tasks": 60,
-        "on_time_tasks": 0,
-        "late_pct": "100.0"
-      },
-      {
-        "username": "worker6",
-        "closed_tasks": 48,
-        "on_time_tasks": 40,
-        "late_pct": "16.7"
-      },
-      {
-        "username": "worker3",
-        "closed_tasks": 35,
-        "on_time_tasks": 30,
-        "late_pct": "14.3"
-      }
-    ],
-    "material_overuse": [
-      {
-        "equipment": "Конвейер К-01",
-        "average_quantity": 3
-      },
-      {
-        "equipment": "Дробилка Д-02",
-        "average_quantity": 0.25
-      },
-      {
-        "equipment": "Грохот ГР-09",
-        "average_quantity": 0.25
-      }
-    ]
+  "observed_snapshot": {
+    "sql_statements": 33,
+    "body_bytes": 393941,
+    "visible_tasks": 122,
+    "visible_reports": 101,
+    "scope": "Native baseline plus synthetic test mutations; local engine, no latency SLA claimed"
   },
-  "application_compatibility": [
-    "SQLite: authentication / historical metrics",
-    "SQLite: forbidden foreign task",
-    "SQLite: scheduling conflict",
-    "SQLite: create / pause / report / photo / review",
-    "PostgreSQL adapter through PGlite socket: authentication / historical metrics",
-    "PostgreSQL adapter through PGlite socket: forbidden foreign task",
-    "PostgreSQL adapter through PGlite socket: scheduling conflict",
-    "PostgreSQL adapter through PGlite socket: create / pause / report / photo / review",
-    "native DATE / TIMESTAMPTZ / JSONB wire compatibility",
-    "catalog resolution / normalized material trigger",
-    "JSONB null RPC result",
-    "reopen store preserves accepted report"
-  ],
+  "fresh_legacy_postgres_startup_and_crud": "passed; first local run before native dataset installation",
   "limits": [
-    "PGlite is not a deployed PostgreSQL/Supabase server; concurrency, network and real Storage/LLM still require live validation.",
-    "SQLite mirror is for preview; normalized-detail synchronization is implemented in PostgreSQL triggers."
+    "PostgreSQL tests use PGlite 0.5.8, not a deployed PostgreSQL server.",
+    "Single connection test pool; concurrent multi-process transactions and cloud p95 not measured.",
+    "SQL Python test skipped in both runs; 16 direct in-process SQL probes passed separately.",
+    "Supabase photos, Android/FCM/Web Push, real LLM accuracy, ERP/1C and PostgreSQL disaster recovery not tested."
   ],
-  "http_and_tools": [
-    "installer: applies / backs up / repeats safely",
-    "installer: refuses changed source",
-    "PostgreSQL loader: repeat import preserves existing fixture/application records",
-    "HTTP: login / native-type snapshot",
-    "HTTP: create and repeat RPC / JSONB null RPC result",
-    "HTTP: report / photo / master review",
-    "HTTP: foreign task and photo denied"
-  ],
-  "local_snapshot_seconds": 1.437,
-  "storage_test": "In-memory test storage; Supabase network upload not exercised.",
-  "http_test_mode": "FastAPI TestClient without the concurrent AI lifespan loop; PGlite accepts one connection.",
-  "integration_files": [
+  "source_files": [
     "app/store.py",
     "app/dialogs.py",
+    "app/windows.py",
+    "app/remote.py",
     "server/postgres.py",
-    "requirements-server.txt"
+    "server/api.py",
+    "server/store.py",
+    "server/config.py",
+    "server/chat.py",
+    "server/anythingllm.py",
+    "server/remote_jobs.py",
+    "worker.py",
+    "requirements-server.txt",
+    "requirements.txt",
+    "README.md",
+    "app/case_store.py",
+    "app/analytics.py",
+    "app/migrations.py",
+    "app/migration_v2_pg.sql",
+    "app/photo_pipeline.py",
+    "server/notifications.py",
+    "server/sql/baseline001.sql",
+    "tools/migrate_sqlite_to_postgres.py",
+    "docs/DATABASE_V2.md",
+    "tests/test_case1.py",
+    "tests/test_case1_ui.py",
+    "tests/test_photo_pipeline.py"
   ]
 }

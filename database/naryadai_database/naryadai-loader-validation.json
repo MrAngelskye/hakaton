@@ -1,0 +1,22 @@
+{
+  "first_import": {
+    "users": 19,
+    "tasks": 608,
+    "reports": 655,
+    "task_photos": 705,
+    "task_assignments": 607
+  },
+  "repeat_import": {
+    "users": 19,
+    "tasks": 608,
+    "reports": 655,
+    "task_photos": 705,
+    "task_assignments": 607
+  },
+  "versions": [
+    "001",
+    "002"
+  ],
+  "unchanged_on_repeat": true,
+  "photos": "metadata only; local JPEG verified separately, no Supabase credentials used"
+}

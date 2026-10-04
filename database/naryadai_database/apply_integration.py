@@ -15,35 +15,35 @@ def apply(project):
     for change in specification['files']:
         target=(project/change['path']).resolve()
         if not target.is_relative_to(project): raise ValueError('File path escapes project directory.')
-        original=target.read_bytes()
+        original=target.read_bytes() if target.exists() else None
         # Git on Windows may have converted LF to CRLF.
-        normalized=original.decode('utf-8-sig').replace('\r\n','\n').rstrip('\n')+'\n'
-        normalized_hash=hashlib.sha256(normalized.encode()).hexdigest()
+        normalized=original.decode('utf-8-sig').replace('\r\n','\n').rstrip('\n')+'\n' if original is not None else ''
+        normalized_hash=hashlib.sha256(normalized.encode()).hexdigest() if original is not None else None
         if normalized_hash==change['after_sha256']:
             print('Already applied:',change['path']); continue
         if normalized_hash!=change['before_sha256']:
             raise ValueError('Source differs from reviewed cloud-1.4: '+change['path']+'. No files changed; merge manually using integration.patch.')
-        updated=normalized
-        for edit in change['replacements']:
-            if updated.count(edit['before'])!=1: raise ValueError('Expected unique source fragment: '+change['path'])
-            updated=updated.replace(edit['before'],edit['after'],1)
+        updated=change['after_content']
         if hashlib.sha256(updated.encode()).hexdigest()!=change['after_sha256']: raise ValueError('Patch hash mismatch.')
         if target.suffix=='.py': compile(updated,str(target),'exec')
         backup=target.with_name(target.name+'.before-db-integration')
-        if backup.exists() and backup.read_bytes()!=original: raise ValueError('A different backup already exists: '+str(backup))
+        if backup.exists() and (original is None or backup.read_bytes()!=original): raise ValueError('A different backup already exists: '+str(backup))
         temporary=target.with_name(target.name+'.db-integration.tmp')
         if temporary.exists(): raise ValueError('Temporary file already exists: '+str(temporary))
         staged.append((target,backup,temporary,original,updated.encode('utf-8')))
     changed=[]
     try:
         for target,backup,temporary,original,updated in staged:
-            if not backup.exists():
+            target.parent.mkdir(parents=True,exist_ok=True)
+            if original is not None and not backup.exists():
                 with backup.open('xb') as f: f.write(original)
             with temporary.open('xb') as f: f.write(updated)
             os.replace(temporary,target); changed.append((target,original))
             print('Updated:',target.relative_to(project))
     except Exception:
-        for target,original in changed: target.write_bytes(original)
+        for target,original in changed:
+            if original is None:target.unlink()
+            else:target.write_bytes(original)
         for _,_,temporary,_,_ in staged:
             if temporary.exists(): temporary.unlink()
         raise

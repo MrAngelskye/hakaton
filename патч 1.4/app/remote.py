@@ -108,5 +108,5 @@ def _proxy(method):
     def invoke(self,actor,*args,**kwargs):return self.call(method,*args,**kwargs)
     return invoke
 
-for _method in ('claim','reschedule','transition','review','add_user','set_active','reset_password','support_update_task','set_shift','reassign_task','change_priority','catalog_upsert','set_material_norm','set_employee_profile','start_downtime','end_downtime','assess_refusal','confirm_repeat','acknowledge_notification'):
+for _method in ('claim','reschedule','transition','review','add_user','set_active','reset_password','support_update_task','set_shift','reassign_task','change_priority','catalog_upsert','set_material_norm','set_employee_profile','start_downtime','end_downtime','assess_refusal','confirm_repeat','acknowledge_notification','equipment_history','task_downtimes'):
     setattr(RemoteStore,_method,_proxy(_method))

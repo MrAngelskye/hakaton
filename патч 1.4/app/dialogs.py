@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt,QDate,QDateTime,QTime,QUrl
 from PySide6.QtGui import QPixmap,QDesktopServices
 from PySide6.QtWidgets import (QLineEdit,QTextEdit,QComboBox,QDoubleSpinBox,QSpinBox,QDateEdit,
     QDateTimeEdit,QTimeEdit,QInputDialog,QTableWidget,QTableWidgetItem,QHeaderView,QFileDialog,QAbstractItemView)
+from app.drafts import ReportDraft
 from app.store import STATUS,SITES,ROLES
 from app.case_store import PRIORITIES
 from app.widgets import (Sheet,label,button,row,card,tag,DatePicker,TimePicker,DateTimePicker,
@@ -33,8 +34,15 @@ class CreateTask(Sheet):
         self.equipment=self.field('Оборудование *',combo([]))
         self.site.currentIndexChanged.connect(self.update_equipment);self.update_equipment()
         self.priority=self.field('Приоритет',combo([(name,key) for key,name in PRIORITIES.items()]))
+        self.priority.setCurrentIndex(self.priority.findData('normal'))
         self.kind=self.field('Тип работ',combo([('Плановая','Плановая'),('Внеплановая','Внеплановая')]))
         self.duration=self.field('Плановое время, ч',number(1))
+        self.norm=self.field('Норматив',combo([('Без норматива',None)]+[(n['equipment_type']+' · '+n['kind']+f" · {n['hours']} ч",n['id']) for n in self.catalogs['work_norms'] if n['active']]))
+        self.complexity=self.field('Сложность',number(1,.1,10,.1))
+        def norm_changed():
+            n=next((x for x in self.catalogs['work_norms'] if x['id']==self.norm.currentData()),None)
+            if n:self.duration.setValue(n['hours']);self.complexity.setValue(n['complexity']);self.kind.setCurrentIndex(self.kind.findData(n['kind']))
+        self.norm.currentIndexChanged.connect(norm_changed)
         people=[u for u in store.users(user,True) if u['active']]
         self.worker=self.field('Исполнитель',combo([('Свободный наряд — сотрудник выберет сам',None)]+[(u['name'],u['id']) for u in people]))
         self.brigade=self.field('Бригада (необязательно)',combo([('Индивидуальное назначение',None)]+[(b['name'],b['id']) for b in self.catalogs['brigades']]))
@@ -56,7 +64,7 @@ class CreateTask(Sheet):
         self.run_action(lambda:self.store.create_task(self.user,title=self.title.text(),description=self.description.toPlainText(),
             site=self.site.currentData(),equipment=self.equipment.currentText(),equipment_id=self.equipment.currentData(),priority=self.priority.currentData(),kind=self.kind.currentData(),
             duration=self.duration.value(),day=self.day.date().toString('yyyy-MM-dd'),start=time_value(self.start),
-            deadline=self.deadline.dateTime().toString('yyyy-MM-ddTHH:mm'),worker_id=self.worker.currentData(),brigade_id=self.brigade.currentData(),photo_sources=self.photo_sources))
+            deadline=self.deadline.dateTime().toString('yyyy-MM-ddTHH:mm'),worker_id=self.worker.currentData(),brigade_id=self.brigade.currentData(),norm_id=self.norm.currentData(),complexity=self.complexity.value(),photo_sources=self.photo_sources))
 
     def update_equipment(self):
         self.equipment.clear()
@@ -116,7 +124,11 @@ class TaskDetails(Sheet):
             self.body.addWidget(button('Изменить приоритет',lambda:self.manage_priority(store,user,t),'secondary','edit'))
             if t['status'] in ('available','planned','accepted','queued','rejected','inProgress','paused','revision'):
                 self.body.addWidget(button('Переназначить',lambda:self.reassign(store,user,t),'secondary','team'))
-            self.body.addWidget(button('Простой оборудования',lambda:self.downtime(store,user,t),'secondary','clock'))
+            self.body.addWidget(button('Начать простой оборудования',lambda:self.downtime(store,user,t),'secondary','clock'))
+            for downtime in store.task_downtimes(user,tid):
+                if not downtime['ended_at']:
+                    self.body.addWidget(label('Открытый простой: '+downtime['reason'],'warning',True))
+                    self.body.addWidget(button('Завершить простой оборудования',lambda did=downtime['id']:self.run_action(lambda:store.end_downtime(user,did)),'secondary','check'))
             self.body.addWidget(label('Инструменты поддержки','section'))
             self.body.addWidget(label('Действия администратора записываются в историю наряда.','muted',True))
             if t['status'] in ('available','planned','accepted','queued','rejected'):
@@ -222,9 +234,33 @@ class SubmitReport(Sheet):
             self.work.setPlainText(old['work']);self.result_text.setPlainText(old['result']);self.defect.setCurrentText(old['defect']);self.hours.setValue(old['hours'])
             for m in old['materials']:self.add_material(m)
             self.photo_sources=[str(store.photos/p) for p in old['photos'] if (store.photos/p).is_file()]
+        self.draft=ReportDraft(store,user,t['id'])
+        saved=self.draft.load()
+        if saved:
+            self.work.setPlainText(saved.get('work',''));self.result_text.setPlainText(saved.get('result',''));self.hours.setValue(saved.get('hours',t['duration']))
+            self.defect.setCurrentIndex(max(0,self.defect.findText(saved.get('defect',''))));self.table.setRowCount(0)
+            for material in saved.get('materials',[]):self.add_material(material)
+            self.photo_sources=[p for p in saved.get('photo_sources',[]) if __import__('pathlib').Path(p).is_file()]
+            self.body.addWidget(label('Восстановлен черновик этого наряда','muted',True))
         self.refresh_photos()
+        self.actions.addWidget(button('Сохранить черновик',self.save_draft,'secondary'))
+        self.work.textChanged.connect(self.persist_draft);self.result_text.textChanged.connect(self.persist_draft);self.hours.valueChanged.connect(self.persist_draft);self.defect.currentIndexChanged.connect(self.persist_draft)
+        self.table.itemChanged.connect(self.persist_draft);self.finished.connect(lambda _:self.persist_draft() if not getattr(self,'submitted',False) else None)
         self.body.addWidget(label('На сервере отчёт сначала проверит ИИ, если он включён; окончательное решение принимает мастер.' if getattr(store,'is_remote',False) else 'Отчёт поступит мастеру для ручной проверки.','muted',True))
         self.actions.addWidget(button('Отмена',self.reject));self.actions.addWidget(button('Отправить мастеру',self.save,'primary','report'))
+    def persist_draft(self,*_):
+        if not hasattr(self,'draft') or getattr(self,'submitted',False):return
+        materials=[]
+        for n in range(self.table.rowCount()):
+            widget=self.table.cellWidget(n,0)
+            if widget is None:continue
+            item={'name':widget.currentText()}
+            for column,key in [(1,'quantity'),(2,'unit'),(3,'price')]:item[key]=self.table.item(n,column).text() if self.table.item(n,column) else ''
+            materials.append(item)
+        try:self.draft.save({'work':self.work.toPlainText(),'result':self.result_text.toPlainText(),'defect':self.defect.currentText(),'hours':self.hours.value(),'materials':materials,'photo_sources':self.photo_sources})
+        except OSError as e:self.fail('Не удалось сохранить черновик: '+str(e))
+    def save_draft(self):self.persist_draft();self.reject()
+
     def add_material(self,m=None):
         m=m if isinstance(m,dict) else {'name':'','quantity':1,'unit':'','price':0}
         n=self.table.rowCount();self.table.insertRow(n);materials=self.store.catalogs(self.user)['materials']
@@ -239,13 +275,13 @@ class SubmitReport(Sheet):
         choices.currentIndexChanged.connect(changed)
         old=next((i for i,x in enumerate(materials) if x['name']==m['name']),0);choices.setCurrentIndex(old);changed()
     def remove_material(self):
-        if self.table.currentRow()>=0:self.table.removeRow(self.table.currentRow())
+        if self.table.currentRow()>=0:self.table.removeRow(self.table.currentRow());self.persist_draft()
     def add_photos(self):
         paths,_=QFileDialog.getOpenFileNames(self,'Выберите фото','','Фото (*.jpg *.jpeg *.png *.webp)')
         selected=list(dict.fromkeys(self.photo_sources+paths))
         if len(selected)>5:self.fail('Выберите не больше 5 фото.');return
         if any(QPixmap(p).isNull() for p in paths):self.fail('Один из файлов не удалось открыть как фото.');return
-        self.photo_sources=selected;self.refresh_photos()
+        self.photo_sources=selected;self.refresh_photos();self.persist_draft()
     def refresh_photos(self):
         while self.photo_layout.count():
             item=self.photo_layout.takeAt(0)
@@ -259,7 +295,7 @@ class SubmitReport(Sheet):
             w=label('');w.setPixmap(QPixmap(p).scaled(100,74,Qt.AspectRatioMode.KeepAspectRatio,Qt.TransformationMode.SmoothTransformation))
             line=row(w,button('Убрать',lambda path=p:self.remove_photo(path)))
             self.photo_layout.addLayout(line)
-    def remove_photo(self,p):self.photo_sources.remove(p);self.refresh_photos()
+    def remove_photo(self,p):self.photo_sources.remove(p);self.refresh_photos();self.persist_draft()
     def save(self):
         def action():
             materials=[]
@@ -269,6 +305,7 @@ class SubmitReport(Sheet):
                 except ValueError:raise ValueError(f'Проверьте количество и цену в строке {n+1}.')
             self.store.submit(self.user,self.t['id'],work=self.work.toPlainText(),result=self.result_text.toPlainText(),
                 defect=self.defect.currentText(),hours=self.hours.value(),materials=materials,photo_sources=self.photo_sources)
+            self.submitted=True;self.draft.clear()
         self.run_action(action)
 
 
@@ -302,8 +339,11 @@ class ReviewReport(Sheet):
             self.body.addWidget(label(f"{m['name']} · {m['quantity']:g} {m['unit']} × {m['price']:,.2f} тг",'',True))
         total=sum(m['quantity']*m['price'] for m in r['materials'])
         self.body.addWidget(label(f'Итого: {total:,.2f} тг' if r['materials'] else 'Материалы не использовались','title'))
-        self.body.addWidget(label('Фото результата','section'))
-        for p in r['photos']:
+        before=[p['object_key'] for p in store.photos_for_task(user,r['task_id']) if p['kind']=='before']
+        if before and hasattr(store,'ensure_photos'):store.ensure_photos({'photos':before})
+        self.body.addWidget(label('Фото до ремонта и результата','section'))
+        for p in before+r['photos']:
+            self.body.addWidget(label('До ремонта' if p in before else 'После ремонта','muted'))
             path=store.photos/p
             if path.is_file():
                 w=label('');w.setPixmap(QPixmap(str(path)).scaled(530,260,Qt.AspectRatioMode.KeepAspectRatio,Qt.TransformationMode.SmoothTransformation));self.body.addWidget(w)
@@ -314,14 +354,15 @@ class ReviewReport(Sheet):
             w,l=card();l.addWidget(label('Решение мастера','section'));l.addWidget(label(r['comment'],'',True))
             l.addWidget(label((r['reviewer_name'] or '')+(f" · {r['score']} / 100" if r['score'] is not None else ''),'muted'));self.body.addWidget(w)
         if user['role'] in ('master','admin') and r['status']=='submitted':
-            self.score=NoWheelSpinBox();self.score.setRange(0,100);self.score.setSpecialValueText('0');self.score.setValue(0)
+            self.score=NoWheelSpinBox();self.score.setRange(-1,100);self.score.setSpecialValueText('Выберите оценку');self.score.setValue(ai['score'] if ai and ai.get('status')=='completed' else -1)
             self.field('Ручная оценка мастера, 0–100',self.score)
             self.comment=self.field('Комментарий сотруднику *',QTextEdit());self.comment.setFixedHeight(90)
             self.actions.addWidget(button('Вернуть на доработку',lambda:self.decide(False),'danger'))
             self.actions.addWidget(button('Принять работу',lambda:self.decide(True),'primary','check'))
         else:self.actions.addWidget(button('Закрыть',self.reject))
     def decide(self,approve):
-        self.run_action(lambda:self.store.review(self.user,self.r['id'],approve,self.score.value(),self.comment.toPlainText()))
+        if approve and self.score.value()<0:self.fail('Укажите итоговую оценку мастера.');return
+        self.run_action(lambda:self.store.review(self.user,self.r['id'],approve,max(0,self.score.value()),self.comment.toPlainText()))
 
 
 class AddUser(Sheet):

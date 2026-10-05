@@ -67,7 +67,8 @@ def period_analytics(store,actor,start,end,site_id=None,equipment_id=None,worker
             if r['brigade_id'] is None:continue
             item=brigade[r['brigade_id']];item['done']+=1;item['hours']+=r['hours'];item['complexity_volume']+=taskmap[r['task_id']]['complexity'];item['task_ids'].add(r['task_id'])
             item['weighted_score']+=rankbyid[r['worker_id']]['score'] or 0
-        brigades=[{'brigade_id':bid,'done':v['done'],'hours':v['hours'],'complexity_volume':v['complexity_volume'],'score':round(v['weighted_score']/v['done'],2),'task_ids':sorted(v['task_ids'])} for bid,v in brigade.items()]
+        brigade_names={r['id']:r['name'] for r in c.execute('SELECT id,name FROM brigades')}
+        brigades=[{'brigade_id':bid,'name':brigade_names.get(bid,f'Бригада {bid}'),'done':v['done'],'hours':v['hours'],'complexity_volume':v['complexity_volume'],'score':round(v['weighted_score']/v['done'],2),'task_ids':sorted(v['task_ids'])} for bid,v in brigade.items()]
         problems=defaultdict(lambda:{'repairs':0,'task_ids':[]})
         for r in done:
             t=taskmap[r['task_id']]

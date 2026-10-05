@@ -19,7 +19,7 @@ def main():
     args=parser.parse_args()
     app=QApplication(sys.argv[:1]);app.setApplicationName('NaryadAI');app.setOrganizationName('NaryadAI')
     app.setStyle('Fusion');app.setFont(QFont('Segoe UI',10));apply_theme(app)
-    app.setWindowIcon(QIcon(str(ROOT/'assets/branding/allur-vector.svg')))
+    app.setWindowIcon(QIcon(str(ROOT/'assets/branding/km-mark-blue.svg')))
     app.setQuitOnLastWindowClosed(False)
     data=args.data_dir or Path(os.environ.get('NARYADAI_DATA_DIR') or QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppLocalDataLocation))
     try:
@@ -33,8 +33,15 @@ def main():
     windows={}
     def login_screen():
         if windows.get('main'):
-            if hasattr(store,'logout'):store.logout()
+            from app.drafts import clear_user_drafts
+            draft_error=False
+            try:clear_user_drafts(store,windows['main'].user)
+            except OSError:draft_error=True
+            if hasattr(store,'logout'):
+                try:store.logout()
+                except OSError:draft_error=True
             windows['main'].refresh_timer.stop();windows['main'].hide();windows['main'].deleteLater();windows['main']=None
+            if draft_error:QMessageBox.warning(None,'Локальные данные','Сессия закрыта, но не все черновики или временные фото удалось удалить. Проверьте доступ к папке данных приложения.')
         login=LoginWindow(store);windows['login']=login;login.logged_in.connect(open_main);login.show()
     def open_main(user):
         window=MainWindow(store,user);windows['main']=window;window.logged_out.connect(login_screen);window.show()

@@ -37,7 +37,7 @@ def main():
         chat_slug=old.get('chat_workspace','')
         if chat_slug and chat_slug!=data['workspace']:
             ai.check_workspace(chat_slug)
-        else:chat_slug=ai.create_workspace('ALLUR — чат администратора',CHAT_PROMPT)
+        else:chat_slug=ai.create_workspace('НарядAI — чат администратора',CHAT_PROMPT)
         data['chat_workspace']=chat_slug
         scratch.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
         scratch.replace(target)

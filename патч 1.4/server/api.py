@@ -5,7 +5,8 @@ from datetime import date,timedelta
 from pathlib import Path
 from fastapi import FastAPI,Request,HTTPException,Depends,Query
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import Response,JSONResponse,HTMLResponse
+from fastapi.responses import Response,JSONResponse,HTMLResponse,FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel,Field,ConfigDict
 from server.store import ServerStore
 from server.anythingllm import AnythingLLM,AIError,parse_verdict
@@ -13,7 +14,7 @@ from server.anythingllm import AnythingLLM,AIError,parse_verdict
 LOG=logging.getLogger('naryadai')
 MAX_BODY=60*1024*1024
 WRITE_METHODS={'create_task','claim','reschedule','transition','submit','review','add_user','set_active','reset_password','support_update_task','set_shift','reassign_task','change_priority','catalog_upsert','set_material_norm','set_employee_profile','start_downtime','end_downtime','assess_refusal','confirm_repeat','acknowledge_notification'}
-READ_METHODS={'task','events','pauses','shift','free_slots','employee_status','catalogs','photos_for_task','notifications','analytics','metrics'}
+READ_METHODS={'task','events','pauses','shift','free_slots','employee_status','catalogs','photos_for_task','notifications','analytics','metrics','equipment_history','task_downtimes'}
 
 class LoginBody(BaseModel):
     model_config=ConfigDict(extra='forbid')
@@ -152,9 +153,16 @@ def create_app(settings,provider=None):
         return dict(u)
 
     @app.get('/health')
-    def health():return {'ok':True,'version':'1.5','ai_enabled':settings.ai_enabled,'features':['admin_chat','case1_workflow','period_analytics','notifications','atomic_rpc']}
-    @app.get('/',response_class=HTMLResponse)
-    def home():return '<html><meta charset="utf-8"><title>НарядAI</title><h1>Сервер НарядAI работает</h1><p>Откройте start_client.bat в папке приложения.</p></html>'
+    def health():return {'ok':True,'version':'1.5','ai_enabled':settings.ai_enabled,'features':['admin_chat','case1_workflow','period_analytics','notifications','atomic_rpc','mobile_web']}
+    web=Path(__file__).resolve().parents[1]/'web'
+    app.mount('/web',StaticFiles(directory=web),name='web')
+    app.mount('/assets/branding',StaticFiles(directory=web.parent/'assets'/'branding'),name='branding')
+    @app.get('/')
+    def home():return FileResponse(web/'index.html',media_type='text/html')
+    @app.get('/sw.js')
+    def service_worker():return FileResponse(web/'sw.js',media_type='application/javascript',headers={'Service-Worker-Allowed':'/'})
+    @app.get('/manifest.webmanifest')
+    def manifest():return FileResponse(web/'manifest.webmanifest',media_type='application/manifest+json')
 
     @app.post('/api/login')
     def login(body:LoginBody,request:Request):

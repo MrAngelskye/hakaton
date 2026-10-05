@@ -128,6 +128,23 @@ class CaseWorkflow:
                 name='Смазка Литол-24' if i==0 else f'Демо материал {i+1:02}'
                 c.execute('INSERT INTO materials(code,name,unit,unit_price) VALUES(?,?,?,?)',(f'M-{i+1:03}',name,'кг' if i==0 else 'шт.',1000+i*50))
 
+    def task_downtimes(self,actor,tid):
+        with self.transaction() as c:
+            self.task(actor,tid)
+            return [dict(r) for r in c.execute('SELECT * FROM equipment_downtimes WHERE task_id=? ORDER BY id DESC',(tid,))]
+
+    def equipment_history(self,actor,equipment_id):
+        if type(equipment_id) is not int:raise ValueError('Укажите ID оборудования.')
+        with self.transaction() as c:
+            self.require(c,actor,('master','admin','manager'))
+            equipment=c.execute('SELECT * FROM equipment WHERE id=?',(equipment_id,)).fetchone()
+            if not equipment:raise ValueError('Оборудование не найдено.')
+            tasks=[t for t in self.tasks(actor) if t['equipment_id']==equipment_id]
+            reports=self.reports(actor,task_ids=[t['id'] for t in tasks])
+            for t in tasks:t['last_report']=next((r for r in reports if r['task_id']==t['id'] and r['status']!='superseded'),None)
+            downtime=[dict(r) for r in c.execute('SELECT * FROM equipment_downtimes WHERE equipment_id=? ORDER BY id DESC',(equipment_id,))]
+            return {'equipment':dict(equipment),'tasks':tasks,'downtimes':downtime}
+
     def catalogs(self,actor):
         with self.transaction() as c:
             self.require(c,actor)
@@ -183,7 +200,11 @@ class CaseWorkflow:
             if clauses:sql+=' WHERE '+' AND '.join(clauses)
             sql+=" ORDER BY CASE WHEN t.status IN ('approved','cancelled') THEN 1 ELSE 0 END,t.id DESC"
             if limit is not None:sql+=' LIMIT ? OFFSET ?';args+=(limit,offset)
-            return [dict(r) for r in c.execute(sql,args)]
+            rows=[dict(r) for r in c.execute(sql,args)]
+            # Assignment snapshots, rather than the brigade's current roster.
+            members=defaultdict_list(c.execute('SELECT task_id,worker_id FROM task_assignments WHERE ended_at IS NULL'),'task_id','worker_id')
+            for row in rows:row['member_ids']=members.get(row['id'],[])
+            return rows
 
     def task(self,actor,tid):
         with self.transaction() as c:

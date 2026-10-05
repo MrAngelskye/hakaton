@@ -6,7 +6,7 @@ from PySide6.QtGui import QPainter,QColor,QPen
 from PySide6.QtWidgets import (QMainWindow,QWidget,QVBoxLayout,QHBoxLayout,QFrame,
     QScrollArea,QLineEdit,QButtonGroup,QLabel,QDateEdit,QProgressBar,QSizePolicy,
     QFileDialog,QMessageBox,QTableWidget,QTableWidgetItem,QHeaderView,QAbstractItemView)
-from app.widgets import label,button,brand,card,row,avatar,tag,CardGrid,Sheet,DatePicker,motion_toggle,Toast,allur_wordmark
+from app.widgets import label,button,brand,card,row,avatar,tag,CardGrid,Sheet,DatePicker,motion_toggle,Toast
 from app.theme import COLORS
 from app.motion import PageTransition
 from app.store import ROLES,STATUS,EMPLOYEE_STATUS
@@ -107,9 +107,9 @@ class Timeline(QWidget):
 class MainWindow(QMainWindow):
     logged_out=Signal()
     def __init__(self,store,user):
-        super().__init__();self.store=store;self.user=user;self.setWindowTitle('НарядAI · Allur');self.resize(1360,900);self.setMinimumSize(1040,760)
+        super().__init__();self.store=store;self.user=user;self.setWindowTitle('НарядAI · Костанайские минералы');self.resize(1360,900);self.setMinimumSize(1040,760)
         self.page_key='overview' if user['role']!='worker' else 'tasks'
-        self.task_filter='available' if user['role']=='worker' else 'all';self.report_filter='submitted';self.query='';self.priority='all';self.schedule_day=QDate.currentDate()
+        self.task_filter='mine' if user['role']=='worker' else 'all';self.report_filter='submitted';self.query='';self.priority='all';self.schedule_day=QDate.currentDate()
         host=QWidget();outer=QHBoxLayout(host);outer.setContentsMargins(0,0,0,0);outer.setSpacing(0)
         sidebar,self.side=card('sidebar',18);self.side.setSpacing(8)
         self.side.addWidget(brand());self.side.addSpacing(16);self.side.addWidget(label('Костанайские минералы','title'));self.side.addWidget(label('Производственная смена','muted'));self.side.addSpacing(22)
@@ -119,6 +119,8 @@ class MainWindow(QMainWindow):
         if user['role']=='worker':items=[('tasks','tasks','Задачи'),('schedule','calendar','График'),('reports','report','Отчёты'),('profile','user','Профиль')]
         elif user['role']=='admin':items += [('ai_chat','spark','Чат с ИИ'),('users','shield','Пользователи'),('integrations','spark','Подключения')]
         elif user['role'] in ('master','manager'):items += [('ai_chat','spark','Чат с аналитикой')]
+        if user['role'] in ('master','admin'):items += [('references','tasks','Справочники')]
+        if user['role']!='worker':items += [('equipment','tasks','Оборудование')]
         for key,ico,title in items:
             b=button(title,lambda k=key:self.navigate(k),'nav',ico);b.setCheckable(True);self.nav[key]=b;self.side.addWidget(b)
         if user['role'] in ('master','admin'):
@@ -192,7 +194,7 @@ class MainWindow(QMainWindow):
         for k,b in self.nav.items():b.setChecked(k==self.page_key)
         page=QWidget();page.setMaximumWidth(1220);self.body=QVBoxLayout(page);self.body.setContentsMargins(36,32,36,30);self.body.setSpacing(23)
         methods={'overview':self.overview,'tasks':self.tasks_page,'reports':self.reports_page,'team':self.team_page,
-                 'schedule':self.schedule_page,'team_schedule':self.team_schedule_page,'profile':self.profile_page,'costs':self.costs_page,'users':self.users_page,'integrations':self.integrations_page,'ai_chat':self.ai_chat_page,'analytics':self.analytics_page}
+                 'schedule':self.schedule_page,'team_schedule':self.team_schedule_page,'profile':self.profile_page,'costs':self.costs_page,'users':self.users_page,'integrations':self.integrations_page,'ai_chat':self.ai_chat_page,'analytics':self.analytics_page,'references':self.references_page,'equipment':self.equipment_page}
         methods[self.page_key]();self.body.addStretch();self.body.addWidget(label('Костанайские минералы · НарядAI · Демонстрационная версия','muted'))
         old=self.scroll.takeWidget()
         if old:old.deleteLater()
@@ -277,7 +279,7 @@ class MainWindow(QMainWindow):
             if x.widget():x.widget().deleteLater()
         items=[]
         for t in self.tasks:
-            match={'all':True,'available':t['status']=='available','mine':t['worker_id']==self.user['id'] and t['status'] not in ('approved','cancelled'),
+            match={'all':True,'available':t['status']=='available','mine':(t['worker_id']==self.user['id'] or self.user['id'] in t.get('member_ids',[])) and t['status'] not in ('approved','cancelled'),
                    'active':t['status'] not in ('available','approved','cancelled'),'approved':t['status']=='approved'}[self.task_filter]
             text=' '.join(str(t[k]) for k in ('id','title','site','equipment','worker_name')).lower()
             if match and (self.priority=='all' or t['priority']==self.priority) and self.query.lower() in text:items.append(t)
@@ -315,7 +317,7 @@ class MainWindow(QMainWindow):
             l.addLayout(row(label('Смена '+fmt_time(shift['start'])+'–'+fmt_time(shift['end']) if shift else 'Не на смене в выбранный день','muted'),
                 button('Изменить смену',lambda person=p:self.edit_shift(person,day),'secondary','edit') if self.user['role'] in ('master','admin') else label('Только просмотр','muted')))
             for t in self.tasks:
-                if t['worker_id']==p['id'] and t['day']==day and t['status']!='cancelled':
+                if (t['worker_id']==p['id'] or p['id'] in t.get('member_ids',[])) and t['day']==day and t['status']!='cancelled':
                     l.addWidget(button(f"{fmt_time(t['start'])}–{fmt_time(t['start']+t['duration'])} · НР-{t['id']} · {STATUS[t['status']]} · {t['title']}",lambda tid=t['id']:self.open_task(tid),'secondary'))
                     if t['status']=='paused':l.addWidget(label('Причина паузы: '+self.store.pauses(self.user,t['id'])[-1]['reason'],'',True))
             l.addWidget(label('Свободное время','section'))
@@ -335,7 +337,7 @@ class MainWindow(QMainWindow):
     def person(self,p):
         d=Sheet(p['name'],self);d.body.addWidget(label(p['job'],'muted'));d.body.addWidget(label(f"Принято: {p['done']} · Рейтинг: {score_text(p['score'])}",'title',True))
         for t in self.tasks:
-            if t['worker_id']==p['id'] and t['status'] not in ('approved','cancelled'):
+            if (t['worker_id']==p['id'] or p['id'] in t.get('member_ids',[])) and t['status'] not in ('approved','cancelled'):
                 d.body.addWidget(button(f"НР-{t['id']} · {t['title']}",lambda tid=t['id']:self.open_task(tid)))
         for r in self.reports:
             if r['worker_id']==p['id']:d.body.addWidget(label(f"ОТ-{r['id']:04d} · {STATUS[r['status']]} · {r['title']}",'',True))
@@ -343,7 +345,7 @@ class MainWindow(QMainWindow):
     def schedule_page(self):
         self.heading('Мой график','Смена и назначенные работы · нажмите на задачу, чтобы открыть наряд')
         selector=DatePicker(self.schedule_day);selector.dateChanged.connect(self.change_schedule);self.body.addWidget(selector)
-        tasks=[t for t in self.tasks if t['worker_id']==self.user['id'] and t['day']==self.schedule_day.toString('yyyy-MM-dd') and t['status']!='cancelled']
+        tasks=[t for t in self.tasks if (t['worker_id']==self.user['id'] or self.user['id'] in t.get('member_ids',[])) and t['day']==self.schedule_day.toString('yyyy-MM-dd') and t['status']!='cancelled']
         day=self.schedule_day.toString('yyyy-MM-dd');shift=self.store.shift(self.user,self.user['id'],day)
         hours=sum(t['duration'] for t in tasks);total=shift['end']-shift['start'] if shift else 0
         w,l=card();l.addWidget(tag(*EMPLOYEE_STATUS[self.store.employee_status(self.user,self.user['id'])]))
@@ -362,6 +364,31 @@ class MainWindow(QMainWindow):
         metric=next((r for r in self.store.metrics(self.user) if r['id']==self.user['id']),None)
         self.stats([(str(metric['done'] if metric else 0),'Закрыто за 90 дней'),(score_text(metric['score'] if metric else None),'Рейтинг'),(f"{metric['hours'] if metric else 0:g} ч",'Выполнено')])
         self.body.addWidget(label('Последние результаты','section'));self.body.addWidget(CardGrid([self.report_card(r) for r in self.reports[:4]]) if self.reports else self.empty('Пока без отчётов','После первой работы здесь появится результат.'))
+    def references_page(self):
+        from app.reference_dialogs import NAMES,ReferenceEditor
+        self.heading('Справочники','Единые каталоги БД 002. Данные учебные; история нарядов сохраняется.')
+        category=getattr(self,'reference_category','sites')
+        def choose(key):self.reference_category=key;self.render()
+        self.tabs(list(NAMES.items()),category,choose)
+        def edit(item=None):
+            if ReferenceEditor(self.store,self.user,category,self,item).exec():self.render()
+        self.body.addWidget(button('Добавить запись',lambda:edit(),'primary','plus'))
+        for item in self.store.catalogs(self.user)[category]:
+            w,l=card();l.addWidget(label(item.get('name') or item.get('equipment_type'),'title',True));l.addWidget(label(' · '.join(str(v) for k,v in item.items() if k not in ('id','name') and v is not None),'muted',True));l.addWidget(button('Изменить',lambda value=item:edit(value),'secondary','edit'));self.body.addWidget(w)
+
+    def equipment_page(self):
+        self.heading('Оборудование','История по инвентарному номеру за весь период')
+        for e in self.store.catalogs(self.user)['equipment']:
+            self.body.addWidget(button(e['inventory_number']+' · '+e['name'],lambda eid=e['id']:self.equipment_history(eid),'secondary','tasks'))
+
+    def equipment_history(self,eid):
+        data=self.store.equipment_history(self.user,eid);d=Sheet(data['equipment']['name'],self)
+        d.body.addWidget(label(data['equipment']['inventory_number'],'muted'));d.body.addWidget(label('Простой оборудования','section'))
+        for item in data['downtimes']:d.body.addWidget(label(item['reason']+' · '+item['started_at']+' — '+(item['ended_at'] or 'открыт'),'',True))
+        d.body.addWidget(label('Наряды за весь период','section'))
+        for t in data['tasks']:d.body.addWidget(button(f"НР-{t['id']} · {t['title']} · {STATUS[t['status']]}",lambda tid=t['id']:self.open_task(tid),'secondary'))
+        d.actions.addWidget(button('Закрыть',d.reject));d.exec()
+
     def analytics_page(self):
         self.heading('Сводка за период','Выданные наряды, исполнение, рейтинг, неисправности и простой оборудования')
         start,end=getattr(self,'analytics_dates',(QDate.currentDate().addDays(-6),QDate.currentDate()))
@@ -374,6 +401,8 @@ class MainWindow(QMainWindow):
         self.body.addWidget(label('Рейтинг исполнителей','section'))
         for r in result['workers']:
             if r['done']:self.body.addWidget(label(r['name']+' · '+score_text(r['score'])+' · закрыто '+str(r['done'])+' · качество '+score_text(r['quality_score'])+' · сложность/объём '+str(r['complexity_volume']),'',True))
+        self.body.addWidget(label('Рейтинг бригад','section'))
+        for b in result['brigades']:self.body.addWidget(label(b['name']+' · '+score_text(b['score'])+' · закрыто '+str(b['done']),'',True))
         self.body.addWidget(label('Проблемное оборудование (число ремонтов)','section'))
         equipment={e['id']:e for e in self.store.catalogs(self.user)['equipment']}
         for r in result['failures'][:10]:self.body.addWidget(label(equipment.get(r['equipment_id'],{}).get('name',str(r['equipment_id']))+' · '+str(r['repairs'])+' · наряды '+', '.join(map(str,r['task_ids'])),'',True))
@@ -401,8 +430,20 @@ class MainWindow(QMainWindow):
             w,l=card();l.addLayout(row(avatar(u['name']),label(u['name']+' · '+u['username'],'title',True),tag('Активен' if u['active'] else 'Отключён','success' if u['active'] else 'urgent')))
             l.addWidget(label(ROLES[u['role']]+' · '+u['job'],'muted',True))
             if u['id']!=self.user['id']:l.addWidget(button('Отключить' if u['active'] else 'Включить',lambda user=u:self.toggle_user(user),'danger' if u['active'] else 'secondary'))
+            if u['role']=='worker':l.addWidget(button('Профиль и бригада',lambda person=u:self.employee_profile(person),'secondary','team'))
             l.addWidget(button('Сбросить пароль',lambda uid=u['id']:self.reset_password(uid),'secondary'))
             self.body.addWidget(w)
+    def employee_profile(self,person):
+        from app.dialogs import number
+        d=Sheet('Профиль сотрудника',self)
+        specialty=d.field('Специальность',QLineEdit(person['specialty'] or person['job']))
+        grade=d.field('Разряд 1–6',number(person['grade'] or 1,1,6,1));grade.setDecimals(0)
+        brigade=d.field('Бригада',combo([('Без бригады',None)]+[(b['name'],b['id']) for b in self.store.catalogs(self.user)['brigades']]))
+        brigade.setCurrentIndex(max(0,brigade.findData(person['brigade_id'])))
+        d.body.addWidget(label('Изменение состава сохраняет историю уже выданных нарядов.','muted',True))
+        d.actions.addWidget(button('Сохранить',lambda:d.run_action(lambda:self.store.set_employee_profile(self.user,person['id'],specialty.text(),int(grade.value()),brigade.currentData())),'primary','check'))
+        if d.exec():self.render()
+
     def reset_password(self,uid):
         d=Sheet('Новый пароль',self);password=QLineEdit();password.setEchoMode(QLineEdit.EchoMode.Password)
         d.field('Новый пароль (от 4 символов)',password)

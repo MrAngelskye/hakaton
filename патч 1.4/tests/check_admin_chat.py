@@ -18,7 +18,7 @@ class ChatChecks(unittest.TestCase):
     def setup_admin(self):
         self.admin=RemoteStore(self.url);self.a=self.admin.authenticate('admin',self.password,'admin')
         self.addCleanup(self.admin._cache.cleanup)
-        self.ai_settings.chat_workspace='allur-admin-chat'
+        self.ai_settings.chat_workspace='naryadai-admin-chat'
         return self.admin.request('/api/chat')['conversation_id']
     def send(self,cid,text='Привет, помоги составить отчёт.',rid=None):
         return self.admin.request('/api/chat',{'conversation_id':cid,'request_id':rid or uuid.uuid4().hex,'message':text})
@@ -36,7 +36,7 @@ class ChatChecks(unittest.TestCase):
         self.assertEqual(context['history'][0]['content'],'Привет, помоги составить отчёт.')
         self.assertEqual(context['history'][1]['content'],'Связь работает. Чем помочь?')
         self.assertNotEqual(first_payload['sessionId'],second['sessionId'])
-        self.assertEqual(self.mock.payloads[0][0],'/api/v1/workspace/allur-admin-chat/chat')
+        self.assertEqual(self.mock.payloads[0][0],'/api/v1/workspace/naryadai-admin-chat/chat')
         self.assertNotIn('Верни ТОЛЬКО один JSON',first_payload['message'])
         data=json.dumps(history,ensure_ascii=False)
         for secret in (self.key,'test-anything-key','lease_token'):self.assertNotIn(secret,data)
@@ -106,7 +106,7 @@ class ChatChecks(unittest.TestCase):
         with patch.object(setup_server,'ROOT',self.folder),patch('builtins.input',side_effect=lambda *a:next(answers)),patch('getpass.getpass',return_value='only-local-test-key'):
             setup_server.main()
         config=Settings.load(self.folder/'server_config.json')
-        self.assertEqual(config.workspace,'naryadai');self.assertEqual(config.chat_workspace,'allur-admin-chat')
+        self.assertEqual(config.workspace,'naryadai');self.assertEqual(config.chat_workspace,'naryadai-admin-chat')
         self.assertEqual(config.model_label,'qwen test');self.assertFalse(config.send_images)
         self.assertEqual(len(self.mock.workspace_configs),2)
         self.assertNotIn('ТОЛЬКО один JSON',self.mock.workspace_configs[1]['openAiPrompt'])

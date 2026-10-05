@@ -92,7 +92,7 @@ class VisualChecks(unittest.TestCase):
         self.assertLess(first.geometry().bottom(),second.geometry().top())
         self.assertNotIn('\n',first.text());self.assertIn('Проверить датчик',first.toolTip())
     def test_remote_snapshot_is_quiet(self):
-        w=self.show(MainWindow(self.store,self.master));self.store.url='https://demo.invalid'
+        w=self.show(MainWindow(self.store,self.master));self.store.url='https://demo.invalid';self.store.actor=self.master
         with self.store.transaction() as c:
             c.execute("UPDATE tasks SET description=description || ' Обновлено.'")
         # Exercise the same callback as the network loader, without a real server.

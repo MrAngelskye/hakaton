@@ -43,11 +43,11 @@ class LocalAnythingAPI:
             def do_POST(self):
                 body=json.loads(self.rfile.read(int(self.headers['Content-Length'])))
                 if self.path.endswith('/workspace/new'):
-                    owner.workspace_configs.append(body);self.send({'workspace':{'slug':'allur-admin-chat' if 'чат' in body.get('name','') else 'naryadai'}});return
+                    owner.workspace_configs.append(body);self.send({'workspace':{'slug':'naryadai-admin-chat' if 'чат' in body.get('name','') else 'naryadai'}});return
                 owner.payloads.append((self.path,self.headers.get('Authorization'),body))
                 owner.started.set();owner.allow.wait(5)
                 if owner.mode=='http_error':self.send({'error':'not available'},503)
-                else:self.send({'type':'textResponse','textResponse':('Связь работает. Чем помочь?' if '/allur-admin-chat/chat' in self.path else json.dumps(VERDICT,ensure_ascii=False)) if owner.mode=='ok' else 'Я не вернул JSON','error':None})
+                else:self.send({'type':'textResponse','textResponse':('Связь работает. Чем помочь?' if '/naryadai-admin-chat/chat' in self.path else json.dumps(VERDICT,ensure_ascii=False)) if owner.mode=='ok' else 'Я не вернул JSON','error':None})
         self.http=ThreadingHTTPServer(('127.0.0.1',0),Handler);self.url=f'http://127.0.0.1:{self.http.server_port}'
         self.thread=threading.Thread(target=self.http.serve_forever,daemon=True);self.thread.start()
     def close(self):self.allow.set();self.http.shutdown();self.http.server_close();self.thread.join()
@@ -147,7 +147,7 @@ class ServerChecks(unittest.TestCase):
         self.assertEqual(self.client.get('/api/snapshot',headers={'Authorization':'Bearer '+self.worker.token}).status_code,401)
         self.assertEqual(self.worker.authenticate('worker4','5678','worker')['id'],self.w['id'])
     def test_remote_gui_updates_without_search_focus_loss(self):
-        win=MainWindow(self.worker,self.w);self.windows.append(win);win.show();APP.processEvents();win.task_filter='mine';win.render()
+        win=MainWindow(self.worker,self.w);self.windows.append(win);win.show();APP.processEvents();win.task_filter='mine';win.navigate('tasks')
         win.search.setText('Совместный');win.search.setFocus();APP.processEvents()
         tid=self.create();win.refresh_if_idle()
         deadline=time.monotonic()+3
@@ -156,7 +156,8 @@ class ServerChecks(unittest.TestCase):
         rid=self.submit(tid);r=self.await_report(rid)
         master_win=MainWindow(self.master,self.m);self.windows.append(master_win);master_win.show();APP.processEvents()
         d=ReviewReport(self.master,self.m,r,master_win);self.windows.append(d);d.show();APP.processEvents()
-        self.assertTrue(any('Оценка ИИ: 78' in l.text() for l in d.findChildren(QLabel)));self.assertEqual(d.score.value(),0)
+        self.assertTrue(any('Оценка ИИ: 78' in l.text() for l in d.findChildren(QLabel)));self.assertEqual(d.score.value(),78)
+        self.assertIsNone(self.worker.latest_report(self.w,tid)['score'])
         d.score.setValue(96);d.comment.setPlainText('Проверено мастером');d.decide(True)
         self.worker.refresh_snapshot();self.assertEqual(self.worker.latest_report(self.w,tid)['score'],96)
     def test_json_validation(self):

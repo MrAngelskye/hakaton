@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-05",
+  "application_version": "1.5",
+  "database_migration": "002",
+  "base_commit": "188a50686044025a4cbca9b8ad2a3822034e4ba1",
+  "python_unittest": {
+    "command": "python -m unittest discover -s tests -p test_*.py",
+    "executed": 27,
+    "passed": 26,
+    "skipped": 1,
+    "errors": 0,
+    "failures": 0,
+    "skip_reason": "Native SQL constraints require a dedicated localhost PostgreSQL test database; this run used isolated SQLite."
+  },
+  "node": {
+    "app_js_syntax": "passed",
+    "service_worker_syntax": "passed",
+    "rpc_lost_response_503_400_retries": "passed"
+  },
+  "browser": {
+    "environment": "local FastAPI, isolated imported synthetic SQLite, AI disabled",
+    "scenarios": ["master login", "period analytics", "create assigned order", "worker login", "accept order", "start work", "submit report", "master review with score 85", "approved order visible in completed filter"],
+    "status": "passed",
+    "console_errors_at_end": 0,
+    "evidence": "previews/consolidated-web-closed.jpg"
+  },
+  "dataset": {
+    "initial_tasks": 608,
+    "reports": 655,
+    "synthetic_jpegs": 705,
+    "archive_preserved": true,
+    "archive_sha256": "d36b1afb2c11f9a8c2f3a9da3827558d6fcb07da9a86d4435091ad0f96761a8e",
+    "migration_and_foreign_keys": "passed",
+    "repeat_import_preserves_changes": "passed",
+    "existing_non_demo_database_rejected_without_overwrite": "passed"
+  },
+  "not_verified": ["live PostgreSQL/Supabase/Render", "parallel production load", "real local AI accuracy", "physical Android camera", "Android push", "APK packaging"]
+}

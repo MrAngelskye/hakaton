@@ -12,7 +12,7 @@ services:
       - key: PYTHON_VERSION
         value: "3.12.13"
       - key: TZ
-        value: Asia/Almaty
+        value: Asia/Qyzylorda
       - key: DATABASE_URL
         sync: false
       - key: SUPABASE_URL

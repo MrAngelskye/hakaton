@@ -1,0 +1,62 @@
+{
+  "commit": "188a506",
+  "mode": "offscreen, temporary SQLite, AI disabled",
+  "assigned_default": {
+    "task_id": 1,
+    "backend_status": "planned",
+    "backend_visible": true,
+    "default_filter": "available",
+    "card_visible": false,
+    "visible_under_mine": true
+  },
+  "brigade_member": {
+    "task_id": 2,
+    "member_id": 4,
+    "lead_id": 3,
+    "backend_visible": true,
+    "visible_under_mine": false
+  },
+  "downtime_controls": {
+    "buttons": [
+      "Простой оборудования"
+    ],
+    "backend_has_end_downtime": true
+  },
+  "default_score": {
+    "initial_value": 0,
+    "status_after_accept": "approved",
+    "saved_score": 0
+  },
+  "window": {
+    "title": "НарядAI · Allur",
+    "minimum_width": 1040,
+    "minimum_height": 760,
+    "navigation": [
+      "overview",
+      "tasks",
+      "reports",
+      "team",
+      "team_schedule",
+      "costs",
+      "analytics",
+      "ai_chat"
+    ]
+  },
+  "analytics": {
+    "contains_brigade_heading": false,
+    "contains_worker_heading": true
+  },
+  "create_task": {
+    "default_executor_id": null,
+    "default_executor_label": "Свободный наряд — сотрудник выберет сам",
+    "executor_labels": [
+      "Свободный наряд — сотрудник выберет сам",
+      "Демо сотрудник 01",
+      "Демо сотрудник 02",
+      "Демо сотрудник 03",
+      "Демо сотрудник 04"
+    ],
+    "has_norm_control": false,
+    "has_complexity_control": false
+  }
+}

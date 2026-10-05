@@ -24,7 +24,7 @@ def wait_for_server(url,seconds=100):
         try:
             with urlopen(url+'/health',timeout=15) as response:
                 info=json.loads(response.read(4096))
-                if info.get('ok') is True and str(info.get('version','')).startswith(('1.3','1.4')):return
+                if info.get('ok') is True and str(info.get('version','')).startswith(('1.3','1.4','1.5')):return
                 raise ValueError('По этому адресу работает другой сервер.')
         except (URLError,HTTPError,TimeoutError,json.JSONDecodeError,OSError):
             if time.monotonic()>=deadline:raise OSError('Не удалось подключиться. Проверьте интернет и адрес сервера.') from None

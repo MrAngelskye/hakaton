@@ -10,6 +10,7 @@ from app.widgets import ROOT
 from app.windows import LoginWindow,MainWindow
 from app.theme import apply_theme
 from app.motion import preferences
+from app.desktop_notifications import configure_windows_notifications
 
 
 def main():
@@ -17,6 +18,7 @@ def main():
     parser.add_argument('--data-dir',type=Path,help='Папка локальной базы и фото')
     parser.add_argument('--server',help='Адрес общего сервера, например http://192.168.1.10:8000')
     args=parser.parse_args()
+    configure_windows_notifications()
     app=QApplication(sys.argv[:1]);app.setApplicationName('NaryadAI');app.setOrganizationName('NaryadAI')
     app.setStyle('Fusion');app.setFont(QFont('Segoe UI',10));apply_theme(app)
     app.setWindowIcon(QIcon(str(ROOT/'assets/branding/km-mark-blue.svg')))
@@ -33,6 +35,7 @@ def main():
     windows={}
     def login_screen():
         if windows.get('main'):
+            windows['main'].desktop_notifications.shutdown()
             from app.drafts import clear_user_drafts
             draft_error=False
             try:clear_user_drafts(store,windows['main'].user)
@@ -46,12 +49,13 @@ def main():
     def open_main(user):
         window=MainWindow(store,user);windows['main']=window;window.logged_out.connect(login_screen);window.show()
         windows['login'].hide();windows['login'].deleteLater();windows['login']=None
-    # Закрытие крестиком завершает приложение; выход из аккаунта открывает форму входа.
+    # Окно входа закрывает приложение; рабочее окно остаётся в трее для уведомлений.
     def event_filter_close(cls):
         def close_event(self,event):
             event.accept();app.quit()
         cls.closeEvent=close_event
-    event_filter_close(LoginWindow);event_filter_close(MainWindow)
+    event_filter_close(LoginWindow)
+    app.aboutToQuit.connect(lambda:windows['main'].desktop_notifications.shutdown() if windows.get('main') else None)
     login_screen();return app.exec()
 
 if __name__=='__main__':sys.exit(main())

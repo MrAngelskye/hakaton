@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt,QDate,QTimer,Signal,QObject
 from PySide6.QtGui import QPainter,QColor,QPen
 from PySide6.QtWidgets import (QMainWindow,QWidget,QVBoxLayout,QHBoxLayout,QFrame,
     QScrollArea,QLineEdit,QButtonGroup,QLabel,QDateEdit,QProgressBar,QSizePolicy,
-    QFileDialog,QMessageBox,QTableWidget,QTableWidgetItem,QHeaderView,QAbstractItemView)
+    QFileDialog,QMessageBox,QTableWidget,QTableWidgetItem,QHeaderView,QAbstractItemView,QCheckBox,QTextEdit,QApplication)
 from app.widgets import label,button,brand,card,row,avatar,tag,CardGrid,Sheet,DatePicker,motion_toggle,Toast
 from app.theme import COLORS
 from app.motion import PageTransition
@@ -139,18 +139,27 @@ class MainWindow(QMainWindow):
         outer.addWidget(content,1);self.setCentralWidget(host)
         self.transition=PageTransition(self.scroll.viewport());self.toast=Toast(self)
         self.search_timer=QTimer(self);self.search_timer.setSingleShot(True);self.search_timer.setInterval(180);self.search_timer.timeout.connect(self.filter_cards)
-        self.refresh_timer=QTimer(self);self.refresh_timer.setInterval(3000 if getattr(store,'is_remote',False) else 15000);self.refresh_timer.timeout.connect(self.refresh_if_idle);self.refresh_timer.start()
+        self.refresh_timer=QTimer(self);self.refresh_timer.setInterval(3000 if getattr(store,'is_remote',False) else 5000);self.refresh_timer.timeout.connect(self.refresh_if_idle);self.refresh_timer.start()
         self._snapshot_loader=None;self.refresh_signature='';self.tasks=[];self.reports=[]
+        from app.desktop_notifications import DesktopNotifications
+        self.desktop_notifications=DesktopNotifications(self,store,user)
+        self.desktop_notifications.activated.connect(self.open_notification)
+        self.desktop_notifications.delivered.connect(lambda text:self.statusBar().showMessage(text,10000))
+        self.desktop_notifications.delivered.connect(lambda text:self.toast.show_message(text[:220]) if self.isVisible() else None)
         self.render()
     def refresh_if_idle(self):
         from PySide6.QtWidgets import QApplication
-        if QApplication.activeModalWidget():return
         if getattr(self.store,'is_remote',False):
             if self._snapshot_loader and self._snapshot_loader.isRunning():return
             loader=SnapshotLoader(self.store,self.schedule_day.toString('yyyy-MM-dd'),self)
             self._snapshot_loader=loader;loader.ready.connect(self.remote_snapshot);loader.failed.connect(lambda msg:self.statusBar().showMessage(msg,5000))
             loader.finished.connect(self.network_finished);loader.finished.connect(loader.deleteLater);loader.start();return
-        if self.page_key not in ('tasks','users','ai_chat'):
+        try:
+            self.store.notification_tick()
+            self.deliver_notifications(self.store.notifications(self.user))
+        except (ValueError,OSError,PermissionError) as e:self.statusBar().showMessage(str(e),5000)
+        if QApplication.activeModalWidget():return
+        if self.page_key not in ('users','ai_chat'):
             old_signature=self.refresh_signature
             try:self.load()
             except PermissionError:
@@ -166,6 +175,7 @@ class MainWindow(QMainWindow):
         if self.sender() is self._snapshot_loader:self._snapshot_loader=None
     def remote_snapshot(self,snapshot):
         from PySide6.QtWidgets import QApplication
+        self.deliver_notifications(snapshot.get('notifications',[]))
         if snapshot['day']!=self.schedule_day.toString('yyyy-MM-dd'):return
         old=self.refresh_signature;self.store._snapshot=snapshot
         if QApplication.activeModalWidget():return
@@ -182,8 +192,21 @@ class MainWindow(QMainWindow):
         people=self.store.users(self.user,True) if self.user['role']!='worker' else [self.user]
         shifts=[self.store.shift(self.user,p['id'],self.schedule_day.toString('yyyy-MM-dd')) for p in people]
         inbox=self.store.snapshot().get('notifications',[]) if getattr(self.store,'is_remote',False) else self.store.notifications(self.user)
-        self.bell.setText('Уведомления'+(' · '+str(len(inbox)) if inbox else ''))
+        self.deliver_notifications(inbox)
         self.refresh_signature=repr((self.tasks,self.reports,shifts,inbox,datetime.now().strftime('%Y%m%d%H%M')))
+    def deliver_notifications(self,items):
+        self.bell.setText('Уведомления'+(' · '+str(len(items)) if items else ''))
+        self.desktop_notifications.feed(items)
+    def open_notification(self,tid):
+        if QApplication.activeModalWidget():
+            QApplication.activeModalWidget().raise_()
+            self.statusBar().showMessage('Сохраните или закройте текущее окно, затем откройте уведомления.',10000)
+            return
+        if tid:self.open_task(tid)
+        else:self.notifications()
+    def closeEvent(self,event):
+        if self.desktop_notifications.hide_to_tray():event.ignore()
+        else:event.accept();self.desktop_notifications.quit()
     def render(self,*,refresh_remote=True,animate=True):
         try:self.load(refresh_remote=refresh_remote)
         except PermissionError:
@@ -479,15 +502,41 @@ class MainWindow(QMainWindow):
             if r and ReviewReport(self.store,self.user,r,self).exec():self.render();self.notify_success('Решение сохранено')
         except (ValueError,PermissionError,OSError) as e:QMessageBox.information(self,'Отчёт',str(e))
     def notifications(self):
-        d=Sheet('Уведомления',self);items=self.store.notifications(self.user)
-        names={'issued':'Выдан наряд','assigned':'Переназначен наряд','unaccepted':'Наряд не принят вовремя','deadline_reminder':'Приближается срок','overdue':'Просрочен срок','rejected':'Отказ исполнителя','report':'Отчёт на проверке','approved':'Работа закрыта','revision':'Нужна доработка'}
+        from app.notification_content import notification_content
+        try:items=self.store.notifications(self.user)
+        except (ValueError,OSError,PermissionError) as e:QMessageBox.information(self,'Уведомления',str(e));return
+        d=Sheet('Уведомления',self)
+        enabled=QCheckBox('Всплывающие уведомления Windows');enabled.setChecked(self.desktop_notifications.enabled)
+        enabled.toggled.connect(self.desktop_notifications.set_enabled);d.body.addWidget(enabled)
+        d.body.addWidget(label('Крестик сворачивает приложение к часам. Для полного выхода используйте меню значка.','muted',True))
+        d.body.addWidget(button('Проверить уведомление',self.desktop_notifications.test))
+        if self.user['role'] in ('master','admin'):
+            def compose():d.accept();QTimer.singleShot(0,self,self.send_announcement)
+            d.body.addWidget(button('Оповестить сотрудников',compose,'primary'))
+        if items:d.body.addWidget(button('Прочитать все',lambda:d.run_action(lambda:self.store.acknowledge_notifications(self.user,[i['id'] for i in items]))))
         if not items:d.body.addWidget(label('Новых уведомлений пока нет','section'))
         for item in items:
-            w,l=card();l.addWidget(label(names.get(item['kind'],item['kind']),'title'));l.addWidget(label('НР-'+str(item['task_id'])+' · '+item['created_at'],'muted',True))
-            if item['payload'].get('reason') or item['payload'].get('comment'):l.addWidget(label(item['payload'].get('reason') or item['payload']['comment'],'',True))
-            l.addWidget(button('Открыть наряд',lambda tid=item['task_id']:self.open_task(tid),'secondary'))
+            content=notification_content(item)
+            w,l=card();l.addWidget(label(content['title'],'title'));l.addWidget(label(item['created_at'],'muted'))
+            l.addWidget(label(content['body'],'',True))
+            if item['task_id']:
+                def open_item(tid=item['task_id']):d.accept();QTimer.singleShot(0,self,lambda:self.open_task(tid))
+                l.addWidget(button('Открыть наряд',open_item,'secondary'))
             l.addWidget(button('Прочитано',lambda nid=item['id']:d.run_action(lambda:self.store.acknowledge_notification(self.user,nid))));d.body.addWidget(w)
-        d.exec()
+        d.body.addStretch()
+        d.exec();self.render(animate=False)
+    def send_announcement(self):
+        d=Sheet('Оповестить сотрудников',self)
+        people=[u for u in self.store.users(self.user,True) if u['active']]
+        recipient=d.field('Получатель',combo([('Все сотрудники',None)]+[(p['name'],p['id']) for p in people]))
+        title=d.field('Заголовок',QLineEdit());title.setMaxLength(120)
+        message=d.field('Сообщение',QTextEdit());message.setFixedHeight(150)
+        important=QCheckBox('Важное сообщение');d.body.addWidget(important)
+        def send():
+            ids=[recipient.currentData()] if recipient.currentData() is not None else None
+            self.store.send_announcement(self.user,title.text(),message.toPlainText(),ids,important.isChecked())
+        d.body.addWidget(button('Отправить',lambda:d.run_action(send),'primary'))
+        if d.exec():self.notify_success('Оповещение отправлено сотрудникам')
     def export_reports(self):
         p,_=QFileDialog.getSaveFileName(self,'Экспорт отчётов','NaryadAI_reports.csv','CSV (*.csv)')
         if p:

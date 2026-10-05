@@ -13,7 +13,7 @@ from server.anythingllm import AnythingLLM,AIError,parse_verdict
 
 LOG=logging.getLogger('naryadai')
 MAX_BODY=60*1024*1024
-WRITE_METHODS={'create_task','claim','reschedule','transition','submit','review','add_user','set_active','reset_password','support_update_task','set_shift','reassign_task','change_priority','catalog_upsert','set_material_norm','set_employee_profile','start_downtime','end_downtime','assess_refusal','confirm_repeat','acknowledge_notification'}
+WRITE_METHODS={'create_task','claim','reschedule','transition','submit','review','add_user','set_active','reset_password','support_update_task','set_shift','reassign_task','change_priority','catalog_upsert','set_material_norm','set_employee_profile','start_downtime','end_downtime','assess_refusal','confirm_repeat','acknowledge_notification','acknowledge_notifications','send_announcement'}
 READ_METHODS={'task','events','pauses','shift','free_slots','employee_status','catalogs','photos_for_task','notifications','analytics','metrics','equipment_history','task_downtimes'}
 
 class LoginBody(BaseModel):
@@ -153,7 +153,7 @@ def create_app(settings,provider=None):
         return dict(u)
 
     @app.get('/health')
-    def health():return {'ok':True,'version':'1.5','ai_enabled':settings.ai_enabled,'features':['admin_chat','case1_workflow','period_analytics','notifications','atomic_rpc','mobile_web']}
+    def health():return {'ok':True,'version':'1.5','release':'1.5-notifications.1','ai_enabled':settings.ai_enabled,'features':['admin_chat','case1_workflow','period_analytics','notifications','atomic_rpc','mobile_web','desktop_notifications','announcements']}
     web=Path(__file__).resolve().parents[1]/'web'
     app.mount('/web',StaticFiles(directory=web),name='web')
     app.mount('/assets/branding',StaticFiles(directory=web.parent/'assets'/'branding'),name='branding')

@@ -1,0 +1,123 @@
+/* Real mobile browser workflow. CDP test host must use an isolated localhost DB. */
+'use strict';
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const fs = require('node:fs');
+const {chromium} = require(path.join(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES, 'playwright'));
+
+(async () => {
+  const browser = await chromium.connectOverCDP('http://127.0.0.1:9222', {noDefaults: true});
+  const pages = browser.contexts().flatMap(context => context.pages());
+  const master = pages.find(page => page.url().includes('testrole=master'));
+  const worker = pages.find(page => page.url().includes('testrole=worker'));
+  assert(master && worker, 'Two isolated mobile browser profiles are required');
+  const errors = [];
+  for (const page of [master, worker]) {
+    page.on('pageerror', error => errors.push(error.message));
+    await page.reload();
+    await page.locator('#login-form').waitFor();
+  }
+  async function login(page, role, username) {
+    await page.locator(`[data-role="${role}"]`).click();
+    await page.locator('#username').fill(username);
+    await page.locator('#password').fill('1234');
+    await page.locator('#login-form button[type=submit]').click();
+    await page.locator('#notification-bell').waitFor();
+    await page.waitForFunction(() => state.snapshot !== null);
+  }
+  await login(master, 'master', 'master');
+  await login(worker, 'worker', 'worker1');
+  console.log('Mobile profiles signed in');
+  const output = process.env.NARYADAI_TEST_OUTPUT || '/tmp/naryadai-browser-evidence';
+  fs.mkdirSync(output, {recursive: true});
+  assert(await worker.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile viewport must not overflow horizontally');
+
+  // Master composes a real announcement; worker receives and acknowledges it through UI.
+  await master.locator('#notification-bell').click();
+  await master.locator('#send-announcement').click();
+  const workerID = await worker.evaluate(() => state.user.id);
+  await master.locator('#announcement-recipient').selectOption(String(workerID));
+  await master.locator('#announcement-title').fill('Сбор бригады');
+  await master.locator('#announcement-message').fill('В 15:00 у мастерской. <b>Проверка текста</b>');
+  await master.locator('#announcement-important').check();
+  await master.locator('#announcement-form button').click();
+  await master.waitForFunction(() => !document.querySelector('#dialog').open);
+  await worker.waitForFunction(() => state.snapshot.notifications.some(item => item.kind === 'announcement'));
+  await worker.locator('#notification-bell').click();
+  await worker.getByText('Сбор бригады', {exact: true}).waitFor();
+  assert.equal(await worker.locator('.notification-copy b').count(), 0, 'Announcement HTML must remain plain text');
+  await worker.screenshot({path: path.join(output, 'mobile-notifications.png'), fullPage: true});
+  await worker.locator('[data-ack]').first().click();
+  await worker.waitForFunction(() => state.snapshot.notifications.length === 0);
+  console.log('Announcement delivered and acknowledged');
+
+  // One complete job goes through assignment, pause, photo report and master review.
+  await master.evaluate(() => go('home'));
+  await master.locator('#create-task').click();
+  const reference = await master.evaluate(() => ({equipment: state.refs.equipment[0], worker: state.snapshot.users.find(u => u.username === 'worker1')}));
+  await master.locator('#site').selectOption(String(reference.equipment.site_id));
+  await master.locator('#equipment').selectOption(String(reference.equipment.id));
+  await master.locator('#worker').selectOption(String(reference.worker.id));
+  await master.locator('#norm').selectOption('custom');
+  await master.locator('#priority').selectOption('urgent');
+  if (!await master.locator('#task-details').evaluate(node => node.open)) await master.locator('#task-details summary').click();
+  const nextDay = new Date(Date.now() + 86400000).toLocaleDateString('sv-SE', {timeZone: 'Asia/Qyzylorda'});
+  await master.locator('#task-day').fill(nextDay);
+  await master.locator('#title').fill('Срочная проверка конвейера');
+  await master.locator('#description').fill('Проверить привод, устранить вибрацию и выполнить контрольный запуск.');
+  await master.locator('#start').fill('09:00');
+  await master.locator('#deadline').fill(nextDay + 'T18:00');
+  await master.locator('#create-form button').click();
+  await master.waitForFunction(() => !document.querySelector('#dialog').open);
+  const taskID = await master.evaluate(() => state.snapshot.tasks.find(task => task.title === 'Срочная проверка конвейера').id);
+  console.log('Urgent task created');
+  await worker.waitForFunction(id => state.snapshot.tasks.some(task => task.id === id), taskID);
+  await worker.locator('#notification-bell').click();
+  await worker.getByText('Срочный наряд', {exact: true}).waitFor();
+  const openWorkerTask = () => worker.locator(`[data-notification-task="${taskID}"]`).first().click();
+  await openWorkerTask();
+  await worker.locator('#primary-task').click();
+  await worker.waitForFunction(() => !document.querySelector('#dialog').open);
+  await openWorkerTask();
+  await worker.locator('#primary-task').click();
+  await worker.waitForFunction(() => !document.querySelector('#dialog').open);
+  await openWorkerTask();
+  await worker.locator('#pause-task').click();
+  await worker.locator('#reason').fill('Ожидаем запасную часть');
+  await worker.locator('#reason-form button').click();
+  await worker.waitForFunction(() => !document.querySelector('#dialog').open);
+  await master.waitForFunction(id => state.snapshot.tasks.find(task => task.id === id)?.status === 'paused', taskID);
+  console.log('Pause reached master in real time');
+  await openWorkerTask();
+  await worker.locator('#primary-task').click();
+  await worker.waitForFunction(() => !document.querySelector('#dialog').open);
+  await openWorkerTask();
+  await worker.locator('#primary-task').click();
+  await worker.locator('#work').fill('Заменён подшипник, проверены крепления и смазка привода.');
+  await worker.locator('#result').fill('Контрольный запуск без вибрации, температура в норме.');
+  const defectID = await worker.evaluate(() => state.refs.defect_codes[1].id);
+  await worker.locator('#defect').selectOption(String(defectID));
+  await worker.locator('#hours').fill('1');
+  const photo = await worker.evaluate(() => {const canvas=document.createElement('canvas');canvas.width=120;canvas.height=80;const ctx=canvas.getContext('2d');ctx.fillStyle='#007cc3';ctx.fillRect(0,0,120,80);return canvas.toDataURL('image/png').split(',')[1];});
+  await worker.locator('input[type=file]').setInputFiles({name:'after.png',mimeType:'image/png',buffer:Buffer.from(photo,'base64')});
+  await worker.waitForFunction(() => state.draft?.photos.length === 1);
+  await worker.locator('#submit-report').click();
+  await worker.waitForFunction(() => !document.querySelector('#dialog').open);
+  await master.waitForFunction(id => state.snapshot.reports.some(report => report.task_id === id && report.status === 'submitted'), taskID);
+  console.log('Photo report reached master');
+  await master.evaluate(() => go('reports'));
+  const reportID = await master.evaluate(id => state.snapshot.reports.find(report => report.task_id === id).id, taskID);
+  await master.locator(`[data-report="${reportID}"]`).first().click();
+  await master.locator('#review-comment').fill('Фото и контрольный запуск проверены. Работа принята.');
+  await master.locator('#review-score').fill('92');
+  await master.locator('#approve-report').click();
+  await master.waitForFunction(() => !document.querySelector('#dialog').open);
+  await worker.waitForFunction(id => state.snapshot.tasks.find(task => task.id === id)?.status === 'approved', taskID);
+  await worker.locator('#notification-bell').click();
+  await worker.getByText('Работа принята', {exact:true}).waitFor();
+  await master.screenshot({path:path.join(output,'master-mobile.png'),fullPage:true});
+  await worker.screenshot({path:path.join(output,'worker-mobile.png'),fullPage:true});
+  assert.deepEqual(errors, [], 'Client must not produce JavaScript runtime errors');
+  console.log('PASS: two mobile users, plain-text announcement, urgent assignment, pause/resume, photo report, master review, shared DB and notifications');
+  await browser.close();
+})().catch(error => {console.error(error);process.exit(1);});

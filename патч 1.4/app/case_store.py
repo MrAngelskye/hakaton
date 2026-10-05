@@ -296,7 +296,7 @@ class CaseWorkflow:
             self._assign(c,tid,actor,people,brigade_id,'Выдача наряда')
             self._record_photos(c,tid,None,'before',actor['id'],photos)
             self.event(c,tid,actor['id'],'Выдан наряд','issued',None,status,data={'worker_id':wid,'brigade_id':brigade_id,'priority':priority})
-            for person in people:self._notify(c,person,tid,'issued',f'issued:{tid}:{person}',{'title':title,'status':STATUS[status]})
+            for person in people:self._notify(c,person,tid,'issued',f'issued:{tid}:{person}',{'title':title,'status':STATUS[status],'priority':priority})
             return tid
 
     def claim(self,actor,tid,day,start):
@@ -367,7 +367,7 @@ class CaseWorkflow:
             c.execute("UPDATE tasks SET worker_id=?,brigade_id=?,day=?,start=?,status='planned',issued_at=?,accepted_at=NULL,started_at=NULL,completed_at=NULL,queue_position=NULL,assignment_version=assignment_version+1,updated_at=? WHERE id=?",(wid,brigade_id,day,start,stamp(),stamp(),tid))
             self._assign(c,tid,actor,people,brigade_id,reason.strip())
             self.event(c,tid,actor['id'],'Переназначен наряд','reassigned',t['status'],'planned',reason.strip(),{'old_worker_id':t['worker_id'],'worker_id':wid,'brigade_id':brigade_id})
-            for person in people:self._notify(c,person,tid,'assigned',f'assigned:{tid}:{t["assignment_version"]+1}:{person}',{'title':t['title']})
+            for person in people:self._notify(c,person,tid,'assigned',f'assigned:{tid}:{t["assignment_version"]+1}:{person}',{'title':t['title'],'priority':t['priority']})
 
     def change_priority(self,actor,tid,priority,reason):
         if priority not in PRIORITIES or len(reason.strip())<3:raise ValueError('Выберите приоритет и укажите причину.')
@@ -376,6 +376,11 @@ class CaseWorkflow:
             if t['status'] in ('approved','cancelled'):raise ValueError('Наряд завершён.')
             c.execute('UPDATE tasks SET priority=?,updated_at=? WHERE id=?',(priority,stamp(),tid))
             self.event(c,tid,actor['id'],'Изменён приоритет','priority_changed',t['status'],t['status'],reason.strip(),{'old_priority':t['priority'],'priority':priority})
+            if priority=='urgent' and t['priority']!='urgent':
+                people={r['worker_id'] for r in c.execute('SELECT worker_id FROM task_assignments WHERE task_id=? AND ended_at IS NULL',(tid,))}
+                if t['worker_id']:people.add(t['worker_id'])
+                key=secrets.token_hex(16)
+                for uid in people:self._notify(c,uid,tid,'urgent',f'urgent:{key}:{uid}',{'title':t['title'],'priority':priority,'reason':reason.strip()})
 
     @staticmethod
     def _materials(c,lines):
@@ -411,9 +416,10 @@ class CaseWorkflow:
                 try:
                     with Image.open(p) as image:
                         if image.format not in ('JPEG','PNG','WEBP') or image.width*image.height>40000000:raise ValueError('Размер фото больше 40 Мп.')
-                        exif=image.getexif();captured=exif.get(36867) or exif.get(306);image.verify()
-                    with Image.open(p) as image:image.load()
-                except (OSError,ValueError,Image.DecompressionBombError):raise ValueError('Файл не является поддерживаемым фото.') from None
+                        image.verify()
+                    with Image.open(p) as image:
+                        image.load();exif=image.getexif();captured=exif.get(36867) or exif.get(306)
+                except (OSError,ValueError,SyntaxError,RuntimeError,Image.DecompressionBombError):raise ValueError('Файл не является поддерживаемым фото.') from None
                 sha=hashlib.sha256(p.read_bytes()).hexdigest()
                 if sha in hashes:raise ValueError('Одна фотография прикреплена несколько раз.')
                 hashes.add(sha);issues=[];capture=None
@@ -609,23 +615,73 @@ class CaseWorkflow:
             rows=c.execute("SELECT * FROM tasks WHERE status NOT IN ('approved','cancelled','aiPending','submitted')").fetchall()
             for t in rows:
                 if not t['issued_at']:continue
-                people=set(assignments.get(t['id'],[])) if t['status']!='rejected' else set();people.add(t['master_id'])
-                due=moment(t['deadline']);payload={'title':t['title'],'deadline':t['deadline'],'status':t['status']}
+                people=set(assignments.get(t['id'],[])) if t['status']!='rejected' else set()
+                if t['worker_id'] and t['status']!='rejected':people.add(t['worker_id'])
+                people.add(t['master_id'])
+                due=moment(t['deadline']);payload={'title':t['title'],'deadline':t['deadline'],'status':t['status'],'priority':t['priority']}
                 version=f'{t["id"]}:{t["assignment_version"]}'
                 if t['status'] in ('available','planned') and not t['accepted_at'] and clock-moment(t['issued_at'])>=timedelta(minutes=urgent if t['priority']=='urgent' else normal):
                     for uid in {t['master_id'],*managers}:self._notify(c,uid,t['id'],'unaccepted',f'unaccepted:{version}:{uid}',payload)
                 if timedelta(0)<due-clock<=timedelta(minutes=remind):
                     for uid in people:self._notify(c,uid,t['id'],'deadline_reminder',f'reminder:{version}:{t["deadline"]}:{uid}',payload)
-                if due<clock:
+                if due<=clock:
                     bucket=int((clock-due).total_seconds()//(repeat*60))
                     for uid in people|set(managers):self._notify(c,uid,t['id'],'overdue',f'overdue:{version}:{t["deadline"]}:{bucket}:{uid}',payload)
 
+            # One next job per free employee, including brigade members and night shifts.
+            busy=set();candidates={}
+            for t in rows:
+                owners=set(assignments.get(t['id'],[]))
+                if t['worker_id']:owners.add(t['worker_id'])
+                if t['status'] in ('inProgress','paused'):busy.update(owners)
+                if t['status'] not in ('planned','accepted','queued') or t['start'] is None:continue
+                begin=datetime.combine(date.fromisoformat(t['day']),datetime.min.time())+timedelta(hours=float(t['start']))
+                if begin>clock+timedelta(minutes=10) or moment(t['deadline'])<=clock:continue
+                rank=({'urgent':0,'high':1,'normal':2,'scheduled':3}.get(t['priority'],2),begin,t['queue_position'] or 0,t['id'])
+                for uid in owners:
+                    if uid not in candidates or rank<candidates[uid][0]:candidates[uid]=(rank,t)
+            for uid,(_,t) in candidates.items():
+                if uid in busy:continue
+                if not c.execute('SELECT 1 FROM users WHERE id=? AND active=1',(uid,)).fetchone():continue
+                on_shift=False
+                for shift_day in (clock.date(),clock.date()-timedelta(days=1)):
+                    shift=self._shift(c,uid,shift_day.isoformat())
+                    if shift:
+                        base=datetime.combine(shift_day,datetime.min.time())
+                        if base+timedelta(hours=float(shift['start']))<=clock<base+timedelta(hours=float(shift['end'])):on_shift=True
+                if not on_shift:continue
+                key=f'next:{t["id"]}:{t["assignment_version"]}:{t["day"]}:{t["start"]}:{uid}'
+                self._notify(c,uid,t['id'],'next_task',key,{'title':t['title'],'priority':t['priority'],'day':t['day'],'start':t['start']})
+
     def notifications(self,actor,limit=100):
+        from app.notification_content import notification_content
         if not 1<=limit<=200:raise ValueError('Лимит уведомлений: 1–200.')
         with self.transaction() as c:
             self.require(c,actor);rows=[dict(r) for r in c.execute('SELECT id,task_id,kind,payload,created_at,read_at FROM notification_outbox WHERE user_id=? AND read_at IS NULL ORDER BY id DESC LIMIT ?',(actor['id'],limit))]
-            for row in rows:row['payload']=decoded(row['payload'],{})
+            for row in rows:
+                row['payload']=decoded(row['payload'],{});row.update(notification_content(row))
             return rows
+
+    def send_announcement(self,actor,title,message,user_ids=None,important=False):
+        if not isinstance(title,str) or not 3<=len(title.strip())<=120:raise ValueError('Заголовок: от 3 до 120 символов.')
+        if not isinstance(message,str) or not 3<=len(message.strip())<=2000:raise ValueError('Сообщение: от 3 до 2000 символов.')
+        if type(important) is not bool:raise ValueError('Проверьте важность сообщения.')
+        if user_ids is not None and (not isinstance(user_ids,list) or not 1<=len(user_ids)<=500 or any(type(uid) is not int for uid in user_ids)):raise ValueError('Выберите получателей.')
+        with self.transaction(write=True) as c:
+            sender=self.require(c,actor,('master','admin'))
+            available={r['id'] for r in c.execute("SELECT id FROM users WHERE active=1 AND role='worker'")}
+            recipients=available if user_ids is None else set(user_ids)
+            if not recipients or not recipients<=available:raise ValueError('Оповещение можно отправить действующим сотрудникам.')
+            key=secrets.token_hex(16)
+            payload={'title':title.strip(),'message':message.strip(),'important':important,'sender_id':sender['id'],'sender_name':sender['name']}
+            for uid in sorted(recipients):self._notify(c,uid,None,'announcement',f'announcement:{key}:{uid}',payload)
+            return {'recipients':len(recipients)}
+
+    def acknowledge_notifications(self,actor,notification_ids):
+        if not isinstance(notification_ids,list) or not 1<=len(notification_ids)<=200 or any(type(nid) is not int for nid in notification_ids):raise ValueError('Выберите уведомления (до 200).')
+        with self.transaction(write=True) as c:
+            self.require(c,actor)
+            for nid in set(notification_ids):self.acknowledge_notification(actor,nid)
 
     def acknowledge_notification(self,actor,notification_id):
         with self.transaction(write=True) as c:

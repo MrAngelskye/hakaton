@@ -77,6 +77,7 @@ async function clearDrafts() { try{const db=await database();await new Promise((
 const draftKey = id => `${state.user.id}:${id}`;
 function clearPhotos() { state.photoURLs.forEach(url => URL.revokeObjectURL(url));state.photoURLs.clear(); }
 async function endSession(send=true) {
+  await NaryadNotifications.stop();
   if(send){try{await request('/api/logout',{method:'POST'});}catch(_){/* local logout always succeeds */}}
   state.token='';state.user=null;state.snapshot=null;state.refs={};state.draft=null;state.taskId=null;
   sessionStorage.removeItem('naryadai.token');sessionStorage.removeItem('naryadai.user');
@@ -90,8 +91,8 @@ function renderLogin() {
 }
 function navItems() { return state.user.role==='worker' ? [['home','Главная'],['tasks','Наряды'],['schedule','График'],['reports','Результаты'],['settings','Настройки']] : state.user.role==='master' ? [['home','Обзор'],['tasks','Наряды'],['reports','Приёмка'],['equipment','Оборудование'],['people','Команда'],['analytics','Аналитика'],['settings','Настройки']] : state.user.role==='admin' ? [['home','Обзор'],['tasks','Наряды'],['reports','Приёмка'],['equipment','Справочники'],['people','Доступ'],['analytics','Аналитика'],['settings','Настройки']] : [['home','Обзор'],['tasks','Наряды'],['reports','Отчёты'],['equipment','Оборудование'],['people','Команда'],['analytics','Аналитика'],['settings','Настройки']]; }
 function renderShell() {
-  const list=navItems();$('#app').innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><img src="/assets/branding/km-logo-white.svg" alt="Костанайские Минералы"><strong>НарядAI</strong><small>Управление работами</small></div><nav class="nav" aria-label="Основная навигация">${list.map(([key,name])=>`<button data-page="${key}" ${state.page===key?'aria-current="page"':''}>${icon(key)}<span>${h(name)}</span></button>`).join('')}</nav><div class="side-bottom"><small>${h(roleNames[state.user.role])}<br>АО «Костанайские Минералы»</small><button id="side-logout">Завершить сеанс</button></div></aside><div class="main-wrap"><header class="topbar"><div><strong>${h(state.user.name)}</strong><small>${h(state.user.job || roleNames[state.user.role])}</small></div><span id="network" class="network" role="status">Соединение…</span></header><main class="main" id="main" tabindex="-1"><div class="grid cols-3">${Array(3).fill('<div class="skeleton" aria-label="Загрузка"></div>').join('')}</div></main></div></div>`;
-  $$('[data-page]').forEach(button=>button.onclick=()=>go(button.dataset.page));$('#side-logout').onclick=()=>endSession();network(state.network);
+  const list=navItems();$('#app').innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><img src="/assets/branding/km-logo-white.svg" alt="Костанайские Минералы"><strong>НарядAI</strong><small>Управление работами</small></div><nav class="nav" aria-label="Основная навигация">${list.map(([key,name])=>`<button data-page="${key}" ${state.page===key?'aria-current="page"':''}>${icon(key)}<span>${h(name)}</span></button>`).join('')}</nav><div class="side-bottom"><small>${h(roleNames[state.user.role])}<br>АО «Костанайские Минералы»</small><button id="side-logout">Завершить сеанс</button></div></aside><div class="main-wrap"><header class="topbar"><div><strong>${h(state.user.name)}</strong><small>${h(state.user.job || roleNames[state.user.role])}</small></div><div class="topbar-actions"><span id="network" class="network" role="status">Соединение…</span><button id="notification-bell" class="notification-bell" aria-label="Уведомления">${icon('bell')}<span id="notification-count" hidden>0</span></button></div></header><main class="main" id="main" tabindex="-1"><div class="grid cols-3">${Array(3).fill('<div class="skeleton" aria-label="Загрузка"></div>').join('')}</div></main></div></div>`;
+  $$('[data-page]').forEach(button=>button.onclick=()=>go(button.dataset.page));$('#side-logout').onclick=()=>endSession();$('#notification-bell').onclick=()=>go('notifications');network(state.network);
 }
 function go(page) { state.page=page;state.search='';state.filter='active';$$('[data-page]').forEach(button=>button.toggleAttribute('aria-current',button.dataset.page===page));$$('[data-page][aria-current]').forEach(button=>button.setAttribute('aria-current','page'));renderPage();$('#main').focus({preventScroll:true});window.scrollTo({top:0,behavior:'auto'}); }
 async function refresh(first=false) {
@@ -100,6 +101,8 @@ async function refresh(first=false) {
   try {
     const snapshot=await request(`/api/snapshot?day=${day()}`);if(!state.user||sessionToken!==state.token)return;state.snapshot=snapshot;if(Number.isFinite(snapshot.server_time))state.clockOffset=snapshot.server_time*1000-Date.now();
     if(first || !Object.keys(state.refs).length)state.refs=await request('/api/catalogs');
+    updateNotificationCount();NaryadNotifications.feed(snapshot.notifications||[],state.user);
+    if(first)openPendingNotification();
     const main=$('#main');const editing=(document.activeElement?.matches('input,select,textarea,button,a') && Boolean(document.activeElement.closest('#main'))) || $('#dialog').open;
     if(first || !editing){const scroll=window.scrollY;renderPage();if(!first)window.scrollTo({top:scroll,behavior:'auto'});}
     else { const node=$('#sync-time');if(node)node.textContent=`Данные обновлены ${new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}`; }
@@ -112,9 +115,49 @@ function empty(title,text='') { return `<div class="empty">${icon('check')}<stro
 function metric(value,label) { return `<div class="card metric"><b>${h(value)}</b><span>${h(label)}</span></div>`; }
 function taskCard(task) { return `<button class="card task-card" data-task="${task.id}"><span class="task-id">НАРЯД НР-${task.id}</span><h3>${h(task.title)}</h3><div class="badges">${badge(task.status)}${badge(task.priority,'priority')}</div><small>${h(task.equipment)} · ${h(task.site)}</small><div class="task-meta">${deadline(task)}<span>${h(task.duration)} ч</span></div>${state.user.role!=='worker'?`<small style="margin-top:10px">${h(task.worker_name || 'Исполнитель не назначен')}</small>`:''}</button>`; }
 function alertsBlock() {
-  const alerts=(state.snapshot?.notifications || []).filter(item=>!item.acknowledged);if(!alerts.length)return '';
-  return `<section class="card"><div class="section-head"><h2>Требуют внимания</h2>${icon('bell')}</div><div class="list">${alerts.slice(0,5).map(alert=>`<div class="alert-row"><strong>${h(alert.payload?.title || ({issued:'Новое назначение',report:'Отчёт на проверке',review:'Решение мастера',overdue:'Просрочен срок',acceptance_overdue:'Наряд не принят',deadline_reminder:'Приближается срок'}[alert.kind]) || 'Уведомление')}</strong><small>${h(alert.payload?.reason || alert.payload?.comment || statusNames[alert.payload?.status] || alert.payload?.status || dateTime(alert.created_at))}</small>${alert.task_id?`<button data-task="${Number(alert.task_id)}">Открыть наряд</button>`:''}${alert.id?`<button data-ack="${h(alert.id)}" class="ghost">Прочитано</button>`:''}</div>`).join('')}</div></section>`;
+  const items=state.snapshot?.notifications||[];if(!items.length)return '';
+  return `<section class="card"><div class="section-head"><h2>Требуют внимания</h2><button data-go="notifications">Все · ${items.length}</button></div><div class="list">${items.slice(0,3).map(notificationRow).join('')}</div></section>`;
 }
+function updateNotificationCount() {
+  const count=state.snapshot?.notifications?.length||0;const badge=$('#notification-count');
+  if(badge){badge.textContent=count>99?'99+':String(count);badge.hidden=!count;}
+  $('#notification-bell')?.setAttribute('aria-label',`Уведомления: ${count}`);
+}
+function notificationRow(item) {
+  return `<article class="notification-row ${h(item.severity||'info')}"><div class="notification-symbol">${icon(item.kind==='next_task'?'arrow':item.kind==='overdue'||item.kind==='deadline_reminder'?'clock':'bell')}</div><div class="notification-copy"><strong>${h(item.title||item.payload?.title||'Уведомление')}</strong><p class="work-text">${h(item.body||item.payload?.reason||item.payload?.comment||'')}</p><small>${h(dateTime(item.created_at))}</small><div class="notification-actions">${item.task_id?`<button data-notification-task="${item.task_id}">Открыть наряд</button>`:''}<button class="ghost" data-ack="${item.id}">Прочитано</button></div></div></article>`;
+}
+function notificationSettings() {
+  const enabled=NaryadNotifications.enabled(state.user);
+  return `<section class="card"><div class="section-head"><div><h2>Уведомления устройства</h2><p class="muted">${h(NaryadNotifications.status(state.user))}</p></div>${icon('bell')}</div><p>Срочные наряды, приближение срока, сообщения мастера и следующая работа.</p><button id="enable-notifications" class="${enabled?'':'primary'}">${enabled?'Выключить всплывающие':'Включить уведомления'}</button><p class="sync-note">Держите приложение открытым. При закрытом браузере или спящем устройстве сообщения появятся после возвращения. Центр уведомлений работает независимо от разрешения браузера.</p></section>`;
+}
+function notificationsPage() {
+  const items=state.snapshot?.notifications||[];
+  const sorted=[...items].sort((a,b)=>Number(b.severity==='critical')-Number(a.severity==='critical')||b.id-a.id);
+  return pageHead('Уведомления','Все назначения и сообщения вашей смены.',canManage()?'<button class="primary" id="send-announcement">'+icon('plus')+' Оповестить сотрудников</button>':'')+`<div class="notification-layout"><section class="card"><div class="section-head"><h2>Непрочитанные · ${items.length}</h2>${items.length?'<button id="read-all-notifications">Прочитать все</button>':''}</div><div class="list">${sorted.map(notificationRow).join('')||empty('Вы всё прочитали','Здесь появятся новые наряды, сообщения и напоминания.')}</div></section>${notificationSettings()}</div>`;
+}
+function composeAnnouncement() {
+  const workers=state.snapshot.users.filter(u=>u.role==='worker'&&u.active);
+  showDialog('Оповестить сотрудников','Сообщение появится в приложении и в уведомлениях устройства',`<form id="announcement-form"><div class="field"><label for="announcement-recipient">Кому</label><select id="announcement-recipient"><option value="">Всем сотрудникам (${workers.length})</option>${workers.map(u=>`<option value="${u.id}">${h(u.name)}</option>`).join('')}</select></div>${field('announcement-title','Заголовок','text','','required minlength="3" maxlength="120"')}<div class="field"><label for="announcement-message">Сообщение</label><textarea id="announcement-message" minlength="3" maxlength="2000" required placeholder="Например: сбор бригады в 15:00 у мастерской"></textarea></div><label class="settings-row"><span>Важное сообщение</span><input type="checkbox" id="announcement-important"></label><div id="form-error" class="error-text" role="alert"></div><div class="dialog-actions"><button class="primary">Отправить оповещение</button></div></form>`);
+  $('#announcement-form').onsubmit=event=>{event.preventDefault();const uid=$('#announcement-recipient').value;mutate($('#announcement-form button'),'send_announcement',[],{title:$('#announcement-title').value,message:$('#announcement-message').value,user_ids:uid?[Number(uid)]:null,important:$('#announcement-important').checked});};
+}
+async function openNotificationTask(id) {
+  let task=taskById(id);
+  try{if(!task){task=await rpc('task',[Number(id)]);state.snapshot.tasks.push(task);}openTask(Number(id));}
+  catch(error){toast(error.message,true);}
+}
+let pendingNotification=null;
+function openPendingNotification() {
+  const params=new URLSearchParams(location.search);
+  if(!pendingNotification&&(params.has('notificationTask')||params.has('notifications'))){pendingNotification={taskId:Number(params.get('notificationTask'))||null};history.replaceState(null,'',location.pathname);}
+  if(!pendingNotification||!state.user||!state.snapshot)return;
+  if($('#dialog').open){toast('Новое уведомление — откройте колокольчик после сохранения формы.');return;}
+  const target=pendingNotification;pendingNotification=null;
+  if(target.userId&&target.userId!==state.user.id){go('notifications');return;}
+  if(target.taskId)openNotificationTask(target.taskId);else go('notifications');
+}
+window.addEventListener('naryadai-notification',event=>{pendingNotification=event.detail;openPendingNotification();});
+navigator.serviceWorker?.addEventListener('message',event=>{if(event.data?.type==='OPEN_NOTIFICATION'){pendingNotification=event.data;openPendingNotification();}});
+
 function homePage() {
   const tasks=state.user.role==='worker'?mine():state.snapshot.tasks;const todo=tasks.filter(active);const reports=state.snapshot.reports.filter(r=>r.status==='submitted');const inWork=todo.filter(t=>t.status==='inProgress');const waiting=todo.filter(t=>t.status==='planned');
   const metricRow=state.snapshot.metrics?.find(m=>m.id===state.user.id);const finished=state.snapshot.reports.filter(r=>r.status==='approved');const avg=metricRow?.score??'—';
@@ -163,16 +206,17 @@ function peoplePage() {
   return pageHead(state.user.role==='admin'?'Пользователи и доступ':'Команда',state.user.role==='admin'?'Роли и доступ к рабочему пространству.':'Загрузка исполнителей и оценки принятых работ.',state.user.role==='admin'?'<button id="add-user" class="primary">Добавить пользователя</button>':'')+`<section class="card"><div class="list">${people.map(person=>state.user.role==='admin'?`<div class="list-row"><div><strong>${h(person.name)}</strong><small>${h(person.username)} · ${h(roleNames[person.role])} · ${person.active?'Активен':'Отключён'}</small></div>${person.role==='worker'?`<button data-profile="${person.id}">Профиль и бригада</button>`:''}${person.id!==state.user.id?`<button data-user-active="${person.id}" data-active="${person.active?0:1}">${person.active?'Отключить':'Включить'}</button>`:''}</div>`:personRow(person,true)).join('')}</div></section>`;
 }
 function settingsPage() {
-  return pageHead('Настройки','Параметры интерфейса, подключения и сеанса.')+`<div class="grid cols-equal"><section class="card"><h2>Интерфейс</h2><label class="settings-row" for="reduce-motion"><div>Уменьшить анимации<small style="display:block">Настройка сохраняется на этом устройстве</small></div><input type="checkbox" id="reduce-motion" ${document.documentElement.classList.contains('reduce-motion')?'checked':''}></label><div class="settings-row"><div>Установить приложение<small style="display:block">Доступно в поддерживаемом браузере по HTTPS</small></div><button id="install-app" ${state.installPrompt?'':'disabled'}>Установить</button></div><p class="sync-note">На iPhone: «Поделиться» → «На экран Домой». На Android: меню браузера → «Установить приложение».</p></section><section class="card"><h2>Рабочий сеанс</h2><p><strong>${h(state.user.name)}</strong><br><span class="muted">${h(roleNames[state.user.role])}</span></p><p>ИИ ${state.snapshot.ai_enabled?'подключён для предварительной проверки':'выключен: отчёты проверяет мастер вручную'}.</p><div class="notice">Без сети можно открыть оболочку и сохранённый черновик в текущем сеансе. Наряды, фотографии сервера и отправка требуют подключения. Автоматической фоновой отправки нет.</div><button id="settings-logout" class="danger">Выйти и удалить черновики</button></section></div>`;
+  return pageHead('Настройки','Параметры интерфейса, подключения и сеанса.')+`<div class="grid cols-equal">${notificationSettings()}<section class="card"><h2>Интерфейс</h2><label class="settings-row" for="reduce-motion"><div>Уменьшить анимации<small style="display:block">Настройка сохраняется на этом устройстве</small></div><input type="checkbox" id="reduce-motion" ${document.documentElement.classList.contains('reduce-motion')?'checked':''}></label><div class="settings-row"><div>Установить приложение<small style="display:block">Доступно в поддерживаемом браузере по HTTPS</small></div><button id="install-app" ${state.installPrompt?'':'disabled'}>Установить</button></div><p class="sync-note">На iPhone: «Поделиться» → «На экран Домой». На Android: меню браузера → «Установить приложение».</p></section><section class="card"><h2>Рабочий сеанс</h2><p><strong>${h(state.user.name)}</strong><br><span class="muted">${h(roleNames[state.user.role])}</span></p><p>ИИ ${state.snapshot.ai_enabled?'подключён для предварительной проверки':'выключен: отчёты проверяет мастер вручную'}.</p><div class="notice">Без сети можно открыть оболочку и сохранённый черновик в текущем сеансе. Наряды, фотографии сервера и отправка требуют подключения. Автоматической фоновой отправки нет.</div><button id="settings-logout" class="danger">Выйти и удалить черновики</button></section></div>`;
 }
 function renderPage() {
   if(!state.snapshot || !state.user)return;
-  const pages={home:homePage,tasks:tasksPage,reports:reportsPage,schedule:schedulePage,equipment:equipmentPage,people:peoplePage,settings:settingsPage,analytics:analyticsPage};
+  const pages={home:homePage,tasks:tasksPage,reports:reportsPage,schedule:schedulePage,equipment:equipmentPage,people:peoplePage,settings:settingsPage,notifications:notificationsPage,analytics:analyticsPage};
   $('#main').innerHTML=(pages[state.page]||homePage)()+`<p class="sync-note" id="sync-time">Данные обновлены ${new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})} · обновление каждые 3 секунды</p>`;bindPage();
 }
 function bindCommon(root=document) {
   $$('[data-task]',root).forEach(button=>button.onclick=()=>openTask(Number(button.dataset.task)));
   $$('[data-report]',root).forEach(button=>button.onclick=()=>openReport(Number(button.dataset.report)));
+  $$('[data-notification-task]',root).forEach(button=>button.onclick=()=>openNotificationTask(Number(button.dataset.notificationTask)));
   $$('[data-go]',root).forEach(button=>button.onclick=()=>go(button.dataset.go));
   $$('[data-equipment]',root).forEach(button=>button.onclick=()=>openEquipment(button.dataset.equipment));
   $$('[data-evidence]',root).forEach(button=>button.onclick=()=>openReport(Number(button.dataset.evidence)));
@@ -181,6 +225,9 @@ function bindPage() {
   bindCommon($('#main'));$$('[data-profile]').forEach(b=>b.onclick=()=>editEmployee(state.snapshot.users.find(p=>p.id===Number(b.dataset.profile))));if($('#analytics-form'))$('#analytics-form').onsubmit=event=>{event.preventDefault();calculateAnalytics();};if($('#create-task'))$('#create-task').onclick=()=>createTask();
   if($('#task-list')){ $('#task-filter').value=state.filter;$('#task-priority').value=state.priority;$('#task-search').oninput=event=>{state.search=event.target.value;updateTaskList();};$('#task-filter').onchange=event=>{state.filter=event.target.value;updateTaskList();};$('#task-priority').onchange=event=>{state.priority=event.target.value;updateTaskList();};updateTaskList(); }
   $$('[data-ack]').forEach(button=>button.onclick=()=>mutate(button,'acknowledge_notification',[Number(button.dataset.ack)]));
+  if($('#send-announcement'))$('#send-announcement').onclick=composeAnnouncement;
+  if($('#read-all-notifications'))$('#read-all-notifications').onclick=()=>mutate($('#read-all-notifications'),'acknowledge_notifications',[(state.snapshot.notifications||[]).map(item=>item.id)]);
+  if($('#enable-notifications'))$('#enable-notifications').onclick=async event=>{const button=event.currentTarget;button.disabled=true;try{if(NaryadNotifications.enabled(state.user))await NaryadNotifications.disable(state.user);else await NaryadNotifications.enable(state.user);renderPage();}catch(error){toast(error.message,true);button.disabled=false;}};
   $$('[data-reference-tab]').forEach(button=>button.onclick=()=>{$('#main').innerHTML=referencesPage(button.dataset.referenceTab);bindPage();});
   $$('[data-reference]').forEach(button=>button.onclick=()=>editReference((state.refs[state.referenceCategory]||[]).find(item=>String(item.id)===button.dataset.reference)));
   if($('#new-reference'))$('#new-reference').onclick=()=>editReference();
@@ -198,7 +245,7 @@ function showDialog(title,subtitle,body) {
 }
 async function mutate(button,method,args=[],kwargs={},photos=[]) {
   if(state.busy)return;state.busy=true;button.disabled=true;
-  try{await rpc(method,args,kwargs,photos);toast('Изменения сохранены');$('#dialog').close();await refresh(true);}
+  try{const result=await rpc(method,args,kwargs,photos);toast(method==='send_announcement'?`Оповещение отправлено · получателей: ${result.recipients}`:'Изменения сохранены');$('#dialog').close();await refresh(true);}
   catch(error){toast(error.message,true);const node=$('#form-error');if(node)node.textContent=error.message+(error.status===0||error.status>=500?' При повторе того же действия будет отправлен тот же запрос.':'');}
   finally{state.busy=false;if(button.isConnected)button.disabled=false;}
 }
@@ -384,4 +431,5 @@ window.addEventListener('offline',()=>network('offline'));window.addEventListene
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();state.installPrompt=event;if($('#install-app'))$('#install-app').disabled=false;});
 if('serviceWorker' in navigator && window.isSecureContext)navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(()=>{});
 if(state.token&&state.user){renderShell();refresh(true);}else renderLogin();
-setInterval(()=>{if(state.user&&!document.hidden)refresh();},3000);
+setInterval(()=>{if(state.user)refresh();},3000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state.user)refresh();});

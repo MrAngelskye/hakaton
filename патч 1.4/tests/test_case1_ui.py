@@ -13,7 +13,7 @@ class UISmoke(unittest.TestCase):
     @classmethod
     def setUpClass(cls):cls.qt=QApplication.instance() or QApplication([])
     def setUp(self):
-        self.temp=tempfile.TemporaryDirectory();self.store=Store(self.temp.name);self.master=self.store.authenticate('master','1234','master');self.worker=self.store.authenticate('worker1','1234','worker');self.parent=QWidget()
+        self.temp=tempfile.TemporaryDirectory();self.store=Store(self.temp.name,seed_demo=True);self.master=self.store.authenticate('master','1234','master');self.worker=self.store.authenticate('worker1','1234','worker');self.parent=QWidget()
     def tearDown(self):self.parent.close();self.temp.cleanup()
     def test_catalog_widgets_and_material_price(self):
         d=CreateTask(self.store,self.master,self.parent)

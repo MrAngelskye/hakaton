@@ -1,0 +1,110 @@
+{
+  "pageid": 20582583,
+  "title": "File:Leaky pipe section removed using copper tube cutter.jpg",
+  "revision": {
+    "revid": 1269618738,
+    "parentid": 461114217,
+    "timestamp": "2026-08-30T04:20:43Z",
+    "slots": {
+      "main": {
+        "contentmodel": "wikitext",
+        "contentformat": "text/x-wiki",
+        "*": "=={{int:filedesc}}==\n{{Information\n|description={{en|1=This section of pipe over a hot water heater had leaked, and then corroded (green color). A tube cutter was used to cut the two sections of pipe so that a replacement connector could be attached.}}\n|date=2012-08-08\n|source={{own}}\n|author=[[User:Tomwsulcer|Tomwsulcer]]\n|permission=\n|other_versions=\n|other_fields=\n}}\n\n=={{int:license-header}}==\n{{self|cc-zero}}\n\n[[Category:Copper pipes]]\n[[Category:Handyman projects]]\n[[Category:Corrosion]]"
+      }
+    }
+  },
+  "imageinfo": {
+    "size": 137916,
+    "width": 514,
+    "height": 518,
+    "thumburl": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Leaky_pipe_section_removed_using_copper_tube_cutter.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "thumbwidth": 1280,
+    "thumbheight": 1290,
+    "thumbattribs": {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Leaky_pipe_section_removed_using_copper_tube_cutter.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "decoding": "async",
+      "loading": "lazy",
+      "width": 1280,
+      "height": 1290
+    },
+    "url": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Leaky_pipe_section_removed_using_copper_tube_cutter.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Leaky_pipe_section_removed_using_copper_tube_cutter.jpg",
+    "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=20582583",
+    "sha1": "ea3c8935e2bbc9365ada7deb55611bdc7f11746b",
+    "extmetadata": {
+      "DateTime": {
+        "value": "2012-08-08 21:54:41",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+      },
+      "ObjectName": {
+        "value": "Leaky pipe section removed using copper tube cutter",
+        "source": "mediawiki-metadata"
+      },
+      "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+      },
+      "Categories": {
+        "value": "CC-Zero|Corrosion|Copper pipes|Self-published work|Handyman projects",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "ImageDescription": {
+        "value": "This section of pipe over a hot water heater had leaked, and then corroded (green color). A tube cutter was used to cut the two sections of pipe so that a replacement connector could be attached.",
+        "source": "commons-desc-page"
+      },
+      "DateTimeOriginal": {
+        "value": "2012-08-08",
+        "source": "commons-desc-page"
+      },
+      "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+      },
+      "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Tomwsulcer&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Tomwsulcer (page does not exist)\">Tomwsulcer</a>",
+        "source": "commons-desc-page"
+      },
+      "LicenseShortName": {
+        "value": "CC0",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "UsageTerms": {
+        "value": "Creative Commons Zero, Public Domain Dedication",
+        "source": "commons-desc-page"
+      },
+      "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "LicenseUrl": {
+        "value": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+        "source": "commons-desc-page"
+      },
+      "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "License": {
+        "value": "cc0",
+        "source": "commons-templates",
+        "hidden": ""
+      }
+    }
+  }
+}

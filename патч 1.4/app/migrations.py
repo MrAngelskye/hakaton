@@ -70,9 +70,12 @@ class DB:
         return {r['name'] for r in self.execute('PRAGMA table_info('+table+')')}
 
 def migrate(raw, postgres=False):
+    from app.production_schema import ensure_reference_schema
     db=DB(raw,postgres)
     db.ddl(TABLES.split(';')[0])
-    if db.execute('SELECT 1 FROM schema_migrations WHERE version=?',(VERSION,)).fetchone():return False
+    if db.execute('SELECT 1 FROM schema_migrations WHERE version=?',(VERSION,)).fetchone():
+        ensure_reference_schema(db)
+        return False
     if postgres:
         # Old baseline triggers tolerate strings but lose facts. Replaced below.
         for name,table in [('resolve_task_catalogs_trigger','tasks'),('resolve_report_defect_trigger','reports'),('sync_report_details_trigger','reports')]:
@@ -99,6 +102,7 @@ def migrate(raw, postgres=False):
         from pathlib import Path
         db.execute((Path(__file__).parent/'migration_v2_pg.sql').read_text(encoding='utf-8'))
     db.execute('INSERT INTO schema_migrations(version,description,applied_at) VALUES(?,?,CURRENT_TIMESTAMP)',(VERSION,'Case 1 workflow, units, facts, assignment history and durable notifications'))
+    ensure_reference_schema(db)
     return True
 
 

@@ -1,8 +1,9 @@
+import json
 from datetime import date
 from PySide6.QtCore import Qt,QDate,QDateTime,QTime,QUrl
 from PySide6.QtGui import QPixmap,QDesktopServices
 from PySide6.QtWidgets import (QLineEdit,QTextEdit,QComboBox,QDoubleSpinBox,QSpinBox,QDateEdit,
-    QDateTimeEdit,QTimeEdit,QInputDialog,QTableWidget,QTableWidgetItem,QHeaderView,QFileDialog,QAbstractItemView)
+    QDateTimeEdit,QTimeEdit,QInputDialog,QTableWidget,QTableWidgetItem,QHeaderView,QFileDialog,QAbstractItemView,QCheckBox)
 from app.drafts import ReportDraft
 from app.store import STATUS,SITES,ROLES
 from app.case_store import PRIORITIES
@@ -36,6 +37,21 @@ class CreateTask(Sheet):
         self.priority=self.field('Приоритет',combo([(name,key) for key,name in PRIORITIES.items()]))
         self.priority.setCurrentIndex(self.priority.findData('normal'))
         self.kind=self.field('Тип работ',combo([('Плановая','Плановая'),('Внеплановая','Внеплановая')]))
+        self.templates={x['template_id']:x for x in self.catalogs.get('work_order_templates',[])}
+        self.template=self.field('Шаблон работ',combo([('Без шаблона',None)]+[(t['title'],key) for key,t in self.templates.items()]))
+        self.template_confirmation=QCheckBox('Подтверждаю фактическую заявку, оборудование, исполнителя и срок')
+        self.template_confirmation.setVisible(False);self.body.addWidget(self.template_confirmation)
+        def select_template():
+            template=self.templates.get(self.template.currentData())
+            self.template_confirmation.setChecked(False);self.template_confirmation.setVisible(bool(template))
+            if template:
+                self.title.setText(template['title'])
+                requirements=json.loads(template['closeout_requirements'])
+                self.description.setPlainText(template['problem_description']+'\n\nОтчёт:\n'+'\n'.join(requirements))
+                self.kind.setCurrentIndex(self.kind.findData(template['kind']))
+        self.template.currentIndexChanged.connect(select_template)
+        if self.templates:self.body.addWidget(label('Шаблоны — черновики. Утверждённые инструкции и реальные данные наряда указывает мастер.','muted',True))
+        if not self.catalogs['equipment']:self.body.addWidget(label('Сначала зарегистрируйте настоящее оборудование с его инвентарными номерами в справочнике.','warning',True))
         self.duration=self.field('Плановое время, ч',number(1))
         self.norm=self.field('Норматив',combo([('Без норматива',None)]+[(n['equipment_type']+' · '+n['kind']+f" · {n['hours']} ч",n['id']) for n in self.catalogs['work_norms'] if n['active']]))
         self.complexity=self.field('Сложность',number(1,.1,10,.1))
@@ -61,6 +77,8 @@ class CreateTask(Sheet):
             self.body.addWidget(label(f'Выбрано свободное время: {self.start.time().toString("HH:mm")}–{QTime(int(end),round(end%1*60)).toString("HH:mm")}','muted',True))
         self.actions.addWidget(button('Отмена',self.reject));self.actions.addWidget(button('Создать наряд',self.save,'primary','plus'))
     def save(self):
+        if self.template.currentData() and not self.template_confirmation.isChecked():
+            self.fail('Подтвердите фактические данные наряда перед выдачей.');return
         self.run_action(lambda:self.store.create_task(self.user,title=self.title.text(),description=self.description.toPlainText(),
             site=self.site.currentData(),equipment=self.equipment.currentText(),equipment_id=self.equipment.currentData(),priority=self.priority.currentData(),kind=self.kind.currentData(),
             duration=self.duration.value(),day=self.day.date().toString('yyyy-MM-dd'),start=time_value(self.start),
@@ -271,6 +289,7 @@ class SubmitReport(Sheet):
             if row is None:return
             material=next((x for x in materials if x['name']==choices.currentText()),None)
             for column,value in [(2,material['unit'] if material else m.get('unit','шт.')),(3,material['unit_price'] if material else m.get('price',0))]:
+                if column==3 and material and not material.get('unit_price_known',True):value='Не указана'
                 item=QTableWidgetItem(str(value))
                 if material:item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 self.table.setItem(row,column,item)
@@ -303,6 +322,8 @@ class SubmitReport(Sheet):
             materials=[]
             for n in range(self.table.rowCount()):
                 vals=[self.table.item(n,i).text().strip() if self.table.item(n,i) else '' for i in range(4)]
+                material=next((x for x in self.store.catalogs(self.user)['materials'] if x['name']==self.table.cellWidget(n,0).currentText()),None)
+                if material and not material.get('unit_price_known',True):raise ValueError('Администратор должен подтвердить фактическую цену выбранного материала в справочнике.')
                 try:materials.append({'material_id':next((x['id'] for x in self.store.catalogs(self.user)['materials'] if x['name']==self.table.cellWidget(n,0).currentText()),None),'name':self.table.cellWidget(n,0).currentText(),'quantity':float(vals[1].replace(',','.')),'unit':vals[2],'price':float(vals[3].replace(',','.'))})
                 except ValueError:raise ValueError(f'Проверьте количество и цену в строке {n+1}.')
             self.store.submit(self.user,self.t['id'],work=self.work.toPlainText(),result=self.result_text.toPlainText(),
@@ -372,7 +393,8 @@ class AddUser(Sheet):
         super().__init__('Новый пользователь',parent);self.store=store;self.user=user
         self.username=self.field('Логин',QLineEdit());self.name=self.field('Имя и фамилия',QLineEdit())
         self.job=self.field('Должность / участок',QLineEdit());self.role=self.field('Роль',combo([(v,k) for k,v in ROLES.items()]))
-        self.password=self.field('Пароль (от 4 символов)',QLineEdit());self.password.setEchoMode(QLineEdit.EchoMode.Password)
+        minimum=4 if getattr(store,'seed_demo',False) else 12
+        self.password=self.field(f'Пароль (от {minimum} символов)',QLineEdit());self.password.setEchoMode(QLineEdit.EchoMode.Password)
         self.actions.addWidget(button('Создать аккаунт',self.save,'primary','plus'))
     def save(self):
         self.run_action(lambda:self.store.add_user(self.user,self.username.text(),self.name.text(),self.job.text(),self.role.currentData(),self.password.text()))

@@ -1,0 +1,106 @@
+{
+  "pageid": 12014884,
+  "title": "File:FailedBearing.jpg",
+  "revision": {
+    "revid": 1241324532,
+    "parentid": 1201925592,
+    "timestamp": "2026-06-30T04:59:29Z",
+    "slots": {
+      "main": {
+        "contentmodel": "wikitext",
+        "contentformat": "text/x-wiki",
+        "*": "== {{int:filedesc}} ==\n{{Information\n|Description={{en|Made by self. Bike didn't break down completely, but something was awry, a peek showed this horror.}}\n|Source={{transferred from|en.wikipedia|Liftarn|CommonsHelper}}\n|Date={{original upload date|2007-10-14}}\n|Author={{user at project|Ben pcc|wikipedia|en}}\n|Permission=\n|other_versions=\n}}\n\n== {{int:license-header}} ==\n{{PD-user-en|Ben pcc}}\n\n== {{Original upload log}} ==\n{{original description page|en.wikipedia|FailedBearing.jpg}}\n* 2007-10-14 18:56 [[:en:User:Ben pcc|Ben pcc]] 1280×960× (230242 bytes) ''<nowiki>Made by self. Bike didn't break down completely, but something was awry, a peek showed this horror.</nowiki>''\n\n[[Category:Bearings]]\n[[Category:Bicycle hubs]]\n[[Category:Damaged bicycle parts]]\n[[Category:Taken with Nikon Coolpix 5700]]"
+      }
+    }
+  },
+  "imageinfo": {
+    "size": 230242,
+    "width": 1280,
+    "height": 960,
+    "thumburl": "https://upload.wikimedia.org/wikipedia/commons/1/10/FailedBearing.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "thumbwidth": 1280,
+    "thumbheight": 960,
+    "thumbattribs": {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/1/10/FailedBearing.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "decoding": "async",
+      "loading": "lazy",
+      "width": 1280,
+      "height": 960
+    },
+    "url": "https://upload.wikimedia.org/wikipedia/commons/1/10/FailedBearing.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:FailedBearing.jpg",
+    "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=12014884",
+    "sha1": "2a9c158078421ea46fe9f09c0106f06767a63802",
+    "extmetadata": {
+      "DateTime": {
+        "value": "2010-11-10 15:34:00",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+      },
+      "ObjectName": {
+        "value": "FailedBearing",
+        "source": "mediawiki-metadata"
+      },
+      "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+      },
+      "Categories": {
+        "value": "Taken with Nikon Coolpix 5700|Bicycle hubs|Bearings|PD-user|Damaged bicycle parts",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "ImageDescription": {
+        "value": "Made by self. Bike didn't break down completely, but something was awry, a peek showed this horror.",
+        "source": "commons-desc-page"
+      },
+      "DateTimeOriginal": {
+        "value": "14 October 2007 (original upload date)",
+        "source": "commons-desc-page"
+      },
+      "Credit": {
+        "value": "<bdi lang=\"en\" dir=\"ltr\">Transferred from <span class=\"plainlinks\"><a class=\"external text\" data-mw-original-href=\"//en.wikipedia.org\" href=\"https://en.wikipedia.org\">en.wikipedia</a></span> to Commons by <a href=\"//commons.wikimedia.org/wiki/User:Liftarn\" title=\"User:Liftarn\">Liftarn</a> using <a href=\"https://iw.toolforge.org/commonshelper/\" class=\"extiw\" title=\"toollabs:commonshelper/\">CommonsHelper</a>.</bdi>",
+        "source": "commons-desc-page"
+      },
+      "Artist": {
+        "value": "<a href=\"https://en.wikipedia.org/wiki/User:Ben_pcc\" class=\"extiw\" title=\"wikipedia:User:Ben pcc\">Ben pcc</a> at <a href=\"https://en.wikipedia.org/wiki/\" class=\"extiw\" title=\"wikipedia:\">English Wikipedia</a>",
+        "source": "commons-desc-page"
+      },
+      "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+      },
+      "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+      }
+    }
+  }
+}

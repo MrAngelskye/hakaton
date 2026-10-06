@@ -40,7 +40,7 @@ def image_data(color='blue',exif_time=None):
 class Case1Tests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.folder=Path(self.temp.name);self.storage=MemoryStorage()
-        self.settings=Settings(data_dir=self.folder,database_url=DATABASE,database_pool_size=1,ai_enabled=False,bootstrap_password='DemoOnly-2026!')
+        self.settings=Settings(seed_demo=True,data_dir=self.folder,database_url=DATABASE,database_pool_size=1,ai_enabled=False,bootstrap_password='DemoOnly-2026!')
         with patch('server.storage.SupabaseStorage',return_value=self.storage):self.app=create_app(self.settings)
         self.client=TestClient(self.app);self.store=self.app.state.store
         pw='DemoOnly-2026!' if DATABASE else '1234'

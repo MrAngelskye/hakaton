@@ -1,0 +1,110 @@
+{
+  "pageid": 1111544,
+  "title": "File:Ball bearing.jpg",
+  "revision": {
+    "revid": 815806334,
+    "parentid": 470238384,
+    "timestamp": "2023-10-27T14:25:32Z",
+    "slots": {
+      "main": {
+        "contentmodel": "wikitext",
+        "contentformat": "text/x-wiki",
+        "*": "== {{int:filedesc}} ==\n{{Information\n|Description=Ball Bearing / Rillenkugellager\n|Source={{Own}}\n|Date=2006-08-29\n|Author=[[User:Solaris2006|Solaris2006]]\n|Permission=\n|other_versions=\n}}\n== {{int:license-header}} ==\n{{GFDL|migration=relicense}}\n\n[[Category:Ball bearings]]"
+      }
+    }
+  },
+  "imageinfo": {
+    "size": 493278,
+    "width": 1109,
+    "height": 1083,
+    "thumburl": "https://upload.wikimedia.org/wikipedia/commons/2/2d/Ball_bearing.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "thumbwidth": 1280,
+    "thumbheight": 1250,
+    "thumbattribs": {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/2/2d/Ball_bearing.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "decoding": "async",
+      "loading": "lazy",
+      "width": 1280,
+      "height": 1250
+    },
+    "url": "https://upload.wikimedia.org/wikipedia/commons/2/2d/Ball_bearing.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Ball_bearing.jpg",
+    "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=1111544",
+    "sha1": "eeefcfd7d7a708ea517da13d15bec2869622de72",
+    "extmetadata": {
+      "DateTime": {
+        "value": "2006-08-29 16:32:11",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+      },
+      "ObjectName": {
+        "value": "Ball bearing",
+        "source": "mediawiki-metadata"
+      },
+      "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+      },
+      "Categories": {
+        "value": "GFDL|Ball bearings|License migration completed",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "ImageDescription": {
+        "value": "Ball Bearing / Rillenkugellager",
+        "source": "commons-desc-page"
+      },
+      "DateTimeOriginal": {
+        "value": "2006-08-29",
+        "source": "commons-desc-page"
+      },
+      "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+      },
+      "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Solaris2006&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Solaris2006 (page does not exist)\">Solaris2006</a>",
+        "source": "commons-desc-page"
+      },
+      "LicenseShortName": {
+        "value": "CC BY-SA 3.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 3.0",
+        "source": "commons-desc-page"
+      },
+      "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "LicenseUrl": {
+        "value": "http://creativecommons.org/licenses/by-sa/3.0/",
+        "source": "commons-desc-page"
+      },
+      "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "License": {
+        "value": "cc-by-sa-3.0",
+        "source": "commons-templates",
+        "hidden": ""
+      }
+    }
+  }
+}

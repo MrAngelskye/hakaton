@@ -1,0 +1,1750 @@
+{
+  "schema_version": 1,
+  "researched_on": "2026-10-07",
+  "company": "АО «Костанайские минералы»",
+  "boundaries_ru": [
+    "Не импортировать имена людей из публикаций как действующих пользователей.",
+    "Внутренние наряды, фактические поломки, сроки, нормы расхода, остатки и цены открытыми источниками не подтверждены.",
+    "Модели материалов являются реальными каталоговыми позициями производителей, но их применение на АО «КМ» не установлено.",
+    "Коды REF-* — созданные технические идентификаторы справочника, а не инвентарные номера компании.",
+    "Подтвержденное название должности в публикации не является подтверждением актуального штатного расписания.",
+    "Для операций с хризотилом не создаются рабочие инструкции; набор относится к ремонту промышленного оборудования."
+  ],
+  "sources": [
+    {
+      "source_id": "KM-PRODUCTION",
+      "title": "Производство",
+      "url": "https://km.kz/manufacture",
+      "publisher": "АО «Костанайские минералы»",
+      "source_kind": "company_primary",
+      "retrieved_at": "2026-10-07",
+      "published_at": null,
+      "license_id": null,
+      "evidence": "Названы четыре подразделения: горно-транспортный и обогатительный комплексы, автотранспортное предприятие, энергоуправление. Описаны ремонт транспорта, электросетей, подстанций, котельного оборудования и средств автоматизации."
+    },
+    {
+      "source_id": "KM-TRAINING-2026",
+      "title": "Учебный центр КМ",
+      "url": "https://km.kz/uploads/media/February2026/aff2e8a6-72b1-4d83-ae76-9015a3c5959a.pdf",
+      "publisher": "АО «Костанайские минералы»",
+      "source_kind": "company_primary",
+      "retrieved_at": "2026-10-07",
+      "published_at": "2026-02",
+      "license_id": null,
+      "evidence": "Учебный центр использует программы профессиональной подготовки, переподготовки, повышения квалификации. Упомянуты автомобильный и железнодорожный транспорт, грузоподъемное оборудование, обогащение, тепловодоснабжение."
+    },
+    {
+      "source_id": "KM-NEWS-ELECTRIC-2024",
+      "title": "Энергия и мастерство настоящего профессионала",
+      "url": "https://chrysotile.kz/energiya-i-masterstvo-nastoyashhego-professionala.html",
+      "publisher": "Газета «Хризотил КМ», ссылка с официального km.kz",
+      "source_kind": "company_newspaper_primary_interview",
+      "retrieved_at": "2026-10-07",
+      "published_at": "2024-11-01",
+      "license_id": null,
+      "evidence": "Интервью подтверждает названия должностей ремонтного мастера, электрослесаря и старшего мастера смены обогатительного комплекса. Упомянуто электрооборудование бункеров и вакуум-камеры."
+    },
+    {
+      "source_id": "KM-NEWS-SUBSTATION-2026",
+      "title": "Она всё делает с душой…",
+      "url": "https://chrysotile.kz/ona-vsyo-delaet-s-dushoy/",
+      "publisher": "Газета «Хризотил КМ», ссылка с официального km.kz",
+      "source_kind": "company_newspaper_primary_interview",
+      "retrieved_at": "2026-10-07",
+      "published_at": "2026-08-17",
+      "license_id": null,
+      "evidence": "Интервью подтверждает должности электромонтера подстанции и электрослесаря участка автоматизации. Личные сведения сотрудников исключены из набора."
+    },
+    {
+      "source_id": "KM-NEWS-JOBS-2025",
+      "title": "Выбор, который объединяет",
+      "url": "https://chrysotile.kz/vyibor-kotoryij-obedinyaet/",
+      "publisher": "Газета «Хризотил КМ», ссылка с официального km.kz",
+      "source_kind": "company_newspaper_primary_report",
+      "retrieved_at": "2026-10-07",
+      "published_at": "2025-09-01",
+      "license_id": null,
+      "evidence": "Публикация содержит названия профессий ремонтного слесаря, сварщика, токаря, машиниста тепловоза и водителя погрузчика. Имена, политическая принадлежность и числа работников не импортируются."
+    },
+    {
+      "source_id": "KM-NEWS-TRANSPORT-2021",
+      "title": "Награждение лучших из лучших «каэмовцев» в преддверии профессионального праздника, Дня работников транспорта!",
+      "url": "https://chrysotile.kz/rajonnyie-novosti/337-nagrazhdenie-luchshix-iz-luchshix-%C2%ABkaemovczev%C2%BB-v-preddverii-professionalnogo-prazdnika%2C-dnya-rabotnikov-transporta%21.html",
+      "publisher": "Газета «Хризотил КМ», ссылка с официального km.kz",
+      "source_kind": "company_newspaper_primary_report",
+      "retrieved_at": "2026-10-07",
+      "published_at": "2021-07-30",
+      "license_id": null,
+      "evidence": "В публикации перечислены транспортные профессии: ремонт подвижного состава и автомобилей, руководство сменой, эксплуатация технологического транспорта."
+    },
+    {
+      "source_id": "SKF-BEARING-DIMENSIONS",
+      "title": "NILOS-Rings catalogue: bearing boundary dimensions, series 62 and 63",
+      "url": "https://cdn.skfmediahub.skf.com/api/public/0901d19680237e2b/pdf_preview_medium/0901d19680237e2b_pdf_preview_medium.pdf",
+      "publisher": "SKF",
+      "source_kind": "manufacturer_primary_catalogue",
+      "retrieved_at": "2026-10-07",
+      "published_at": null,
+      "license_id": null,
+      "evidence": "Таблицы на страницах PDF 17 и 18 дают размеры d, D, B подшипников серий 62 и 63; используются только выбранные типоразмеры и габариты."
+    },
+    {
+      "source_id": "SKF-LGMT2-2025",
+      "title": "SKF Bearing grease LGMT 2, May 2025",
+      "url": "https://cdn.skfmediahub.skf.com/api/public/0901d19680063637/pdf_preview_medium/12018_EN_LGMT_2_Product_data_sheet_2025_pdf_preview_medium.pdf",
+      "publisher": "SKF",
+      "source_kind": "manufacturer_primary_datasheet",
+      "retrieved_at": "2026-10-07",
+      "published_at": "2025-05",
+      "license_id": null,
+      "evidence": "Литиевая смазка на минеральном масле, класс NLGI 2, температурный диапазон -30…+120 °C."
+    },
+    {
+      "source_id": "SHELL-LUBRICANTS-2023",
+      "title": "Marine Lubricants Pocketbook, October 2023",
+      "url": "https://www.shell.com/content/dam/shell/assets/en/business-functions/business-customer/marine/documents/shell-marine-forward-together-pocketbook-digital.pdf",
+      "publisher": "Shell",
+      "source_kind": "manufacturer_primary_catalogue",
+      "retrieved_at": "2026-10-07",
+      "published_at": "2023-10",
+      "license_id": null,
+      "evidence": "Страница PDF 19: гидравлические масла Tellus S2 VX 32, 46, 68 для рекомендаций ISO HV. Страница PDF 20: минеральные редукторные масла Omala S2 GX 150, 220, 320. Каталог судового применения не подтверждает использование на предприятии."
+    },
+    {
+      "source_id": "HENKEL-243",
+      "title": "LOCTITE 243",
+      "url": "https://next.henkel-adhesives.com/hn/en/products/industrial-adhesives/central-pdp.html/loctite-243/BP000000316211.html",
+      "publisher": "Henkel",
+      "source_kind": "manufacturer_primary_product_page",
+      "retrieved_at": "2026-10-07",
+      "published_at": null,
+      "license_id": null,
+      "evidence": "Синий анаэробный резьбовой фиксатор средней прочности; допускает разборку обычным ручным инструментом."
+    },
+    {
+      "source_id": "HENKEL-270",
+      "title": "LOCTITE 270",
+      "url": "https://next.henkel-adhesives.com/in/en/products/industrial-adhesives/central-pdp.html/loctite-270/346906AG.html",
+      "publisher": "Henkel",
+      "source_kind": "manufacturer_primary_product_page",
+      "retrieved_at": "2026-10-07",
+      "published_at": null,
+      "license_id": null,
+      "evidence": "Зеленый анаэробный резьбовой фиксатор высокой прочности."
+    },
+    {
+      "source_id": "HENKEL-577",
+      "title": "LOCTITE 577",
+      "url": "https://next.henkel-adhesives.com/at/de/products/industrial-sealants/central-pdp.html/loctite-577/BP000000168431.html",
+      "publisher": "Henkel",
+      "source_kind": "manufacturer_primary_product_page",
+      "retrieved_at": "2026-10-07",
+      "published_at": null,
+      "license_id": null,
+      "evidence": "Анаэробный герметик металлических резьбовых соединений труб."
+    },
+    {
+      "source_id": "HENKEL-638",
+      "title": "LOCTITE 638",
+      "url": "https://next.henkel-adhesives.com/us/en/products/industrial-adhesives/central-pdp.html/loctite-638/BP000000450822.html",
+      "publisher": "Henkel",
+      "source_kind": "manufacturer_primary_product_page",
+      "retrieved_at": "2026-10-07",
+      "published_at": null,
+      "license_id": null,
+      "evidence": "Зеленый анаэробный фиксатор цилиндрических соединений высокой прочности, максимальный заявленный зазор 0,25 мм."
+    },
+    {
+      "source_id": "ESAB-OK4600",
+      "title": "OK 46.00, MEA product catalogue",
+      "url": "https://esab.com/ae/mea_en/products-solutions/product/filler-metals/mild-steel/stick-electrodes-smaw/ok-46-00/",
+      "publisher": "ESAB",
+      "source_kind": "manufacturer_primary_product_page",
+      "retrieved_at": "2026-10-07",
+      "published_at": null,
+      "license_id": null,
+      "evidence": "В каталоге подтверждены электроды OK 46.00 размеров 2,5×350, 3,2×350 и 4,0×350 мм с отдельными заводскими артикулами."
+    },
+    {
+      "source_id": "CASE1-REQUIREMENTS",
+      "title": "Кейс 1 «НарядAI» — требования заказчика",
+      "url": "https://drive.google.com/drive/folders/1Xx-QKkGMSk2Df6X9jIH2TbpQxZI_zaV1",
+      "publisher": "АО «Костанайские минералы» / Qostanai Industry Hackathon",
+      "source_kind": "user_provided_case",
+      "retrieved_at": "2026-10-07",
+      "published_at": null,
+      "license_id": "facts_only_no_image_rights",
+      "evidence": "Кейс задаёт роли, поля наряда и требования к отчёту. Предлагает тестовую историю; внутренние производственные записи и личные данные не предоставлены."
+    }
+  ],
+  "sites": [
+    {
+      "code": "REF-GTK",
+      "name": "Горно-транспортный комплекс",
+      "source_id": "KM-PRODUCTION",
+      "note": "Горные перевозки и поддержание горно-транспортного оборудования. Справочная структура, подтвержденная открытым источником; не перечень участков или инвентарных объектов.",
+      "data_origin": "verified_company_public_reference"
+    },
+    {
+      "code": "REF-OK",
+      "name": "Обогатительный комплекс",
+      "source_id": "KM-PRODUCTION",
+      "note": "Дробление, классификация, сушка и обогащение сырья. Справочная структура, подтвержденная открытым источником; не перечень участков или инвентарных объектов.",
+      "data_origin": "verified_company_public_reference"
+    },
+    {
+      "code": "REF-ATP",
+      "name": "Автотранспортное предприятие",
+      "source_id": "KM-PRODUCTION",
+      "note": "Перевозки и техническое обслуживание машин. Справочная структура, подтвержденная открытым источником; не перечень участков или инвентарных объектов.",
+      "data_origin": "verified_company_public_reference"
+    },
+    {
+      "code": "REF-EU",
+      "name": "Энергоуправление",
+      "source_id": "KM-PRODUCTION",
+      "note": "Ремонт электроснабжения, подстанций, котельного оборудования, тепловодоснабжения, автоматизации и связи. Справочная структура, подтвержденная открытым источником; не перечень участков или инвентарных объектов.",
+      "data_origin": "verified_company_public_reference"
+    }
+  ],
+  "job_titles": [
+    {
+      "code": "master_electric",
+      "name": "Мастер по ремонту и обслуживанию электрооборудования",
+      "source_id": "KM-NEWS-ELECTRIC-2024",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "site_code": "REF-OK",
+      "department_mapping_is_reference": true
+    },
+    {
+      "code": "electric_fitter",
+      "name": "Электрослесарь по ремонту и обслуживанию оборудования",
+      "source_id": "KM-NEWS-ELECTRIC-2024",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "site_code": "REF-OK",
+      "department_mapping_is_reference": true
+    },
+    {
+      "code": "shift_senior_master",
+      "name": "Старший мастер смены",
+      "source_id": "KM-NEWS-ELECTRIC-2024",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "site_code": "REF-OK",
+      "department_mapping_is_reference": true
+    },
+    {
+      "code": "substation_electrician",
+      "name": "Электромонтер по обслуживанию подстанции",
+      "source_id": "KM-NEWS-SUBSTATION-2026",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "site_code": "REF-EU",
+      "department_mapping_is_reference": true
+    },
+    {
+      "code": "automation_electric_fitter",
+      "name": "Электрослесарь по обслуживанию и ремонту оборудования участка автоматизации",
+      "source_id": "KM-NEWS-SUBSTATION-2026",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "site_code": "REF-EU",
+      "department_mapping_is_reference": true
+    },
+    {
+      "code": "maintenance_fitter",
+      "name": "Слесарь по обслуживанию и ремонту оборудования",
+      "source_id": "KM-NEWS-JOBS-2025",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "site_code": "REF-OK",
+      "department_mapping_is_reference": true
+    },
+    {
+      "code": "welder",
+      "name": "Электрогазосварщик",
+      "source_id": "KM-NEWS-JOBS-2025",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "site_code": "REF-GTK",
+      "department_mapping_is_reference": true
+    },
+    {
+      "code": "turner",
+      "name": "Токарь",
+      "source_id": "KM-NEWS-JOBS-2025",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "site_code": "REF-GTK",
+      "department_mapping_is_reference": true
+    },
+    {
+      "code": "locomotive_driver",
+      "name": "Машинист тепловоза",
+      "source_id": "KM-NEWS-JOBS-2025",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "site_code": "REF-GTK",
+      "department_mapping_is_reference": true
+    },
+    {
+      "code": "loader_driver",
+      "name": "Водитель погрузчика",
+      "source_id": "KM-NEWS-JOBS-2025",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "site_code": "REF-OK",
+      "department_mapping_is_reference": true
+    },
+    {
+      "code": "vehicle_fitter",
+      "name": "Слесарь по ремонту автомобилей",
+      "source_id": "KM-NEWS-TRANSPORT-2021",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "site_code": "REF-ATP",
+      "department_mapping_is_reference": true
+    },
+    {
+      "code": "rolling_stock_fitter",
+      "name": "Слесарь по ремонту подвижного состава",
+      "source_id": "KM-NEWS-TRANSPORT-2021",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "site_code": "REF-GTK",
+      "department_mapping_is_reference": true
+    }
+  ],
+  "materials": [
+    {
+      "reference_code": "REF-BRG-6204",
+      "name_ru": "Подшипник шариковый радиальный 6204",
+      "category": "Подшипники",
+      "manufacturer_reference": "SKF dimensional catalogue",
+      "model": "6204",
+      "unit": "шт",
+      "specification": {
+        "bore_d_mm": 20,
+        "outer_D_mm": 47,
+        "width_B_mm": 14
+      },
+      "source_ids": [
+        "SKF-BEARING-DIMENSIONS"
+      ],
+      "source_locator": "PDF page 17, Series 62, bearing dimensions d/D/B",
+      "approval_note_ru": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-BRG-6204",
+      "name": "Подшипник шариковый радиальный 6204",
+      "manufacturer": "SKF",
+      "source_id": "SKF-BEARING-DIMENSIONS",
+      "note": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-BRG-6205",
+      "name_ru": "Подшипник шариковый радиальный 6205",
+      "category": "Подшипники",
+      "manufacturer_reference": "SKF dimensional catalogue",
+      "model": "6205",
+      "unit": "шт",
+      "specification": {
+        "bore_d_mm": 25,
+        "outer_D_mm": 52,
+        "width_B_mm": 15
+      },
+      "source_ids": [
+        "SKF-BEARING-DIMENSIONS"
+      ],
+      "source_locator": "PDF page 17, Series 62, bearing dimensions d/D/B",
+      "approval_note_ru": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-BRG-6205",
+      "name": "Подшипник шариковый радиальный 6205",
+      "manufacturer": "SKF",
+      "source_id": "SKF-BEARING-DIMENSIONS",
+      "note": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-BRG-6206",
+      "name_ru": "Подшипник шариковый радиальный 6206",
+      "category": "Подшипники",
+      "manufacturer_reference": "SKF dimensional catalogue",
+      "model": "6206",
+      "unit": "шт",
+      "specification": {
+        "bore_d_mm": 30,
+        "outer_D_mm": 62,
+        "width_B_mm": 16
+      },
+      "source_ids": [
+        "SKF-BEARING-DIMENSIONS"
+      ],
+      "source_locator": "PDF page 17, Series 62, bearing dimensions d/D/B",
+      "approval_note_ru": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-BRG-6206",
+      "name": "Подшипник шариковый радиальный 6206",
+      "manufacturer": "SKF",
+      "source_id": "SKF-BEARING-DIMENSIONS",
+      "note": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-BRG-6207",
+      "name_ru": "Подшипник шариковый радиальный 6207",
+      "category": "Подшипники",
+      "manufacturer_reference": "SKF dimensional catalogue",
+      "model": "6207",
+      "unit": "шт",
+      "specification": {
+        "bore_d_mm": 35,
+        "outer_D_mm": 72,
+        "width_B_mm": 17
+      },
+      "source_ids": [
+        "SKF-BEARING-DIMENSIONS"
+      ],
+      "source_locator": "PDF page 17, Series 62, bearing dimensions d/D/B",
+      "approval_note_ru": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-BRG-6207",
+      "name": "Подшипник шариковый радиальный 6207",
+      "manufacturer": "SKF",
+      "source_id": "SKF-BEARING-DIMENSIONS",
+      "note": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-BRG-6208",
+      "name_ru": "Подшипник шариковый радиальный 6208",
+      "category": "Подшипники",
+      "manufacturer_reference": "SKF dimensional catalogue",
+      "model": "6208",
+      "unit": "шт",
+      "specification": {
+        "bore_d_mm": 40,
+        "outer_D_mm": 80,
+        "width_B_mm": 18
+      },
+      "source_ids": [
+        "SKF-BEARING-DIMENSIONS"
+      ],
+      "source_locator": "PDF page 17, Series 62, bearing dimensions d/D/B",
+      "approval_note_ru": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-BRG-6208",
+      "name": "Подшипник шариковый радиальный 6208",
+      "manufacturer": "SKF",
+      "source_id": "SKF-BEARING-DIMENSIONS",
+      "note": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-BRG-6209",
+      "name_ru": "Подшипник шариковый радиальный 6209",
+      "category": "Подшипники",
+      "manufacturer_reference": "SKF dimensional catalogue",
+      "model": "6209",
+      "unit": "шт",
+      "specification": {
+        "bore_d_mm": 45,
+        "outer_D_mm": 85,
+        "width_B_mm": 19
+      },
+      "source_ids": [
+        "SKF-BEARING-DIMENSIONS"
+      ],
+      "source_locator": "PDF page 17, Series 62, bearing dimensions d/D/B",
+      "approval_note_ru": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-BRG-6209",
+      "name": "Подшипник шариковый радиальный 6209",
+      "manufacturer": "SKF",
+      "source_id": "SKF-BEARING-DIMENSIONS",
+      "note": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-BRG-6210",
+      "name_ru": "Подшипник шариковый радиальный 6210",
+      "category": "Подшипники",
+      "manufacturer_reference": "SKF dimensional catalogue",
+      "model": "6210",
+      "unit": "шт",
+      "specification": {
+        "bore_d_mm": 50,
+        "outer_D_mm": 90,
+        "width_B_mm": 20
+      },
+      "source_ids": [
+        "SKF-BEARING-DIMENSIONS"
+      ],
+      "source_locator": "PDF page 17, Series 62, bearing dimensions d/D/B",
+      "approval_note_ru": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-BRG-6210",
+      "name": "Подшипник шариковый радиальный 6210",
+      "manufacturer": "SKF",
+      "source_id": "SKF-BEARING-DIMENSIONS",
+      "note": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-BRG-6211",
+      "name_ru": "Подшипник шариковый радиальный 6211",
+      "category": "Подшипники",
+      "manufacturer_reference": "SKF dimensional catalogue",
+      "model": "6211",
+      "unit": "шт",
+      "specification": {
+        "bore_d_mm": 55,
+        "outer_D_mm": 100,
+        "width_B_mm": 21
+      },
+      "source_ids": [
+        "SKF-BEARING-DIMENSIONS"
+      ],
+      "source_locator": "PDF page 17, Series 62, bearing dimensions d/D/B",
+      "approval_note_ru": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-BRG-6211",
+      "name": "Подшипник шариковый радиальный 6211",
+      "manufacturer": "SKF",
+      "source_id": "SKF-BEARING-DIMENSIONS",
+      "note": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-BRG-6305",
+      "name_ru": "Подшипник шариковый радиальный 6305",
+      "category": "Подшипники",
+      "manufacturer_reference": "SKF dimensional catalogue",
+      "model": "6305",
+      "unit": "шт",
+      "specification": {
+        "bore_d_mm": 25,
+        "outer_D_mm": 62,
+        "width_B_mm": 17
+      },
+      "source_ids": [
+        "SKF-BEARING-DIMENSIONS"
+      ],
+      "source_locator": "PDF page 18, Series 63, bearing dimensions d/D/B",
+      "approval_note_ru": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-BRG-6305",
+      "name": "Подшипник шариковый радиальный 6305",
+      "manufacturer": "SKF",
+      "source_id": "SKF-BEARING-DIMENSIONS",
+      "note": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-BRG-6306",
+      "name_ru": "Подшипник шариковый радиальный 6306",
+      "category": "Подшипники",
+      "manufacturer_reference": "SKF dimensional catalogue",
+      "model": "6306",
+      "unit": "шт",
+      "specification": {
+        "bore_d_mm": 30,
+        "outer_D_mm": 72,
+        "width_B_mm": 19
+      },
+      "source_ids": [
+        "SKF-BEARING-DIMENSIONS"
+      ],
+      "source_locator": "PDF page 18, Series 63, bearing dimensions d/D/B",
+      "approval_note_ru": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-BRG-6306",
+      "name": "Подшипник шариковый радиальный 6306",
+      "manufacturer": "SKF",
+      "source_id": "SKF-BEARING-DIMENSIONS",
+      "note": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-BRG-6307",
+      "name_ru": "Подшипник шариковый радиальный 6307",
+      "category": "Подшипники",
+      "manufacturer_reference": "SKF dimensional catalogue",
+      "model": "6307",
+      "unit": "шт",
+      "specification": {
+        "bore_d_mm": 35,
+        "outer_D_mm": 80,
+        "width_B_mm": 21
+      },
+      "source_ids": [
+        "SKF-BEARING-DIMENSIONS"
+      ],
+      "source_locator": "PDF page 18, Series 63, bearing dimensions d/D/B",
+      "approval_note_ru": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-BRG-6307",
+      "name": "Подшипник шариковый радиальный 6307",
+      "manufacturer": "SKF",
+      "source_id": "SKF-BEARING-DIMENSIONS",
+      "note": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-BRG-6308",
+      "name_ru": "Подшипник шариковый радиальный 6308",
+      "category": "Подшипники",
+      "manufacturer_reference": "SKF dimensional catalogue",
+      "model": "6308",
+      "unit": "шт",
+      "specification": {
+        "bore_d_mm": 40,
+        "outer_D_mm": 90,
+        "width_B_mm": 23
+      },
+      "source_ids": [
+        "SKF-BEARING-DIMENSIONS"
+      ],
+      "source_locator": "PDF page 18, Series 63, bearing dimensions d/D/B",
+      "approval_note_ru": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-BRG-6308",
+      "name": "Подшипник шариковый радиальный 6308",
+      "manufacturer": "SKF",
+      "source_id": "SKF-BEARING-DIMENSIONS",
+      "note": "Перед закупкой уточнить полное обозначение, уплотнения, зазор, нагрузку и совместимость по паспорту конкретного оборудования. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-GREASE-LGMT2",
+      "name_ru": "Смазка подшипниковая SKF LGMT 2",
+      "category": "Пластичные смазки",
+      "manufacturer_reference": "SKF",
+      "model": "LGMT 2",
+      "unit": "кг",
+      "specification": {
+        "NLGI_class": 2,
+        "base_oil": "mineral",
+        "thickener": "lithium",
+        "operating_temperature_c": [
+          -30,
+          120
+        ]
+      },
+      "source_ids": [
+        "SKF-LGMT2-2025"
+      ],
+      "source_locator": "PDF page 2, Technical data",
+      "approval_note_ru": "Проверить совместимость с ранее примененной смазкой и требования паспорта оборудования.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-GREASE-LGMT2",
+      "name": "Смазка подшипниковая SKF LGMT 2",
+      "manufacturer": "SKF",
+      "source_id": "SKF-LGMT2-2025",
+      "note": "Проверить совместимость с ранее примененной смазкой и требования паспорта оборудования. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-HYD-TELLUS-VX-32",
+      "name_ru": "Масло гидравлическое Shell Tellus S2 VX 32",
+      "category": "Гидравлические масла",
+      "manufacturer_reference": "Shell",
+      "model": "Tellus S2 VX 32",
+      "unit": "л",
+      "specification": {
+        "ISO_viscosity_grade": 32,
+        "hydraulic_class_reference": "ISO HV",
+        "typical_kinematic_viscosity_40c_mm2_s": 32,
+        "typical_kinematic_viscosity_100c_mm2_s": 6.1
+      },
+      "source_ids": [
+        "SHELL-LUBRICANTS-2023"
+      ],
+      "source_locator": "PDF page 19, Hydraulic oils",
+      "approval_note_ru": "Выбор вязкости и допуска — только по паспорту оборудования; наличие у АО «КМ» не подтверждено.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-HYD-TELLUS-VX-32",
+      "name": "Масло гидравлическое Shell Tellus S2 VX 32",
+      "manufacturer": "Shell",
+      "source_id": "SHELL-LUBRICANTS-2023",
+      "note": "Выбор вязкости и допуска — только по паспорту оборудования; наличие у АО «КМ» не подтверждено. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-HYD-TELLUS-VX-46",
+      "name_ru": "Масло гидравлическое Shell Tellus S2 VX 46",
+      "category": "Гидравлические масла",
+      "manufacturer_reference": "Shell",
+      "model": "Tellus S2 VX 46",
+      "unit": "л",
+      "specification": {
+        "ISO_viscosity_grade": 46,
+        "hydraulic_class_reference": "ISO HV",
+        "typical_kinematic_viscosity_40c_mm2_s": 46,
+        "typical_kinematic_viscosity_100c_mm2_s": 7.9
+      },
+      "source_ids": [
+        "SHELL-LUBRICANTS-2023"
+      ],
+      "source_locator": "PDF page 19, Hydraulic oils",
+      "approval_note_ru": "Выбор вязкости и допуска — только по паспорту оборудования; наличие у АО «КМ» не подтверждено.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-HYD-TELLUS-VX-46",
+      "name": "Масло гидравлическое Shell Tellus S2 VX 46",
+      "manufacturer": "Shell",
+      "source_id": "SHELL-LUBRICANTS-2023",
+      "note": "Выбор вязкости и допуска — только по паспорту оборудования; наличие у АО «КМ» не подтверждено. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-HYD-TELLUS-VX-68",
+      "name_ru": "Масло гидравлическое Shell Tellus S2 VX 68",
+      "category": "Гидравлические масла",
+      "manufacturer_reference": "Shell",
+      "model": "Tellus S2 VX 68",
+      "unit": "л",
+      "specification": {
+        "ISO_viscosity_grade": 68,
+        "hydraulic_class_reference": "ISO HV",
+        "typical_kinematic_viscosity_40c_mm2_s": 68,
+        "typical_kinematic_viscosity_100c_mm2_s": 10.5
+      },
+      "source_ids": [
+        "SHELL-LUBRICANTS-2023"
+      ],
+      "source_locator": "PDF page 19, Hydraulic oils",
+      "approval_note_ru": "Выбор вязкости и допуска — только по паспорту оборудования; наличие у АО «КМ» не подтверждено.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-HYD-TELLUS-VX-68",
+      "name": "Масло гидравлическое Shell Tellus S2 VX 68",
+      "manufacturer": "Shell",
+      "source_id": "SHELL-LUBRICANTS-2023",
+      "note": "Выбор вязкости и допуска — только по паспорту оборудования; наличие у АО «КМ» не подтверждено. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-GEAR-OMALA-GX-150",
+      "name_ru": "Масло редукторное Shell Omala S2 GX 150",
+      "category": "Редукторные масла",
+      "manufacturer_reference": "Shell",
+      "model": "Omala S2 GX 150",
+      "unit": "л",
+      "specification": {
+        "ISO_viscosity_grade": 150,
+        "base_oil": "mineral",
+        "typical_kinematic_viscosity_40c_mm2_s": 150,
+        "typical_kinematic_viscosity_100c_mm2_s": 14.8
+      },
+      "source_ids": [
+        "SHELL-LUBRICANTS-2023"
+      ],
+      "source_locator": "PDF page 20, Gear oils — Mineral",
+      "approval_note_ru": "Проверить совместимость с уплотнениями, материалами редуктора и допусками изготовителя.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-GEAR-OMALA-GX-150",
+      "name": "Масло редукторное Shell Omala S2 GX 150",
+      "manufacturer": "Shell",
+      "source_id": "SHELL-LUBRICANTS-2023",
+      "note": "Проверить совместимость с уплотнениями, материалами редуктора и допусками изготовителя. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-GEAR-OMALA-GX-220",
+      "name_ru": "Масло редукторное Shell Omala S2 GX 220",
+      "category": "Редукторные масла",
+      "manufacturer_reference": "Shell",
+      "model": "Omala S2 GX 220",
+      "unit": "л",
+      "specification": {
+        "ISO_viscosity_grade": 220,
+        "base_oil": "mineral",
+        "typical_kinematic_viscosity_40c_mm2_s": 220,
+        "typical_kinematic_viscosity_100c_mm2_s": 19
+      },
+      "source_ids": [
+        "SHELL-LUBRICANTS-2023"
+      ],
+      "source_locator": "PDF page 20, Gear oils — Mineral",
+      "approval_note_ru": "Проверить совместимость с уплотнениями, материалами редуктора и допусками изготовителя.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-GEAR-OMALA-GX-220",
+      "name": "Масло редукторное Shell Omala S2 GX 220",
+      "manufacturer": "Shell",
+      "source_id": "SHELL-LUBRICANTS-2023",
+      "note": "Проверить совместимость с уплотнениями, материалами редуктора и допусками изготовителя. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-GEAR-OMALA-GX-320",
+      "name_ru": "Масло редукторное Shell Omala S2 GX 320",
+      "category": "Редукторные масла",
+      "manufacturer_reference": "Shell",
+      "model": "Omala S2 GX 320",
+      "unit": "л",
+      "specification": {
+        "ISO_viscosity_grade": 320,
+        "base_oil": "mineral",
+        "typical_kinematic_viscosity_40c_mm2_s": 320,
+        "typical_kinematic_viscosity_100c_mm2_s": 24.2
+      },
+      "source_ids": [
+        "SHELL-LUBRICANTS-2023"
+      ],
+      "source_locator": "PDF page 20, Gear oils — Mineral",
+      "approval_note_ru": "Проверить совместимость с уплотнениями, материалами редуктора и допусками изготовителя.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-GEAR-OMALA-GX-320",
+      "name": "Масло редукторное Shell Omala S2 GX 320",
+      "manufacturer": "Shell",
+      "source_id": "SHELL-LUBRICANTS-2023",
+      "note": "Проверить совместимость с уплотнениями, материалами редуктора и допусками изготовителя. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-CHEM-LOCTITE-243",
+      "name_ru": "Фиксатор резьбы LOCTITE 243",
+      "category": "Резьбовые фиксаторы",
+      "manufacturer_reference": "Henkel",
+      "model": "LOCTITE 243",
+      "unit": "мл",
+      "specification": {
+        "strength": "medium",
+        "colour": "blue",
+        "cure": "anaerobic"
+      },
+      "source_ids": [
+        "HENKEL-243"
+      ],
+      "source_locator": "Manufacturer product description / technical specification",
+      "approval_note_ru": "Технический справочник; применение и расход согласовать по TDS/SDS и ремонтной документации.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-CHEM-LOCTITE-243",
+      "name": "Фиксатор резьбы LOCTITE 243",
+      "manufacturer": "Henkel",
+      "source_id": "HENKEL-243",
+      "note": "Технический справочник; применение и расход согласовать по TDS/SDS и ремонтной документации. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-CHEM-LOCTITE-270",
+      "name_ru": "Фиксатор резьбы LOCTITE 270",
+      "category": "Резьбовые фиксаторы",
+      "manufacturer_reference": "Henkel",
+      "model": "LOCTITE 270",
+      "unit": "мл",
+      "specification": {
+        "strength": "high",
+        "colour": "green",
+        "cure": "anaerobic"
+      },
+      "source_ids": [
+        "HENKEL-270"
+      ],
+      "source_locator": "Manufacturer product description / technical specification",
+      "approval_note_ru": "Технический справочник; применение и расход согласовать по TDS/SDS и ремонтной документации.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-CHEM-LOCTITE-270",
+      "name": "Фиксатор резьбы LOCTITE 270",
+      "manufacturer": "Henkel",
+      "source_id": "HENKEL-270",
+      "note": "Технический справочник; применение и расход согласовать по TDS/SDS и ремонтной документации. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-CHEM-LOCTITE-577",
+      "name_ru": "Герметик резьбовых соединений LOCTITE 577",
+      "category": "Герметики",
+      "manufacturer_reference": "Henkel",
+      "model": "LOCTITE 577",
+      "unit": "мл",
+      "specification": {
+        "application": "metal_pipe_thread_sealing",
+        "cure": "anaerobic"
+      },
+      "source_ids": [
+        "HENKEL-577"
+      ],
+      "source_locator": "Manufacturer product description / technical specification",
+      "approval_note_ru": "Технический справочник; применение и расход согласовать по TDS/SDS и ремонтной документации.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-CHEM-LOCTITE-577",
+      "name": "Герметик резьбовых соединений LOCTITE 577",
+      "manufacturer": "Henkel",
+      "source_id": "HENKEL-577",
+      "note": "Технический справочник; применение и расход согласовать по TDS/SDS и ремонтной документации. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-CHEM-LOCTITE-638",
+      "name_ru": "Фиксатор цилиндрических соединений LOCTITE 638",
+      "category": "Вал-втулочные фиксаторы",
+      "manufacturer_reference": "Henkel",
+      "model": "LOCTITE 638",
+      "unit": "мл",
+      "specification": {
+        "strength": "high",
+        "colour": "green",
+        "cure": "anaerobic",
+        "maximum_gap_mm": 0.25
+      },
+      "source_ids": [
+        "HENKEL-638"
+      ],
+      "source_locator": "Manufacturer product description / technical specification",
+      "approval_note_ru": "Технический справочник; применение и расход согласовать по TDS/SDS и ремонтной документации.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-CHEM-LOCTITE-638",
+      "name": "Фиксатор цилиндрических соединений LOCTITE 638",
+      "manufacturer": "Henkel",
+      "source_id": "HENKEL-638",
+      "note": "Технический справочник; применение и расход согласовать по TDS/SDS и ремонтной документации. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-WELD-OK4600-25",
+      "name_ru": "Электроды ESAB OK 46.00 2.5×350 мм",
+      "category": "Сварочные материалы",
+      "manufacturer_reference": "ESAB",
+      "model": "OK 46.00",
+      "manufacturer_part_number": "4600253200",
+      "unit": "кг",
+      "specification": {
+        "diameter_mm": 2.5,
+        "length_mm": 350,
+        "coating_family": "rutile-cellulosic"
+      },
+      "source_ids": [
+        "ESAB-OK4600"
+      ],
+      "source_locator": "Manufacturer product page, Ordering",
+      "approval_note_ru": "Не является разрешением на сварку конкретного узла. Марку, диаметр и режим выбирает ответственный специалист по утвержденной технологии.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-WELD-OK4600-25",
+      "name": "Электроды ESAB OK 46.00 2.5×350 мм",
+      "manufacturer": "ESAB",
+      "source_id": "ESAB-OK4600",
+      "note": "Не является разрешением на сварку конкретного узла. Марку, диаметр и режим выбирает ответственный специалист по утвержденной технологии. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-WELD-OK4600-32",
+      "name_ru": "Электроды ESAB OK 46.00 3.2×350 мм",
+      "category": "Сварочные материалы",
+      "manufacturer_reference": "ESAB",
+      "model": "OK 46.00",
+      "manufacturer_part_number": "4600323200",
+      "unit": "кг",
+      "specification": {
+        "diameter_mm": 3.2,
+        "length_mm": 350,
+        "coating_family": "rutile-cellulosic"
+      },
+      "source_ids": [
+        "ESAB-OK4600"
+      ],
+      "source_locator": "Manufacturer product page, Ordering",
+      "approval_note_ru": "Не является разрешением на сварку конкретного узла. Марку, диаметр и режим выбирает ответственный специалист по утвержденной технологии.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-WELD-OK4600-32",
+      "name": "Электроды ESAB OK 46.00 3.2×350 мм",
+      "manufacturer": "ESAB",
+      "source_id": "ESAB-OK4600",
+      "note": "Не является разрешением на сварку конкретного узла. Марку, диаметр и режим выбирает ответственный специалист по утвержденной технологии. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    },
+    {
+      "reference_code": "REF-WELD-OK4600-4",
+      "name_ru": "Электроды ESAB OK 46.00 4.0×350 мм",
+      "category": "Сварочные материалы",
+      "manufacturer_reference": "ESAB",
+      "model": "OK 46.00",
+      "manufacturer_part_number": "4600403200",
+      "unit": "кг",
+      "specification": {
+        "diameter_mm": 4,
+        "length_mm": 350,
+        "coating_family": "rutile-cellulosic"
+      },
+      "source_ids": [
+        "ESAB-OK4600"
+      ],
+      "source_locator": "Manufacturer product page, Ordering",
+      "approval_note_ru": "Не является разрешением на сварку конкретного узла. Марку, диаметр и режим выбирает ответственный специалист по утвержденной технологии.",
+      "data_origin": "verified_public_manufacturer_reference",
+      "company_usage_confirmed": false,
+      "stock_quantity": null,
+      "unit_price": null,
+      "currency": null,
+      "requires_engineering_approval": true,
+      "code": "REF-WELD-OK4600-4",
+      "name": "Электроды ESAB OK 46.00 4.0×350 мм",
+      "manufacturer": "ESAB",
+      "source_id": "ESAB-OK4600",
+      "note": "Не является разрешением на сварку конкретного узла. Марку, диаметр и режим выбирает ответственный специалист по утвержденной технологии. Это отраслевая каталоговая позиция, а не подтвержденная закупка или складской остаток АО «КМ»."
+    }
+  ],
+  "accounts": [
+    {
+      "username": "km.admin.01",
+      "name": "Администратор системы · профиль 01",
+      "job": "Администратор системы",
+      "role": "admin",
+      "source_id": "CASE1-REQUIREMENTS",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.manager.01",
+      "name": "Руководитель участка · профиль 01",
+      "job": "Руководитель участка",
+      "role": "manager",
+      "source_id": "CASE1-REQUIREMENTS",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.master.01",
+      "name": "Мастер по ремонту и обслуживанию электрооборудования · профиль 01",
+      "job": "Мастер по ремонту и обслуживанию электрооборудования",
+      "role": "master",
+      "source_id": "KM-NEWS-ELECTRIC-2024",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.master.02",
+      "name": "Старший мастер смены · профиль 02",
+      "job": "Старший мастер смены",
+      "role": "master",
+      "source_id": "KM-NEWS-ELECTRIC-2024",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.worker.01",
+      "name": "Электрослесарь по ремонту и обслуживанию оборудования · профиль 01",
+      "job": "Электрослесарь по ремонту и обслуживанию оборудования",
+      "role": "worker",
+      "source_id": "KM-NEWS-ELECTRIC-2024",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.worker.02",
+      "name": "Электромонтер по обслуживанию подстанции · профиль 02",
+      "job": "Электромонтер по обслуживанию подстанции",
+      "role": "worker",
+      "source_id": "KM-NEWS-SUBSTATION-2026",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.worker.03",
+      "name": "Электрослесарь по обслуживанию и ремонту оборудования участка автоматизации · профиль 03",
+      "job": "Электрослесарь по обслуживанию и ремонту оборудования участка автоматизации",
+      "role": "worker",
+      "source_id": "KM-NEWS-SUBSTATION-2026",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.worker.04",
+      "name": "Слесарь по обслуживанию и ремонту оборудования · профиль 04",
+      "job": "Слесарь по обслуживанию и ремонту оборудования",
+      "role": "worker",
+      "source_id": "KM-NEWS-JOBS-2025",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.worker.05",
+      "name": "Электрогазосварщик · профиль 05",
+      "job": "Электрогазосварщик",
+      "role": "worker",
+      "source_id": "KM-NEWS-JOBS-2025",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.worker.06",
+      "name": "Токарь · профиль 06",
+      "job": "Токарь",
+      "role": "worker",
+      "source_id": "KM-NEWS-JOBS-2025",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.worker.07",
+      "name": "Машинист тепловоза · профиль 07",
+      "job": "Машинист тепловоза",
+      "role": "worker",
+      "source_id": "KM-NEWS-JOBS-2025",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.worker.08",
+      "name": "Водитель погрузчика · профиль 08",
+      "job": "Водитель погрузчика",
+      "role": "worker",
+      "source_id": "KM-NEWS-JOBS-2025",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.worker.09",
+      "name": "Слесарь по ремонту автомобилей · профиль 09",
+      "job": "Слесарь по ремонту автомобилей",
+      "role": "worker",
+      "source_id": "KM-NEWS-TRANSPORT-2021",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.worker.10",
+      "name": "Слесарь по ремонту подвижного состава · профиль 10",
+      "job": "Слесарь по ремонту подвижного состава",
+      "role": "worker",
+      "source_id": "KM-NEWS-TRANSPORT-2021",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.worker.11",
+      "name": "Электрослесарь по ремонту и обслуживанию оборудования · профиль 11",
+      "job": "Электрослесарь по ремонту и обслуживанию оборудования",
+      "role": "worker",
+      "source_id": "KM-NEWS-ELECTRIC-2024",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.worker.12",
+      "name": "Электромонтер по обслуживанию подстанции · профиль 12",
+      "job": "Электромонтер по обслуживанию подстанции",
+      "role": "worker",
+      "source_id": "KM-NEWS-SUBSTATION-2026",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.worker.13",
+      "name": "Электрослесарь по обслуживанию и ремонту оборудования участка автоматизации · профиль 13",
+      "job": "Электрослесарь по обслуживанию и ремонту оборудования участка автоматизации",
+      "role": "worker",
+      "source_id": "KM-NEWS-SUBSTATION-2026",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.worker.14",
+      "name": "Слесарь по обслуживанию и ремонту оборудования · профиль 14",
+      "job": "Слесарь по обслуживанию и ремонту оборудования",
+      "role": "worker",
+      "source_id": "KM-NEWS-JOBS-2025",
+      "identity_status": "unassigned_anonymized_profile"
+    },
+    {
+      "username": "km.worker.15",
+      "name": "Электрогазосварщик · профиль 15",
+      "job": "Электрогазосварщик",
+      "role": "worker",
+      "source_id": "KM-NEWS-JOBS-2025",
+      "identity_status": "unassigned_anonymized_profile"
+    }
+  ],
+  "equipment_types": [
+    {
+      "code": "REF-TYPE-01",
+      "name": "Насос",
+      "source_id": "CASE1-REQUIREMENTS",
+      "company_context": false,
+      "note": "Категория для регистрации объекта. Не инвентарная единица и не подтверждение наличия оборудования на предприятии."
+    },
+    {
+      "code": "REF-TYPE-02",
+      "name": "Конвейер",
+      "source_id": "CASE1-REQUIREMENTS",
+      "company_context": false,
+      "note": "Категория для регистрации объекта. Не инвентарная единица и не подтверждение наличия оборудования на предприятии."
+    },
+    {
+      "code": "REF-TYPE-03",
+      "name": "Дробильное оборудование",
+      "source_id": "CASE1-REQUIREMENTS",
+      "company_context": false,
+      "note": "Категория для регистрации объекта. Не инвентарная единица и не подтверждение наличия оборудования на предприятии."
+    },
+    {
+      "code": "REF-TYPE-04",
+      "name": "Подшипниковый узел",
+      "source_id": "CASE1-REQUIREMENTS",
+      "company_context": false,
+      "note": "Категория для регистрации объекта. Не инвентарная единица и не подтверждение наличия оборудования на предприятии."
+    },
+    {
+      "code": "REF-TYPE-05",
+      "name": "Редуктор",
+      "source_id": "CASE1-REQUIREMENTS",
+      "company_context": false,
+      "note": "Категория для регистрации объекта. Не инвентарная единица и не подтверждение наличия оборудования на предприятии."
+    },
+    {
+      "code": "REF-TYPE-06",
+      "name": "Электродвигатель",
+      "source_id": "CASE1-REQUIREMENTS",
+      "company_context": false,
+      "note": "Категория для регистрации объекта. Не инвентарная единица и не подтверждение наличия оборудования на предприятии."
+    },
+    {
+      "code": "REF-TYPE-07",
+      "name": "Электрооборудование",
+      "source_id": "CASE1-REQUIREMENTS",
+      "company_context": false,
+      "note": "Категория для регистрации объекта. Не инвентарная единица и не подтверждение наличия оборудования на предприятии."
+    },
+    {
+      "code": "REF-TYPE-08",
+      "name": "КИПиА",
+      "source_id": "CASE1-REQUIREMENTS",
+      "company_context": false,
+      "note": "Категория для регистрации объекта. Не инвентарная единица и не подтверждение наличия оборудования на предприятии."
+    },
+    {
+      "code": "REF-TYPE-09",
+      "name": "Трубопровод",
+      "source_id": "CASE1-REQUIREMENTS",
+      "company_context": false,
+      "note": "Категория для регистрации объекта. Не инвентарная единица и не подтверждение наличия оборудования на предприятии."
+    },
+    {
+      "code": "REF-TYPE-10",
+      "name": "Горно-транспортное оборудование",
+      "source_id": "CASE1-REQUIREMENTS",
+      "company_context": false,
+      "note": "Категория для регистрации объекта. Не инвентарная единица и не подтверждение наличия оборудования на предприятии."
+    },
+    {
+      "code": "REF-TYPE-11",
+      "name": "Автотранспорт",
+      "source_id": "CASE1-REQUIREMENTS",
+      "company_context": false,
+      "note": "Категория для регистрации объекта. Не инвентарная единица и не подтверждение наличия оборудования на предприятии."
+    },
+    {
+      "code": "REF-TYPE-12",
+      "name": "Подвижной состав",
+      "source_id": "CASE1-REQUIREMENTS",
+      "company_context": false,
+      "note": "Категория для регистрации объекта. Не инвентарная единица и не подтверждение наличия оборудования на предприятии."
+    },
+    {
+      "code": "REF-TYPE-13",
+      "name": "Сварное соединение",
+      "source_id": "CASE1-REQUIREMENTS",
+      "company_context": false,
+      "note": "Категория для регистрации объекта. Не инвентарная единица и не подтверждение наличия оборудования на предприятии."
+    }
+  ],
+  "work_order_templates": [
+    {
+      "template_id": "TPL-001",
+      "title": "Диагностика заявленной течи насоса",
+      "equipment_category": "Насос",
+      "kind": "Внеплановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: диагностика заявленной течи насоса. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-002",
+      "title": "Осмотр доступных соединений насосного узла",
+      "equipment_category": "Насос",
+      "kind": "Плановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: осмотр доступных соединений насосного узла. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-003",
+      "title": "Диагностика заявленного схода конвейерной ленты",
+      "equipment_category": "Конвейер",
+      "kind": "Внеплановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: диагностика заявленного схода конвейерной ленты. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-004",
+      "title": "Осмотр состояния роликов конвейера",
+      "equipment_category": "Конвейер",
+      "kind": "Плановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: осмотр состояния роликов конвейера. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-005",
+      "title": "Осмотр ограждений и креплений конвейера",
+      "equipment_category": "Конвейер",
+      "kind": "Плановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: осмотр ограждений и креплений конвейера. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-006",
+      "title": "Диагностика заявленной вибрации дробильного оборудования",
+      "equipment_category": "Дробильное оборудование",
+      "kind": "Внеплановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: диагностика заявленной вибрации дробильного оборудования. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-007",
+      "title": "Осмотр доступных элементов дробильного оборудования",
+      "equipment_category": "Дробильное оборудование",
+      "kind": "Плановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: осмотр доступных элементов дробильного оборудования. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-008",
+      "title": "Диагностика заявленного перегрева подшипникового узла",
+      "equipment_category": "Подшипниковый узел",
+      "kind": "Внеплановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: диагностика заявленного перегрева подшипникового узла. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-009",
+      "title": "Контроль состояния подшипникового узла по утверждённой карте",
+      "equipment_category": "Подшипниковый узел",
+      "kind": "Плановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: контроль состояния подшипникового узла по утверждённой карте. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-010",
+      "title": "Диагностика заявленной течи редуктора",
+      "equipment_category": "Редуктор",
+      "kind": "Внеплановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: диагностика заявленной течи редуктора. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-011",
+      "title": "Осмотр доступных соединений редуктора",
+      "equipment_category": "Редуктор",
+      "kind": "Плановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: осмотр доступных соединений редуктора. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-012",
+      "title": "Диагностика заявленного перегрева электродвигателя",
+      "equipment_category": "Электродвигатель",
+      "kind": "Внеплановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: диагностика заявленного перегрева электродвигателя. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-013",
+      "title": "Осмотр обозначений и доступных ограждений электрооборудования",
+      "equipment_category": "Электрооборудование",
+      "kind": "Плановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: осмотр обозначений и доступных ограждений электрооборудования. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-014",
+      "title": "Проверка зарегистрированного отказа датчика",
+      "equipment_category": "КИПиА",
+      "kind": "Внеплановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: проверка зарегистрированного отказа датчика. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-015",
+      "title": "Проверка показаний прибора по утверждённой методике",
+      "equipment_category": "КИПиА",
+      "kind": "Плановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: проверка показаний прибора по утверждённой методике. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-016",
+      "title": "Осмотр заявленного повреждения трубопровода",
+      "equipment_category": "Трубопровод",
+      "kind": "Внеплановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: осмотр заявленного повреждения трубопровода. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-017",
+      "title": "Осмотр зарегистрированного дефекта горно-транспортной машины",
+      "equipment_category": "Горно-транспортное оборудование",
+      "kind": "Внеплановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: осмотр зарегистрированного дефекта горно-транспортной машины. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-018",
+      "title": "Осмотр автотранспортной техники по утверждённой карте ТО",
+      "equipment_category": "Автотранспорт",
+      "kind": "Плановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: осмотр автотранспортной техники по утверждённой карте то. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-019",
+      "title": "Осмотр заявленного дефекта подвижного состава",
+      "equipment_category": "Подвижной состав",
+      "kind": "Внеплановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: осмотр заявленного дефекта подвижного состава. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    },
+    {
+      "template_id": "TPL-020",
+      "title": "Осмотр зарегистрированного повреждения сварного соединения",
+      "equipment_category": "Сварное соединение",
+      "kind": "Внеплановая",
+      "source_id": "CASE1-REQUIREMENTS",
+      "problem_description": "Черновик: осмотр зарегистрированного повреждения сварного соединения. Мастер указывает фактическую заявку, инвентарный номер, наблюдаемые признаки, срок и исполнителя. Порядок работы и допуски берутся из утверждённой документации предприятия.",
+      "closeout_requirements": [
+        "Описать фактически выполненные действия.",
+        "Указать фактическое время и использованные материалы.",
+        "Зафиксировать результат контрольной проверки по утверждённой методике.",
+        "Приложить собственные фото этого оборудования; не использовать снимки справочного фотокаталога.",
+        "Передать результат на проверку мастеру."
+      ]
+    }
+  ],
+  "defect_codes": [
+    {
+      "code": "APP-00",
+      "name": "Отклонений не зафиксировано",
+      "category": "Общее",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-01",
+      "name": "Заявленный износ подшипника",
+      "category": "Механика",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-02",
+      "name": "Заявленный перегрев",
+      "category": "Механика",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-03",
+      "name": "Заявленная вибрация",
+      "category": "Механика",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-04",
+      "name": "Заявленный шум",
+      "category": "Механика",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-05",
+      "name": "Заявленная течь масла",
+      "category": "Герметичность",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-06",
+      "name": "Заявленная течь жидкости",
+      "category": "Герметичность",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-07",
+      "name": "Повреждение уплотнения",
+      "category": "Герметичность",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-08",
+      "name": "Повреждение ленты",
+      "category": "Конвейер",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-09",
+      "name": "Сход ленты",
+      "category": "Конвейер",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-10",
+      "name": "Повреждение ролика",
+      "category": "Конвейер",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-11",
+      "name": "Повреждение ограждения",
+      "category": "Ограждения",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-12",
+      "name": "Ослабление крепления",
+      "category": "Механика",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-13",
+      "name": "Загрязнение доступного узла",
+      "category": "Общее",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-14",
+      "name": "Заявленный отказ датчика",
+      "category": "КИПиА",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-15",
+      "name": "Заявленный отказ привода",
+      "category": "Электрооборудование",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-16",
+      "name": "Видимое повреждение кабеля",
+      "category": "Электрооборудование",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-17",
+      "name": "Видимая коррозия",
+      "category": "Общее",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-18",
+      "name": "Видимая трещина",
+      "category": "Общее",
+      "source_id": "CASE1-REQUIREMENTS"
+    },
+    {
+      "code": "APP-19",
+      "name": "Требуется уточнение причины",
+      "category": "Общее",
+      "source_id": "CASE1-REQUIREMENTS"
+    }
+  ],
+  "operational_tasks": [],
+  "operational_reports": []
+}

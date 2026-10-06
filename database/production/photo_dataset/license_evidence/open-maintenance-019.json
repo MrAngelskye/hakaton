@@ -1,0 +1,106 @@
+{
+  "pageid": 5335178,
+  "title": "File:Machine mining belt.jpg",
+  "revision": {
+    "revid": 1132468656,
+    "parentid": 860092336,
+    "timestamp": "2025-12-17T03:54:01Z",
+    "slots": {
+      "main": {
+        "contentmodel": "wikitext",
+        "contentformat": "text/x-wiki",
+        "*": "== {{int:filedesc}} ==\n{{Information\n|Description={{C|Continuous miners}} machine mining belt — used for '''{{C|coal mining in the United States}}'''.\n\n|Source=[https://www.flickr.com/photos/25069384@N03/2492030129/ Machine mining belt]\n|Date=2008-05-14 13:18\n|Author=[https://www.cdc.gov/niosh/ National Institute for Occupational Safety and Health (NIOSH)] from USA\n|Permission=\n|other_versions=\n}}\n\n== {{int:license-header}} ==\n{{cc-by-2.0}}\n{{flickrreview|Mitchazenia|2008-12-03}}\n\n== {{int:license-header}} ==\n{{PD-USGov-HHS-NIOSH}}\n\n[[Category:Continuous miners]]\n[[Category:Coal mining in the United States]]\n[[Category:Conveyor belts in the United States]]\n[[Category:National Institute for Occupational Safety and Health photographs]]"
+      }
+    }
+  },
+  "imageinfo": {
+    "size": 320125,
+    "width": 768,
+    "height": 512,
+    "thumburl": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Machine_mining_belt.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "thumbwidth": 1280,
+    "thumbheight": 853,
+    "thumbattribs": {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Machine_mining_belt.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "decoding": "async",
+      "loading": "lazy",
+      "width": 1280,
+      "height": 853
+    },
+    "url": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Machine_mining_belt.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Machine_mining_belt.jpg",
+    "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=5335178",
+    "sha1": "f1ce1cc1263772c45911756cf71dad9312a07b3e",
+    "extmetadata": {
+      "DateTime": {
+        "value": "2008-12-03 15:33:11",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+      },
+      "ObjectName": {
+        "value": "Machine mining belt",
+        "source": "mediawiki-metadata"
+      },
+      "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+      },
+      "Categories": {
+        "value": "Coal mining in the United States|Continuous miners|Flickr images reviewed by trusted users|Flickr images missing SDC creator|Conveyor belts in the United States|PD US HHS CDC NIOSH|National Institute for Occupational Safety and Health photographs",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "ImageDescription": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/Category:Continuous_miners\" title=\"Category:Continuous miners\">Continuous miners</a> machine mining belt — used for <b><a href=\"//commons.wikimedia.org/wiki/Category:Coal_mining_in_the_United_States\" title=\"Category:Coal mining in the United States\">Coal mining in the United States</a></b>.",
+        "source": "commons-desc-page"
+      },
+      "DateTimeOriginal": {
+        "value": "2008-05-14 13:18",
+        "source": "commons-desc-page"
+      },
+      "Credit": {
+        "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/25069384@N03/2492030129/\">Machine mining belt</a>",
+        "source": "commons-desc-page"
+      },
+      "Artist": {
+        "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.cdc.gov/niosh/\">National Institute for Occupational Safety and Health (NIOSH)</a> from USA",
+        "source": "commons-desc-page"
+      },
+      "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+      },
+      "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+      }
+    }
+  }
+}

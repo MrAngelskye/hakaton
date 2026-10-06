@@ -1,0 +1,114 @@
+{
+  "pageid": 1569602,
+  "title": "File:Warman centrifugal pump.jpg",
+  "revision": {
+    "revid": 1210686734,
+    "parentid": 1056869852,
+    "timestamp": "2026-05-08T17:12:45Z",
+    "slots": {
+      "main": {
+        "contentmodel": "wikitext",
+        "contentformat": "text/x-wiki",
+        "*": "== {{int:filedesc}} ==\n{{Information\n|Description=Warman centrifugal pump, driven by electric motor via vee belts\n|Source={{Own}}\n|Date=2006-01-16\n|Author=Bernard S. Janse\n}}\n== {{int:license-header}} ==\n{{Self|GFDL|Cc-by-sa-3.0-migrated|Cc-by-2.5}}\n\n[[Category:Volutes of centrifugal pumps]]\n[[Category:Taken with Canon Digital IXUS 65]]"
+      }
+    }
+  },
+  "imageinfo": {
+    "size": 1742620,
+    "width": 2816,
+    "height": 2112,
+    "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Warman_centrifugal_pump.jpg/1280px-Warman_centrifugal_pump.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "thumbwidth": 1280,
+    "thumbheight": 960,
+    "responsiveUrls": {
+      "2": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Warman_centrifugal_pump.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+    },
+    "thumbattribs": {
+      "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Warman_centrifugal_pump.jpg/1280px-Warman_centrifugal_pump.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "decoding": "async",
+      "loading": "lazy",
+      "width": 1280,
+      "height": 960,
+      "srcset": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Warman_centrifugal_pump.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+    },
+    "url": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Warman_centrifugal_pump.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Warman_centrifugal_pump.jpg",
+    "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=1569602",
+    "sha1": "4269bb0be9acb4762665a216d3bd4e97136a5424",
+    "extmetadata": {
+      "DateTime": {
+        "value": "2007-01-16 03:21:05",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+      },
+      "ObjectName": {
+        "value": "Warman centrifugal pump",
+        "source": "mediawiki-metadata"
+      },
+      "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+      },
+      "Categories": {
+        "value": "GFDL|Taken with Canon Digital IXUS 65|License migration redundant|Self-published work|Volutes of centrifugal pumps",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "ImageDescription": {
+        "value": "Warman centrifugal pump, driven by electric motor via vee belts",
+        "source": "commons-desc-page"
+      },
+      "DateTimeOriginal": {
+        "value": "2006-01-16",
+        "source": "commons-desc-page"
+      },
+      "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+      },
+      "Artist": {
+        "value": "Bernard S. Janse",
+        "source": "commons-desc-page"
+      },
+      "LicenseShortName": {
+        "value": "CC BY 2.5",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "UsageTerms": {
+        "value": "Creative Commons Attribution 2.5",
+        "source": "commons-desc-page"
+      },
+      "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by/2.5",
+        "source": "commons-desc-page"
+      },
+      "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "License": {
+        "value": "cc-by-2.5",
+        "source": "commons-templates",
+        "hidden": ""
+      }
+    }
+  }
+}

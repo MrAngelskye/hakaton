@@ -60,6 +60,7 @@ def prepare(source,target_columns,base):
 
 def merge(store,user,control):
     control.admin(user)
+    if not getattr(store,'seed_demo',False):raise PermissionError('Импорт учебных данных отключён на рабочем сервере.')
     with zipfile.ZipFile(ARCHIVE) as z,tempfile.TemporaryDirectory(prefix='naryadai-fixture-') as temp:
         directory=Path(temp);manifest=json.loads(z.read('naryadai_database/generated/manifest.json'))
         if manifest.get('synthetic') is not True:raise ValueError('Архив не помечен как учебный.')

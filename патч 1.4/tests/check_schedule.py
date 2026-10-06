@@ -18,7 +18,7 @@ APP.setStyle('Fusion');apply_theme(APP)
 
 class ScheduleChecks(unittest.TestCase):
     def setUp(self):
-        self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name);self.store=Store(self.root)
+        self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name);self.store=Store(self.root,seed_demo=True)
         self.master=self.store.authenticate('master','1234','master');self.admin=self.store.authenticate('admin','1234','admin')
         self.worker=self.store.authenticate('worker4','1234','worker');self.other=self.store.authenticate('worker3','1234','worker')
         self.day=(date.today()+timedelta(days=2)).isoformat();self.windows=[]
@@ -75,7 +75,7 @@ class ScheduleChecks(unittest.TestCase):
         self.store.transition(self.worker,tid,'paused','Сломался инструмент');self.store.transition(self.master,tid,'cancelled')
         self.assertEqual(len(self.store.pauses(self.master,tid)),2)
         self.assertTrue(all(p['ended'] for p in self.store.pauses(self.master,tid)))
-        again=Store(self.root);self.assertEqual(len(again.pauses(self.master,tid)),2)
+        again=Store(self.root,seed_demo=True);self.assertEqual(len(again.pauses(self.master,tid)),2)
         self.assertTrue(any('Нет необходимых материалов' in e['message'] for e in again.events(self.master,tid)))
         # Восстановить схему 1.1 и проверить переход без удаления исходных данных.
         old=self.create(start=14);self.store.transition(self.worker,old,'inProgress')
@@ -84,10 +84,10 @@ class ScheduleChecks(unittest.TestCase):
             for table in ('pauses','shifts','shift_rules'):c.execute('DROP TABLE '+table)
             before=c.execute('SELECT count(*) FROM reports').fetchone()[0]
         marker=self.store.photos/'kept.txt';marker.write_text('Фото остаются на месте')
-        migrated=Store(self.root);self.assertEqual(migrated.task(self.worker,old)['status'],'paused')
+        migrated=Store(self.root,seed_demo=True);self.assertEqual(migrated.task(self.worker,old)['status'],'paused')
         self.assertIn('1.1',migrated.pauses(self.master,old)[0]['reason']);self.assertTrue(marker.exists())
         with migrated.transaction() as c:self.assertEqual(c.execute('SELECT count(*) FROM reports').fetchone()[0],before)
-        self.assertEqual(len(Store(self.root).pauses(self.master,old)),1)
+        self.assertEqual(len(Store(self.root,seed_demo=True).pauses(self.master,old)),1)
     def test_gui_schedule_assignment_and_pause(self):
         win=self.show(MainWindow(self.store,self.master));win.schedule_day=QDate.fromString(self.day,'yyyy-MM-dd');win.navigate('team_schedule');APP.processEvents()
         self.assertEqual(win.page_key,'team_schedule');self.assertTrue(any('Назначить на это время'==b.text() for b in win.findChildren(QPushButton)))

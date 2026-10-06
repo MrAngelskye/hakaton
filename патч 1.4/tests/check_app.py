@@ -23,7 +23,7 @@ APP.setStyle('Fusion');apply_theme(APP)
 
 class Checks(unittest.TestCase):
     def setUp(self):
-        self.temp=tempfile.TemporaryDirectory();self.folder=Path(self.temp.name);self.store=Store(self.folder)
+        self.temp=tempfile.TemporaryDirectory();self.folder=Path(self.temp.name);self.store=Store(self.folder,seed_demo=True)
         self.master=self.store.authenticate('master','1234','master');self.worker=self.store.authenticate('worker1','1234','worker')
         self.other=self.store.authenticate('worker2','1234','worker');self.admin=self.store.authenticate('admin','1234','admin')
         self.windows=[]
@@ -65,14 +65,14 @@ class Checks(unittest.TestCase):
         self.assertTrue(any('Возврат' in e['message'] for e in self.store.events(self.worker,tid)))
         metrics=next(p for p in self.store.metrics(self.master) if p['id']==self.worker['id'])
         self.assertEqual(metrics['done'],3);self.assertAlmostEqual(metrics['score'],(94+91+87)/3)
-        again=Store(self.folder);self.assertEqual(again.task(self.worker,tid)['status'],'approved')
+        again=Store(self.folder,seed_demo=True);self.assertEqual(again.task(self.worker,tid)['status'],'approved')
         export=self.folder/'reports.csv';again.export_reports(self.master,export)
         with export.open(encoding='utf-8-sig') as f:rows=list(csv.reader(f,delimiter=';'))
         self.assertTrue(any(row[1]==str(tid) and row[6]=='87' and row[7]=='100' for row in rows[1:]))
     def test_existing_site_survives_update_and_support_edit(self):
         with self.store.transaction() as c:
             c.execute("UPDATE tasks SET site='Сборочный цех' WHERE id=1048")
-        again=Store(self.folder)
+        again=Store(self.folder,seed_demo=True)
         task=again.task(self.admin,1048)
         self.assertEqual(task['site'],'Сборочный цех')
         dialog=self.show(SupportTask(again,self.admin,task,None))

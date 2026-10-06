@@ -17,6 +17,7 @@ def main():
     parser=argparse.ArgumentParser(description='НарядAI — локальный или сетевой клиент')
     parser.add_argument('--data-dir',type=Path,help='Папка локальной базы и фото')
     parser.add_argument('--server',help='Адрес общего сервера, например http://192.168.1.10:8000')
+    parser.add_argument('--demo',action='store_true',help='Создать учебные аккаунты и справочники только для демонстрации')
     args=parser.parse_args()
     configure_windows_notifications()
     app=QApplication(sys.argv[:1]);app.setApplicationName('NaryadAI');app.setOrganizationName('NaryadAI')
@@ -28,7 +29,7 @@ def main():
         if args.server:
             from app.remote import RemoteStore
             store=RemoteStore(args.server)
-        else:store=Store(data)
+        else:store=Store(data,seed_demo=args.demo)
     except Exception as e:
         QMessageBox.critical(None,'Не удалось открыть данные',str(e));return 1
     data.mkdir(parents=True,exist_ok=True);preferences().configure(data/'ui.ini')

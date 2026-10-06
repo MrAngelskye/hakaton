@@ -13,7 +13,7 @@ from tools.import_demo import import_demo
 class ConsolidatedAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.temp=tempfile.TemporaryDirectory();cls.app=create_app(Settings(data_dir=Path(cls.temp.name),ai_enabled=False));cls.client=TestClient(cls.app)
+        cls.temp=tempfile.TemporaryDirectory();cls.app=create_app(Settings(seed_demo=True,data_dir=Path(cls.temp.name),ai_enabled=False));cls.client=TestClient(cls.app)
         cls.headers={}
         for role,login in [('master','master'),('worker','worker1'),('worker2','worker2'),('admin','admin'),('manager','manager')]:
             r=cls.client.post('/api/login',json={'username':login,'password':'1234','role':'worker' if role=='worker2' else role});assert r.status_code==200,r.text
@@ -91,7 +91,7 @@ class DesktopConsolidation(unittest.TestCase):
         from app.reference_dialogs import ReferenceEditor,NAMES
         from app.drafts import ReportDraft
         with tempfile.TemporaryDirectory() as folder:
-            store=Store(folder);master=store.authenticate('master','1234','master');worker=store.authenticate('worker1','1234','worker')
+            store=Store(folder,seed_demo=True);master=store.authenticate('master','1234','master');worker=store.authenticate('worker1','1234','worker')
             catalogs=store.catalogs(master);e=catalogs['equipment'][0];s=next(s for s in catalogs['sites'] if s['id']==e['site_id']);day=(date.today()+timedelta(days=30)).isoformat()
             tid=store.create_task(master,title='Проверить механизм',description='Проверить состояние и выполнить контрольный запуск',site=s['name'],equipment=e['name'],equipment_id=e['id'],priority='normal',kind='Плановая',duration=1,day=day,start=8,deadline=day+'T18:00',worker_id=worker['id'])
             store.transition(worker,tid,'accepted');store.transition(worker,tid,'inProgress')

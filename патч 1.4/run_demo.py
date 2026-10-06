@@ -18,7 +18,7 @@ def main():
         try:info=import_demo(args.data_dir)
         except (ValueError,OSError) as e:parser.error(str(e))
         print('Учебный набор: '+str(info['counts']['tasks'])+' нарядов; все фото и оценки синтетические.')
-    settings=Settings(data_dir=args.data_dir,ai_enabled=False,ai_mode='local')
+    settings=Settings(data_dir=args.data_dir,ai_enabled=False,ai_mode='local',seed_demo=True)
     app=create_app(settings)
     print(f'Демонстрационные данные: {args.data_dir.resolve()}')
     print(f'Откройте http://{args.host}:{args.port}. ИИ отключён: приёмка вручную.')

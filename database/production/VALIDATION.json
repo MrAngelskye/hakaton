@@ -1,0 +1,52 @@
+{
+  "checked_on": "2026-10-07",
+  "source_branch": "cloud-1.4",
+  "source_commit": "ef30bf4c5681e89bfdd9626e87c2db0fa792def9",
+  "automated_tests": {
+    "command": "python -m unittest discover -s tests -p test_*.py",
+    "run": 53,
+    "skipped": 1,
+    "result": "passed",
+    "environment": "Windows, Python 3.14, isolated test environment; QT_QPA_PLATFORM=offscreen",
+    "production_specific_tests": 13
+  },
+  "additional_checks": {
+    "javascript_syntax": "node --check web/app.js: passed",
+    "qt_production_task_dialog": "20 templates, unchecked confirmation, empty real inventory: passed",
+    "photo_dataset": "25 images decoded, hash checked, unique file paths and sources/licenses present: passed",
+    "training_split": "unreviewed annotations refused; an isolated test-only approved annotation set kept all 22 groups disjoint: passed",
+    "existing_database_guard": "populated database refused without deleting existing data: passed",
+    "post_commit_output_failure": "private credentials CSV retained after successful DB commit: passed"
+  },
+  "postgres_validation": {
+    "engine": "PostgreSQL-compatible PGlite 0.5.8 WASM via local socket and psycopg; NOT a deployed native PostgreSQL server",
+    "direct_bootstrap": "passed",
+    "sqlite_to_postgres_transfer": "passed",
+    "preserved_authenticated_credentials": 19,
+    "unknown_prices_and_grades": "passed",
+    "new_user_profile_update_without_invented_shift": "passed",
+    "all_application_tables_rls_enabled": "passed",
+    "unreviewed_training_photo_approval_constraint": "passed"
+  },
+  "initial_database_counts": {
+    "users": 19,
+    "sites": 4,
+    "materials": 26,
+    "work_order_templates": 20,
+    "training_photos": 25,
+    "reference_sources": 40,
+    "tasks": 0,
+    "reports": 0,
+    "equipment": 0,
+    "brigades": 0,
+    "shifts": 0,
+    "shift_rules": 0
+  },
+  "limitations": [
+    "No company internal employee roster, asset register, warehouse prices/stocks, real work-order history or own repair photo pairs were supplied.",
+    "Manufacturer catalogs do not establish suitability or actual factory use of materials.",
+    "The 25 external photographs are not expert annotated and no AI model was trained.",
+    "The final installation still requires verification against the team's actual PostgreSQL/Supabase and storage credentials. No live service was changed.",
+    "Credentials and prepared private database artifacts are excluded from the GitHub changes."
+  ]
+}

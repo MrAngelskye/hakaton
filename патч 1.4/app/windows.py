@@ -1,8 +1,8 @@
 import math
 import threading
 from datetime import date,datetime
-from PySide6.QtCore import Qt,QDate,QTimer,Signal,QObject
-from PySide6.QtGui import QPainter,QColor,QPen
+from PySide6.QtCore import Qt,QDate,QTimer,Signal,QObject,QUrl
+from PySide6.QtGui import QPainter,QColor,QPen,QDesktopServices
 from PySide6.QtWidgets import (QMainWindow,QWidget,QVBoxLayout,QHBoxLayout,QFrame,
     QScrollArea,QLineEdit,QButtonGroup,QLabel,QDateEdit,QProgressBar,QSizePolicy,
     QFileDialog,QMessageBox,QTableWidget,QTableWidgetItem,QHeaderView,QAbstractItemView,QCheckBox,QTextEdit,QApplication)
@@ -117,10 +117,10 @@ class MainWindow(QMainWindow):
         self.nav={}
         items=[('overview','grid','Смена'),('tasks','tasks','Наряды'),('reports','report','Отчёты'),('team','team','Команда'),('team_schedule','calendar','График команды'),('costs','chart','Материалы'),('analytics','chart','Сводка за период')]
         if user['role']=='worker':items=[('tasks','tasks','Задачи'),('schedule','calendar','График'),('reports','report','Отчёты'),('profile','user','Профиль')]
-        elif user['role']=='admin':items += [('ai_chat','spark','Чат с ИИ'),('users','shield','Пользователи'),('integrations','spark','Подключения')]
+        elif user['role']=='admin':items=[('overview','grid','Обзор'),('ai_chat','spark','Чат с ИИ'),('integrations','shield','Веб-панель управления')]
         elif user['role'] in ('master','manager'):items += [('ai_chat','spark','Чат с аналитикой')]
-        if user['role'] in ('master','admin'):items += [('references','tasks','Справочники')]
-        if user['role']!='worker':items += [('equipment','tasks','Оборудование')]
+        if user['role']=='master':items += [('references','tasks','Справочники')]
+        if user['role'] in ('master','manager'):items += [('equipment','tasks','Оборудование')]
         for key,ico,title in items:
             b=button(title,lambda k=key:self.navigate(k),'nav',ico);b.setCheckable(True);self.nav[key]=b;self.side.addWidget(b)
         if user['role'] in ('master','admin'):
@@ -230,7 +230,7 @@ class MainWindow(QMainWindow):
         else:l.addWidget(tag(date.today().strftime('%d.%m.%Y')))
         self.body.addWidget(w)
     def ai_chat_page(self):
-        self.heading('Чат с аналитикой','Проверенные агрегаты за неделю и текущая доступность работников; ИИ не меняет БД')
+        self.heading('Помощник НарядAI','Поиск по нарядам, отчётам и инструкциям из общей базы')
         if not getattr(self.store,'is_remote',False):
             self.body.addWidget(self.empty('Подключите приложение к общему серверу','Запустите configure_client.bat, укажите адрес сервера и откройте start_client.bat.'))
             return
@@ -478,6 +478,12 @@ class MainWindow(QMainWindow):
         try:self.store.set_active(self.user,u['id'],not u['active']);self.render()
         except (ValueError,PermissionError) as e:QMessageBox.information(self,'Пользователь',str(e))
     def integrations_page(self):
+        if self.user['role']=='admin':
+            self.heading('Веб-панель администратора','Сотрудники, справочники, ИИ и журнал действий')
+            self.body.addWidget(label('Управление перенесено на сайт. Откройте его и войдите как администратор. Там доступны консоль /help, включение ИИ, документация и полный рабочий интерфейс.','muted',True))
+            if getattr(self.store,'is_remote',False):self.body.addWidget(button('Открыть сайт',lambda:QDesktopServices.openUrl(QUrl(self.store.url)),'primary','shield'))
+            else:self.body.addWidget(label('Сначала подключитесь к общему серверу через configure_client.bat.','muted',True))
+            return
         self.heading('Подключения и модули','Управление дополнительными возможностями приложения')
         remote=getattr(self.store,'is_remote',False);enabled=remote and self.store.snapshot()['ai_enabled']
         notice,l=card();l.addWidget(label('Проверка отчётов: '+('включена на сервере' if enabled else 'ручная'),'section'))

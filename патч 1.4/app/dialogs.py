@@ -262,18 +262,20 @@ class SubmitReport(Sheet):
     def save_draft(self):self.persist_draft();self.reject()
 
     def add_material(self,m=None):
-        m=m if isinstance(m,dict) else {'name':'','quantity':1,'unit':'','price':0}
+        m=m if isinstance(m,dict) else {'name':'','quantity':1,'unit':'шт.','price':0}
         n=self.table.rowCount();self.table.insertRow(n);materials=self.store.catalogs(self.user)['materials']
-        choices=combo([(x['name'],x['id']) for x in materials]);self.table.setCellWidget(n,0,choices)
+        choices=combo([(x['name'],x['id']) for x in materials]);choices.setEditable(True);self.table.setCellWidget(n,0,choices)
         self.table.setItem(n,1,QTableWidgetItem(str(m['quantity'])))
         def changed():
             row=next((i for i in range(self.table.rowCount()) if self.table.cellWidget(i,0) is choices),None)
             if row is None:return
-            material=next(x for x in materials if x['id']==choices.currentData())
-            for column,value in [(2,material['unit']),(3,material['unit_price'])]:
-                item=QTableWidgetItem(str(value));item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable);self.table.setItem(row,column,item)
-        choices.currentIndexChanged.connect(changed)
-        old=next((i for i,x in enumerate(materials) if x['name']==m['name']),0);choices.setCurrentIndex(old);changed()
+            material=next((x for x in materials if x['name']==choices.currentText()),None)
+            for column,value in [(2,material['unit'] if material else m.get('unit','шт.')),(3,material['unit_price'] if material else m.get('price',0))]:
+                item=QTableWidgetItem(str(value))
+                if material:item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                self.table.setItem(row,column,item)
+        choices.currentTextChanged.connect(changed)
+        old=next((i for i,x in enumerate(materials) if x['name']==m['name']),-1);choices.setCurrentIndex(old);choices.setEditText(m['name']);changed()
     def remove_material(self):
         if self.table.currentRow()>=0:self.table.removeRow(self.table.currentRow());self.persist_draft()
     def add_photos(self):
@@ -301,7 +303,7 @@ class SubmitReport(Sheet):
             materials=[]
             for n in range(self.table.rowCount()):
                 vals=[self.table.item(n,i).text().strip() if self.table.item(n,i) else '' for i in range(4)]
-                try:materials.append({'material_id':self.table.cellWidget(n,0).currentData(),'name':self.table.cellWidget(n,0).currentText(),'quantity':float(vals[1].replace(',','.')),'unit':vals[2],'price':float(vals[3].replace(',','.'))})
+                try:materials.append({'material_id':next((x['id'] for x in self.store.catalogs(self.user)['materials'] if x['name']==self.table.cellWidget(n,0).currentText()),None),'name':self.table.cellWidget(n,0).currentText(),'quantity':float(vals[1].replace(',','.')),'unit':vals[2],'price':float(vals[3].replace(',','.'))})
                 except ValueError:raise ValueError(f'Проверьте количество и цену в строке {n+1}.')
             self.store.submit(self.user,self.t['id'],work=self.work.toPlainText(),result=self.result_text.toPlainText(),
                 defect=self.defect.currentText(),hours=self.hours.value(),materials=materials,photo_sources=self.photo_sources)

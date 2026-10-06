@@ -25,10 +25,10 @@ def main():
     url=ask('Адрес AnythingLLM (без /api)',old.get('base_url','http://127.0.0.1:3001'))
     key=getpass.getpass('API-ключ AnythingLLM (ввод скрыт; Enter — оставить прежний): ').strip() or old.get('api_key','')
     label=ask('Название выбранной модели для подписи результата',old.get('model_label','Модель AnythingLLM'))
-    images=ask('Отправлять фотографии модели? Только если она поддерживает изображения (да/нет)','да' if old.get('send_images') else 'нет').lower() in ('да','yes','y')
+    images=ask('Отправлять фотографии модели? Только если она поддерживает изображения (да/нет)','да' if old.get('send_images',True) else 'нет').lower() in ('да','yes','y')
     directory=ask('Папка общей базы и фотографий',old.get('data_dir','server_data'))
     data={'data_dir':directory,'base_url':url,'api_key':key,'workspace':old.get('workspace','naryadai'),'ai_enabled':True,
-          'timeout':180,'send_images':images,'model_label':label,'host':'0.0.0.0','port':8000}
+          'timeout':max(600,int(old.get('timeout',600))),'send_images':images,'model_label':label,'host':'0.0.0.0','port':8000}
     # Проверить настройки до записи; содержимое ключа не печатается.
     scratch=ROOT/'server_config.pending.json';scratch.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
     try:

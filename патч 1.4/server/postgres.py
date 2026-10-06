@@ -132,4 +132,8 @@ class PostgresStore(ServerStore):
         import uuid
         target=self.photos/(uuid.uuid4().hex+p.suffix.lower());self.storage.upload(target.name,p.read_bytes());return target
     def remove_photo(self,p):self.storage.delete(p.name)
-    def read_photo(self,name):return self.storage.download(name)
+    def read_photo(self,name):
+        if name.startswith('demo_'):
+            from server.demo_import import read_demo_photo
+            return read_demo_photo(name)
+        return self.storage.download(name)

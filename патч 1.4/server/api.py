@@ -68,7 +68,10 @@ def create_app(settings,provider=None):
         from server.remote_jobs import RemoteJobs
         jobs=RemoteJobs(store,settings)
     from server.chat import AdminChat
-    chat=AdminChat(store,settings)
+    from server.control import ControlCenter
+    from server.knowledge import Knowledge
+    control=ControlCenter(store,settings)
+    knowledge=Knowledge(store,control);chat=AdminChat(store,settings);chat.knowledge=knowledge
     stopping=threading.Event();rpc_lock=threading.Lock();login_lock=threading.Lock();attempts={}
     from server.notifications import NotificationDispatcher
     notifications=NotificationDispatcher(store,settings)
@@ -81,6 +84,7 @@ def create_app(settings,provider=None):
     def ai_loop():
         while not stopping.is_set():
             try:
+                control.refresh()
                 if remote:
                     with rpc_lock:jobs.expire();chat.expire()
                     stopping.wait(5);continue
@@ -112,9 +116,9 @@ def create_app(settings,provider=None):
         try:yield
         finally:stopping.set();thread.join(timeout=2);scheduler.join(timeout=2);store.close()
 
-    app=FastAPI(title='НарядAI · сервер',version='1.5',lifespan=lifespan,docs_url=None,redoc_url=None,openapi_url=None)
+    app=FastAPI(title='НарядAI · сервер',version='1.6',lifespan=lifespan,docs_url=None,redoc_url=None,openapi_url=None)
     app.state.store=store;app.state.provider=ai;app.state.chat=chat
-    app.state.notifications=notifications
+    app.state.notifications=notifications;app.state.control=control;app.state.knowledge=knowledge
     app.add_middleware(GZipMiddleware,minimum_size=1000)
 
     @app.middleware('http')
@@ -153,7 +157,7 @@ def create_app(settings,provider=None):
         return dict(u)
 
     @app.get('/health')
-    def health():return {'ok':True,'version':'1.5','release':'1.5-notifications.1','ai_enabled':settings.ai_enabled,'features':['admin_chat','case1_workflow','period_analytics','notifications','atomic_rpc','mobile_web','desktop_notifications','announcements']}
+    def health():return {'ok':True,'version':'1.6','release':'1.6-knowledge-console.1','ai_enabled':settings.ai_enabled,'features':['admin_chat','case1_workflow','period_analytics','notifications','atomic_rpc','mobile_web','desktop_notifications','announcements','grounded_ai','photo_analysis','admin_console','knowledge_documents','shared_database']}
     web=Path(__file__).resolve().parents[1]/'web'
     app.mount('/web',StaticFiles(directory=web),name='web')
     app.mount('/assets/branding',StaticFiles(directory=web.parent/'assets'/'branding'),name='branding')
@@ -187,7 +191,7 @@ def create_app(settings,provider=None):
 
     @app.get('/api/snapshot')
     def snapshot(day:str='',history_days:int=Query(14,ge=0,le=366),limit:int=Query(500,ge=1,le=1000),user=Depends(actor)):
-        day=day or date.today().isoformat();date.fromisoformat(day)
+        control.refresh();day=day or date.today().isoformat();date.fromisoformat(day)
         # Согласованный снимок: мутации не вклиниваются между чтением нарядов и отчётов.
         with store.transaction() as c:
             if settings.database_url:c.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ')
@@ -222,11 +226,39 @@ def create_app(settings,provider=None):
 
     @app.get('/api/chat')
     def chat_history(conversation_id:str='',user=Depends(actor)):
+        control.refresh()
         with rpc_lock:return chat.history(user,conversation_id)
 
     @app.post('/api/chat')
     def chat_send(body:ChatSend,user=Depends(actor)):
         with rpc_lock:return chat.send(user,body.conversation_id,body.request_id,body.message)
+
+    class ConsoleBody(BaseModel):
+        model_config=ConfigDict(extra='forbid')
+        command:str=Field(min_length=1,max_length=2000)
+        request_id:str=Field(pattern=r'^[a-f0-9]{32}$')
+    class DocumentBody(BaseModel):
+        model_config=ConfigDict(extra='forbid')
+        title:str=Field(min_length=2,max_length=200)
+        body:str=Field(min_length=20,max_length=100000)
+        request_id:str=Field(pattern=r'^[a-f0-9]{32}$')
+    @app.post('/api/admin/import-demo')
+    def admin_import(user=Depends(actor)):
+        from server.demo_import import merge
+        return merge(store,user,control)
+    @app.get('/api/admin/monitor')
+    def admin_monitor(user=Depends(actor)):return control.monitor(user)
+    @app.get('/api/admin/events')
+    def admin_events(limit:int=Query(50,ge=1,le=100),user=Depends(actor)):return {'items':control.events(user,limit)}
+    @app.post('/api/admin/command')
+    def admin_command(body:ConsoleBody,user=Depends(actor)):
+        with rpc_lock:return control.command(user,body.command,body.request_id)
+    @app.get('/api/knowledge')
+    def knowledge_list(user=Depends(actor)):return {'items':control.documents(user)}
+    @app.post('/api/knowledge')
+    def knowledge_add(body:DocumentBody,user=Depends(actor)):return control.put_document(user,body.title,body.body,body.request_id)
+    @app.get('/api/chat/conversations')
+    def conversations(user=Depends(actor)):return {'items':chat.conversations(user)}
 
     @app.post('/api/chat/new')
     def chat_new(body:NewChat,user=Depends(actor)):
@@ -274,6 +306,7 @@ def create_app(settings,provider=None):
                 try:result=fn(user,*body.args,**kwargs)
                 except (TypeError,KeyError,AttributeError):raise ValueError('Проверьте значения в запросе.') from None
                 if method in WRITE_METHODS:
+                    if user['role']=='admin':control.audit(c,user,method,'Операция через интерфейс; параметры защищены.')
                     c.execute('INSERT INTO rpc_results(request_id,user_id,method,result,created,payload_hash) VALUES(?,?,?,?,?,?)',(body.request_id,user['id'],method,json.dumps(result,ensure_ascii=False),str(time.time()),payload_hash))
                     if method=='reset_password':c.execute('DELETE FROM sessions WHERE user_id=?',(bound.arguments['uid'],))
                 return {'result':result}

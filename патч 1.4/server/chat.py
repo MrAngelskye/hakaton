@@ -56,7 +56,7 @@ class AdminChat:
         clock=time.time();online=self.online(c)
         for row in c.execute("SELECT * FROM chat_requests WHERE status IN ('queued','processing')").fetchall():
             error=''
-            if not self.settings.ai_enabled:error='ИИ отключён на сервере. Включите AI_ENABLED и отправьте сообщение снова.'
+            if not self.settings.ai_enabled:error='ИИ выключен администратором. Включите его в центре управления и отправьте сообщение снова.'
             elif row['status']=='processing' and (row['lease_until'] or 0)<clock:error='Обработчик не ответил вовремя. Проверьте AnythingLLM и отправьте сообщение снова.'
             elif row['status']=='queued' and not online and clock-row['created']>=self.settings.offline_wait:error='ПК с ИИ не подключён. Запустите start_worker.bat и отправьте сообщение снова.'
             if error:
@@ -69,7 +69,12 @@ class AdminChat:
             rows=c.execute('SELECT id,message,answer,error,status,model,created FROM chat_requests WHERE conversation_id=? ORDER BY created DESC,id DESC LIMIT 100',(cid,)).fetchall()
             pending=c.execute("SELECT id FROM chat_requests WHERE conversation_id=? AND status IN ('queued','processing') LIMIT 1",(cid,)).fetchone()
             return {'conversation_id':cid,'messages':[dict(r) for r in reversed(rows)],
-                    'ai_enabled':self.settings.ai_enabled,'online':self.online(c),'pending':bool(pending)}
+                    'conversations':self.conversations(user),'ai_enabled':self.settings.ai_enabled,'online':self.online(c),'pending':bool(pending)}
+
+    def conversations(self,user):
+        self.admin(user)
+        with self.store.transaction() as c:
+            return [dict(r) for r in c.execute("SELECT t.id,t.created,COALESCE((SELECT r.message FROM chat_requests r WHERE r.conversation_id=t.id ORDER BY r.created LIMIT 1),'Новый чат') AS title FROM chat_conversations t WHERE t.user_id=? ORDER BY t.created DESC LIMIT 100",(user['id'],))]
 
     def new(self,user,request_id):
         self.admin(user)
@@ -104,12 +109,13 @@ class AdminChat:
             lease=secrets.token_urlsafe(32)
             c.execute("UPDATE chat_requests SET status='processing',lease_token=?,lease_until=? WHERE id=?",(lease,time.time()+660,row['id']))
             earlier=c.execute("SELECT message,answer FROM chat_requests WHERE conversation_id=? AND status='completed' AND created<? ORDER BY created DESC,id DESC LIMIT 6",(row['conversation_id'],row['created'])).fetchall()
-            history=[];remaining=18000
+            history=[];remaining=6000
             for old in earlier:
                 size=len(old['message'])+len(old['answer'])
                 if size>remaining:break
                 history[0:0]=[{'role':'user','content':old['message']},{'role':'assistant','content':old['answer']}];remaining-=size
-            facts=self.store.assistant_context({'id':row['owner_id'],'role':row['owner_role']})
+            owner={'id':row['owner_id'],'role':row['owner_role']}
+            facts=self.knowledge.retrieve(owner,row['message']) if hasattr(self,'knowledge') else self.store.assistant_context(owner)
             import json
             history.append({'role':'system','content':'READ_ONLY_DATABASE_FACTS: '+json.dumps(facts,ensure_ascii=False)})
             return {'kind':'chat','id':row['id'],'conversation_id':row['conversation_id'],'message':row['message'],'history':history,'lease':lease}

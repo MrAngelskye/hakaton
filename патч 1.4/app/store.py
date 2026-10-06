@@ -424,7 +424,11 @@ class LegacyStore:
     def save_photo(self,p):
         target=self.photos/(uuid.uuid4().hex+p.suffix.lower());shutil.copy2(p,target);return target
     def remove_photo(self,p):p.unlink(missing_ok=True)
-    def read_photo(self,name):return (self.photos/name).read_bytes()
+    def read_photo(self,name):
+        if name.startswith('demo_'):
+            from server.demo_import import read_demo_photo
+            return read_demo_photo(name)
+        return (self.photos/name).read_bytes()
 
     def review(self,actor,rid,approve,score,comment):
         if len(comment.strip())<3: raise ValueError('Добавьте комментарий от 3 символов.')

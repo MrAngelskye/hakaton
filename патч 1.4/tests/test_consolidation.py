@@ -30,7 +30,7 @@ class ConsolidatedAPI(unittest.TestCase):
             self.assertEqual(self.client.get(url).status_code,200,url)
         self.assertEqual(self.client.get('/api/catalogs').status_code,401)
         self.assertEqual(self.client.get('/api/snapshot').status_code,401)
-        self.assertEqual(self.client.get('/health').json()['version'],'1.5')
+        self.assertEqual(self.client.get('/health').json()['version'],'1.6')
     def test_web_payload_and_complete_cycle(self):
         cat=self.client.get('/api/catalogs',headers=self.headers['master']).json();e=cat['equipment'][0];s=next(s for s in cat['sites'] if s['id']==e['site_id'])
         day=(date.today()+timedelta(days=20)).isoformat()

@@ -1,0 +1,20 @@
+'use strict';
+const assert=require('node:assert/strict');
+const path=require('node:path');
+const {chromium}=require(path.join(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES,'playwright'));
+(async()=>{
+ const browser=await chromium.connectOverCDP('http://127.0.0.1:9222',{noDefaults:true});
+ const pages=browser.contexts().flatMap(c=>c.pages());const admin=pages.find(p=>p.url().includes('testrole=master'));const worker=pages.find(p=>p.url().includes('testrole=worker'));const errors=[];admin.on('pageerror',e=>errors.push(e.message));
+ await admin.evaluate(()=>endSession());await admin.reload();await admin.locator('[data-role="admin"]').click();await admin.locator('#username').fill('admin');await admin.locator('#password').fill('1234');await admin.locator('#login-form button[type=submit]').click();await admin.locator('#notification-bell').waitFor();
+ await admin.evaluate(()=>go('console'));await admin.locator('#monitor-cards').getByText('SQLite (локальная)',{exact:true}).waitFor();
+ await admin.locator('#console-command').fill('/help');await admin.locator('#console-form button').click();await admin.waitForFunction(()=>document.querySelector('#console-output').textContent.includes('/announce'));
+ await admin.locator('#console-command').fill('/announce Тест административной консоли');await admin.locator('#console-form button').click();await worker.waitForFunction(()=>state.snapshot.notifications.some(n=>n.kind==='announcement'&&n.payload.message==='Тест административной консоли'));
+ await admin.screenshot({path:'/tmp/naryadai-browser-evidence/admin-console.png',fullPage:true});
+ await admin.evaluate(()=>go('knowledge'));await admin.locator('#knowledge-title').fill('Контроль насоса');await admin.locator('#knowledge-body').fill('Проверить крепления насоса. Перед проверкой остановить оборудование по утверждённой инструкции предприятия.');await admin.locator('#knowledge-form button').click();await admin.locator('#knowledge-list').getByText('Контроль насоса',{exact:true}).waitFor();
+ await admin.evaluate(()=>go('console'));await admin.locator('#toggle-ai').getByText('Включить ИИ',{exact:true}).waitFor();await admin.locator('#toggle-ai').click();await admin.locator('#toggle-ai').getByText('Выключить ИИ',{exact:true}).waitFor();
+ await admin.evaluate(()=>go('chat'));await admin.locator('#chat-message').fill('Наряд 999999: есть ли он в базе?');await admin.waitForFunction(()=>!chatState.busy);await admin.locator('#chat-send').click();await admin.locator('.chat-bubble.assistant').getByText('Тестовый ответ: указанного наряда нет в базе.',{exact:true}).waitFor();
+ assert(await admin.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Admin mobile viewport must not overflow');
+ await admin.screenshot({path:'/tmp/naryadai-browser-evidence/admin-chat.png',fullPage:true});
+ await admin.waitForFunction(()=>!chatState.busy);await admin.locator('#new-chat').click();await admin.waitForFunction(()=>!chatState.busy&&chatState.items.length===0);await admin.locator('[data-conversation]').filter({hasText:'Наряд 999999'}).click();await admin.locator('.chat-bubble.assistant').waitFor();
+ assert.deepEqual(errors,[]);console.log('PASS: admin console, /help, shared announcement, documentation, AI switch and persistent chat navigation (mock model).');await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});

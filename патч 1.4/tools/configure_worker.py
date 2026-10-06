@@ -17,7 +17,7 @@ def main():
     (ROOT/'worker_config.json').write_text(json.dumps({'server':server,'token':token},ensure_ascii=False,indent=2),encoding='utf-8')
     (ROOT/'client_config.json').write_text(json.dumps({'server':server},indent=2),encoding='utf-8')
     print('Подключение проверено. Запустите start_worker.bat и оставьте окно открытым.')
-    if not health.get('ai_enabled'):print('ИИ сейчас отключён на Render: установите AI_ENABLED=true и сохраните с перезапуском сервиса.')
+    if not health.get('ai_enabled'):print('ИИ сейчас выключен. Войдите администратором на сайт и включите его в центре управления.')
 
 if __name__=='__main__':
     try:main()

@@ -14,8 +14,8 @@ class Settings:
     workspace: str='naryadai'
     chat_workspace: str=''
     ai_enabled: bool=True
-    timeout: int=180
-    send_images: bool=False
+    timeout: int=600
+    send_images: bool=True
     model_label: str='Модель рабочего пространства AnythingLLM'
     host: str='0.0.0.0'
     port: int=8000

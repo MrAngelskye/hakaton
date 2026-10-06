@@ -1,5 +1,5 @@
 /* Cache public application shell only. API responses and photo reports never enter CacheStorage. */
-const CACHE = 'naryadai-shell-v15-notifications-1';
+const CACHE = 'naryadai-shell-v16-knowledge-console-1';
 const SHELL = ['/', '/web/styles.css', '/web/notifications.js', '/web/app.js', '/web/manifest.webmanifest', '/web/icons/icon.svg', '/web/icons/icon-192.png', '/web/icons/icon-512.png', '/assets/branding/km-logo-white.svg'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(async cache => {

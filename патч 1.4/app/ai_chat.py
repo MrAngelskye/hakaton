@@ -3,7 +3,7 @@ import html,json,threading,uuid
 from urllib.parse import quote
 from PySide6.QtCore import QObject,Signal,QTimer,Qt
 from PySide6.QtGui import QKeySequence,QShortcut
-from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QTextBrowser,QPlainTextEdit,QLabel
+from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QTextBrowser,QPlainTextEdit,QLabel,QComboBox
 from app.widgets import button,label,card
 
 
@@ -32,6 +32,7 @@ class AdminChatWidget(QWidget):
         layout=QVBoxLayout(self);layout.setContentsMargins(0,0,0,0);layout.setSpacing(16)
         box,body=card();top=QHBoxLayout()
         top.addWidget(label('Помощник администратора','title'));top.addStretch()
+        self.switcher=QComboBox();self.switcher.setMinimumWidth(220);self.switcher.activated.connect(self.select_chat);top.addWidget(self.switcher)
         self.new_button=button('Новый чат',self.new_chat,'secondary','plus');top.addWidget(self.new_button);body.addLayout(top)
         self.status=label('Подключаемся к чату…','muted',True);body.addWidget(self.status)
         self.history=QTextBrowser();self.history.setObjectName('aiChatHistory');self.history.setMinimumHeight(340)
@@ -42,7 +43,7 @@ class AdminChatWidget(QWidget):
         controls=QHBoxLayout();controls.addWidget(label('Ctrl + Enter — отправить · до 4000 символов','muted'));controls.addStretch()
         self.send_button=button('Отправить',self.send,'primary','spark');controls.addWidget(self.send_button);body.addLayout(controls)
         layout.addWidget(box)
-        layout.addWidget(label('ИИ видит сообщения этого чата. Для обсуждения наряда вставьте нужный текст. Решения и окончательную оценку принимает человек.','muted',True))
+        layout.addWidget(label('ИИ получает выбранные наряды, отчёты и инструкции из общей базы. Внешние сведения и предположения должны быть отмечены отдельно. Решение принимает мастер.','muted',True))
         self.shortcut=QShortcut(QKeySequence('Ctrl+Return'),self);self.shortcut.activated.connect(self.send)
         self.timer=QTimer(self);self.timer.setInterval(3000);self.timer.timeout.connect(self.poll);self.timer.start()
         self.editor.textChanged.connect(self.controls)
@@ -63,11 +64,14 @@ class AdminChatWidget(QWidget):
 
     def received(self,state):
         self.state=state;self.cid=state['conversation_id'];self.error.hide()
+        self.switcher.blockSignals(True);self.switcher.clear()
+        for item in state.get('conversations',[]):self.switcher.addItem(item['title'][:50],item['id'])
+        self.switcher.setCurrentIndex(self.switcher.findData(self.cid));self.switcher.blockSignals(False)
         if self._retry and any(r['id']==self._retry['request_id'] for r in state['messages']):
             if self.editor.toPlainText().strip()==self._retry['message']:self.editor.clear()
             self._retry=None
         if self._operation=='new':self._new_id=None;self.editor.clear();self._retry=None
-        if not state['ai_enabled']:self.status.setText('ИИ отключён на сервере. Для подключения установите AI_ENABLED=true на Render.')
+        if not state['ai_enabled']:self.status.setText('ИИ выключен. Включите его в центре управления на сайте.')
         elif not state['online']:self.status.setText('ПК с ИИ не подключён. Запустите AnythingLLM, Ollama и start_worker.bat на компьютере с моделью.')
         elif state['pending']:self.status.setText('ИИ готовит ответ. При первом запуске модели это может занять несколько минут.')
         else:self.status.setText('ИИ подключён · можно отправить сообщение')
@@ -76,8 +80,8 @@ class AdminChatWidget(QWidget):
             self._signature=signature;bar=self.history.verticalScrollBar();at_bottom=bar.maximum()-bar.value()<35;old=bar.value()
             blocks=[]
             for turn in state['messages']:
-                blocks.append('<p><b>Вы</b></p><p>'+self.text(turn['message'])+'</p>')
-                if turn['status']=='completed':blocks.append('<p><b>ИИ · '+html.escape(turn['model'])+'</b></p><p>'+self.text(turn['answer'])+'</p><hr>')
+                blocks.append('<table width="100%" cellspacing="0" cellpadding="16"><tr><td width="15%"></td><td bgcolor="#eaf2ff"><p><b>Вы</b></p><p>'+self.text(turn['message'])+'</p></td></tr></table><br>')
+                if turn['status']=='completed':blocks.append('<table width="100%" cellspacing="0" cellpadding="16"><tr><td bgcolor="#f1f4f8"><p><b>НарядAI · '+html.escape(turn['model'])+'</b></p><p>'+self.text(turn['answer'])+'</p></td></tr></table><br>')
                 elif turn['status']=='failed':blocks.append('<p><b>Не удалось получить ответ</b></p><p>'+self.text(turn['error'])+'</p><hr>')
                 else:blocks.append('<p><i>'+('Ожидает обработки…' if turn['status']=='queued' else 'ИИ отвечает…')+'</i></p><hr>')
             self.history.setHtml(''.join(blocks) or '<p>Здесь появится ваш разговор с ИИ.</p>')
@@ -104,6 +108,11 @@ class AdminChatWidget(QWidget):
         if not self._retry or self._retry['message']!=message:
             self._retry={'conversation_id':self.cid,'request_id':uuid.uuid4().hex,'message':message}
         self.request('/api/chat',self._retry,'send')
+
+    def select_chat(self,index):
+        if self._request:return
+        cid=self.switcher.itemData(index)
+        if cid:self.cid=cid;self._signature='';self.poll()
 
     def new_chat(self):
         if not self.new_button.isEnabled():return

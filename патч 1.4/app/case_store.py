@@ -389,7 +389,15 @@ class CaseWorkflow:
         factors={('г','кг'):Decimal('.001'),('кг','г'):Decimal('1000'),('мл','л'):Decimal('.001'),('л','мл'):Decimal('1000'),('см','м'):Decimal('.01'),('мм','м'):Decimal('.001')}
         for line in lines:
             m=c.execute('SELECT * FROM materials WHERE '+('id=?' if line.get('material_id') else 'name=?'),(line.get('material_id') or line.get('name'),)).fetchone()
-            if not m:raise ValueError('Выберите материал из справочника.')
+            if not m:
+                if line.get('material_id'):raise ValueError('Материал не найден в справочнике.')
+                name=str(line.get('name','')).strip();unit=str(line.get('unit','')).strip()
+                if not 2<=len(name)<=200 or not 1<=len(unit)<=20:raise ValueError('Для своего материала укажите название и единицу измерения.')
+                try:qty=Decimal(str(line['quantity']));price=Decimal(str(line.get('price',0)))
+                except Exception:raise ValueError('Проверьте количество и цену материала.') from None
+                if not qty.is_finite() or not 0<qty<=1000000 or not price.is_finite() or not 0<=price<=100000000:raise ValueError('Проверьте количество и цену материала.')
+                out.append({'material_id':None,'name':name,'quantity':float(qty),'unit':unit,'price':float(price),'custom':True})
+                continue
             unit=str(line.get('unit','')).strip();factor=Decimal(1) if unit.rstrip('.')==m['unit'].rstrip('.') else factors.get((unit,m['unit']))
             if factor is None:raise ValueError('Единица материала несовместима с единицей справочника.')
             try:qty=Decimal(str(line['quantity']))*factor
@@ -524,6 +532,7 @@ class CaseWorkflow:
         if task.get('norm_id'):
             norm=c.execute('SELECT hours,complexity FROM work_norms WHERE id=?',(task['norm_id'],)).fetchone()
             if norm:task['norms']={'time':dict(norm),'materials':[dict(r) for r in c.execute('SELECT mn.quantity,m.name,m.unit FROM material_norms mn JOIN materials m ON m.id=mn.material_id WHERE mn.norm_id=?',(task['norm_id'],))]}
+        task['historical_context']=[dict(row) for row in c.execute("SELECT t.id,t.title,t.status,t.kind,r.result,r.defect,r.score FROM tasks t LEFT JOIN reports r ON r.task_id=t.id AND r.status='approved' WHERE t.equipment_id=? AND t.id<>? ORDER BY t.id DESC LIMIT 3",(task.get('equipment_id'),task['id']))]
         # Do not send employee names/usernames in free text to an external model.
         import re
         replacements=[(r['name'],f'Сотрудник #{r["id"]}') for r in c.execute('SELECT id,name FROM users')]
@@ -532,6 +541,7 @@ class CaseWorkflow:
             value=re.sub(r'[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}','[email]',value)
             return value
         task={**task,'title':anonymize(task['title']),'description':anonymize(task['description'])}
+        task['historical_context']=[{k:anonymize(v) if isinstance(v,str) else v for k,v in row.items()} for row in task['historical_context']]
         report={**report,'work':anonymize(report['work']),'result':anonymize(report['result'])}
         return task,report
 

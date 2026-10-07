@@ -33,7 +33,7 @@ class VisualChecks(unittest.TestCase):
         self.exceptions=[];self.old_hook=sys.excepthook
         sys.excepthook=lambda kind,value,trace:self.exceptions.append(str(value))
         preferences().settings=None;preferences().set_reduced(False)
-        self.store=Store(self.temp.name);self.master=self.store.authenticate('master','1234','master')
+        self.store=Store(self.temp.name,seed_demo=True);self.master=self.store.authenticate('master','1234','master')
     def tearDown(self):
         for w in self.windows:
             if isinstance(w,MainWindow):w.refresh_timer.stop()

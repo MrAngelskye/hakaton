@@ -12,7 +12,7 @@ from app.store import SITES
 class HeadlessCheck(unittest.TestCase):
  def test_server_without_qt(self):
   with tempfile.TemporaryDirectory() as temp:
-   folder=Path(temp);app=create_app(Settings(data_dir=folder/'data',ai_enabled=False))
+   folder=Path(temp);app=create_app(Settings(seed_demo=True,data_dir=folder/'data',ai_enabled=False))
    with TestClient(app) as client:
     m=client.post('/api/login',json={'username':'master','password':'1234','role':'master'}).json()
     w=client.post('/api/login',json={'username':'worker4','password':'1234','role':'worker'}).json()

@@ -1,4 +1,7 @@
 .venv/
+.naryadai-runtime.json
+.naryadai-runtime.json.tmp
+voice_models/
 .webvenv/
 __pycache__/
 demo_data/
@@ -16,5 +19,7 @@ worker_config.json
 .env
 *.env
 cloud-secrets.txt
+*accounts*.csv
+*credentials*.csv
 ui.ini
 ui-previews/

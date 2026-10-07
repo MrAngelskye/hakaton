@@ -1,0 +1,13 @@
+{
+  "data_dir": "runtime",
+  "host": "127.0.0.1",
+  "port": 8000,
+  "database_url": "postgresql://naryadai_owner:REPLACE_WITH_DATABASE_PASSWORD@127.0.0.1:5432/naryadai_production?sslmode=prefer",
+  "supabase_url": "https://REPLACE_WITH_PROJECT.supabase.co",
+  "supabase_secret_key": "REPLACE_WITH_PRIVATE_SERVER_KEY",
+  "storage_bucket": "naryadai-reports",
+  "seed_demo": false,
+  "ai_enabled": false,
+  "ai_mode": "local",
+  "database_pool_size": 8
+}

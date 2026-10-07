@@ -1,0 +1,127 @@
+{
+  "pageid": 146039845,
+  "title": "File:Train wheel bearing.jpg",
+  "revision": {
+    "revid": 895282945,
+    "parentid": 894625917,
+    "timestamp": "2024-07-09T13:05:24Z",
+    "slots": {
+      "main": {
+        "contentmodel": "wikitext",
+        "contentformat": "text/x-wiki",
+        "*": "=={{int:filedesc}}==\n{{Information\n|description={{en|1=Train wheel bearing}}\n|date={{According to Exif data|2024-03-02|location=Canada}}\n|source={{own}}\n|author=[[User:Wolfy13399|Wolfy13399]]\n|permission=\n|other versions=\n}}\n{{Location|46.504308|-71.068856|heading:51}}\n\n=={{int:license-header}}==\n{{self|cc-by-sa-4.0}}\n\n[[Category:MLW M-420 locomotives]]\n[[Category:Bearings]]"
+      }
+    }
+  },
+  "imageinfo": {
+    "size": 3965171,
+    "width": 4080,
+    "height": 3072,
+    "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Train_wheel_bearing.jpg/1280px-Train_wheel_bearing.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "thumbwidth": 1280,
+    "thumbheight": 964,
+    "responsiveUrls": {
+      "2": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Train_wheel_bearing.jpg/3840px-Train_wheel_bearing.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    },
+    "thumbattribs": {
+      "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Train_wheel_bearing.jpg/1280px-Train_wheel_bearing.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "decoding": "async",
+      "loading": "lazy",
+      "width": 1280,
+      "height": 964,
+      "srcset": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Train_wheel_bearing.jpg/3840px-Train_wheel_bearing.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail 2x"
+    },
+    "url": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Train_wheel_bearing.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Train_wheel_bearing.jpg",
+    "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=146039845",
+    "sha1": "4e33beb07fd7e6af233044997427d28f2fcf8953",
+    "extmetadata": {
+      "DateTime": {
+        "value": "2024-03-03 19:31:05",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+      },
+      "ObjectName": {
+        "value": "Train wheel bearing",
+        "source": "mediawiki-metadata"
+      },
+      "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+      },
+      "Categories": {
+        "value": "Bearings|MLW M-420 locomotives|Self-published work|Canada photographs taken on 2024-03-02",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "GPSLatitude": {
+        "value": "46.504308",
+        "source": "commons-desc-page"
+      },
+      "GPSLongitude": {
+        "value": "-71.068856",
+        "source": "commons-desc-page"
+      },
+      "GPSMapDatum": {
+        "value": "WGS-84",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "ImageDescription": {
+        "value": "Train wheel bearing",
+        "source": "commons-desc-page"
+      },
+      "DateTimeOriginal": {
+        "value": "2 March 2024 (according to <span lang=\"en\" dir=\"ltr\"><a href=\"https://en.wikipedia.org/wiki/Exif\" class=\"extiw\" title=\"en:Exif\">Exif</a></span> data)",
+        "source": "commons-desc-page"
+      },
+      "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+      },
+      "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/User:Wolfy13399\" title=\"User:Wolfy13399\">Wolfy13399</a>",
+        "source": "commons-desc-page"
+      },
+      "LicenseShortName": {
+        "value": "CC BY-SA 4.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 4.0",
+        "source": "commons-desc-page"
+      },
+      "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/4.0",
+        "source": "commons-desc-page"
+      },
+      "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "License": {
+        "value": "cc-by-sa-4.0",
+        "source": "commons-templates",
+        "hidden": ""
+      }
+    }
+  }
+}

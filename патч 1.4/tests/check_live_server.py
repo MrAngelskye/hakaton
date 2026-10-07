@@ -28,7 +28,7 @@ class LiveServerCheck(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             folder=Path(folder)
             with socket.socket() as s:s.bind(('127.0.0.1',0));port=s.getsockname()[1]
-            cfg={'data_dir':str(folder/'data'),'base_url':f'http://127.0.0.1:{ai.server_port}','api_key':'local-test-only','workspace':'naryadai','host':'127.0.0.1','port':port,'send_images':True}
+            cfg={'seed_demo':True,'data_dir':str(folder/'data'),'base_url':f'http://127.0.0.1:{ai.server_port}','api_key':'local-test-only','workspace':'naryadai','host':'127.0.0.1','port':port,'send_images':True}
             config=folder/'server.json';config.write_text(json.dumps(cfg),encoding='utf-8');clients=[]
             with (folder/'server.log').open('w') as log:
                 process=subprocess.Popen([sys.executable,str(ROOT/'run_server.py'),'--config',str(config)],cwd=ROOT,stdout=log,stderr=log)

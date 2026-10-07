@@ -6,7 +6,10 @@ if (-not $taskPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Admini
     exit 1
 }
 $taskRoot = Split-Path -Parent $PSScriptRoot
-$taskPython = (Resolve-Path (Join-Path $taskRoot '.venv\Scripts\python.exe')).Path
+$env:PYTHONUTF8 = '1'
+$taskResolvedPython = & py -3 (Join-Path $PSScriptRoot 'run.py') --python
+if ($LASTEXITCODE -ne 0) { throw 'First run install.bat to install the project environment.' }
+$taskPython = (Resolve-Path -LiteralPath ([string]$taskResolvedPython)).Path
 $taskPort = 8000
 $taskConfig = Join-Path $taskRoot 'server_config.json'
 if (Test-Path $taskConfig) { $taskSettings = Get-Content -Raw -Encoding UTF8 $taskConfig | ConvertFrom-Json; $taskPort = $taskSettings.port }

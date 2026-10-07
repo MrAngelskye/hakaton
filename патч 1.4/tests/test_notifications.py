@@ -21,7 +21,7 @@ from server.config import Settings
 class NotificationAPI(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.app = create_app(Settings(data_dir=Path(self.temp.name), ai_enabled=False))
+        self.app = create_app(Settings(seed_demo=True,data_dir=Path(self.temp.name), ai_enabled=False))
         self.client = TestClient(self.app)
         self.store = self.app.state.store
         self.headers = {}

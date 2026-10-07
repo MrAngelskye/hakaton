@@ -13,7 +13,7 @@ from tools.import_demo import import_demo
 class ConsolidatedAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.temp=tempfile.TemporaryDirectory();cls.app=create_app(Settings(data_dir=Path(cls.temp.name),ai_enabled=False));cls.client=TestClient(cls.app)
+        cls.temp=tempfile.TemporaryDirectory();cls.app=create_app(Settings(seed_demo=True,data_dir=Path(cls.temp.name),ai_enabled=False));cls.client=TestClient(cls.app)
         cls.headers={}
         for role,login in [('master','master'),('worker','worker1'),('worker2','worker2'),('admin','admin'),('manager','manager')]:
             r=cls.client.post('/api/login',json={'username':login,'password':'1234','role':'worker' if role=='worker2' else role});assert r.status_code==200,r.text
@@ -30,7 +30,7 @@ class ConsolidatedAPI(unittest.TestCase):
             self.assertEqual(self.client.get(url).status_code,200,url)
         self.assertEqual(self.client.get('/api/catalogs').status_code,401)
         self.assertEqual(self.client.get('/api/snapshot').status_code,401)
-        self.assertEqual(self.client.get('/health').json()['version'],'1.6')
+        self.assertEqual(self.client.get('/health').json()['version'],'1.7')
     def test_web_payload_and_complete_cycle(self):
         cat=self.client.get('/api/catalogs',headers=self.headers['master']).json();e=cat['equipment'][0];s=next(s for s in cat['sites'] if s['id']==e['site_id'])
         day=(date.today()+timedelta(days=20)).isoformat()
@@ -86,12 +86,13 @@ class DesktopConsolidation(unittest.TestCase):
         from PySide6.QtWidgets import QApplication
         cls.qt=QApplication.instance() or QApplication([])
     def test_draft_score_and_catalog_pages(self):
+        from PySide6.QtCore import QCoreApplication,QEvent
         from app.dialogs import SubmitReport,CreateTask,ReviewReport
         from app.windows import MainWindow
         from app.reference_dialogs import ReferenceEditor,NAMES
         from app.drafts import ReportDraft
         with tempfile.TemporaryDirectory() as folder:
-            store=Store(folder);master=store.authenticate('master','1234','master');worker=store.authenticate('worker1','1234','worker')
+            store=Store(folder,seed_demo=True);master=store.authenticate('master','1234','master');worker=store.authenticate('worker1','1234','worker')
             catalogs=store.catalogs(master);e=catalogs['equipment'][0];s=next(s for s in catalogs['sites'] if s['id']==e['site_id']);day=(date.today()+timedelta(days=30)).isoformat()
             tid=store.create_task(master,title='Проверить механизм',description='Проверить состояние и выполнить контрольный запуск',site=s['name'],equipment=e['name'],equipment_id=e['id'],priority='normal',kind='Плановая',duration=1,day=day,start=8,deadline=day+'T18:00',worker_id=worker['id'])
             store.transition(worker,tid,'accepted');store.transition(worker,tid,'inProgress')
@@ -103,10 +104,12 @@ class DesktopConsolidation(unittest.TestCase):
             review.score.setValue(0);review.decide(True);self.assertEqual(store.task(master,tid)['status'],'approved')
             create=CreateTask(store,master,None);self.assertEqual(create.priority.currentData(),'normal')
             for name in NAMES:
-                items=store.catalogs(master)[name];editor=ReferenceEditor(store,master,name,None,items[0] if items else None);editor.close()
+                items=store.catalogs(master)[name];editor=ReferenceEditor(store,master,name,None,items[0] if items else None);editor.close();editor.deleteLater()
             window=MainWindow(store,master);window.navigate('references');window.navigate('equipment');window.close()
             worker_window=MainWindow(store,worker);self.assertEqual(worker_window.task_filter,'mine');worker_window.close()
-            for obj in (d,again,review,create):obj.close()
+            for obj in (d,again,review,create,window,worker_window):obj.close();obj.deleteLater()
+            QCoreApplication.sendPostedEvents(None,QEvent.Type.DeferredDelete)
+            self.qt.processEvents()
             store.close()
 
 if __name__=='__main__':unittest.main(verbosity=2)

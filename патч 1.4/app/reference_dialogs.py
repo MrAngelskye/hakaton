@@ -2,6 +2,7 @@
 from PySide6.QtWidgets import QLineEdit,QCheckBox
 from app.widgets import Sheet,button
 from app.dialogs import combo,number
+from app.widgets import label
 
 NAMES={'sites':'Участки','equipment':'Оборудование','brigades':'Бригады','defect_codes':'Шифры неисправностей','materials':'Материалы','work_norms':'Нормативы'}
 FIELDS={
@@ -17,6 +18,10 @@ class ReferenceEditor(Sheet):
     def __init__(self,store,user,category,parent,item=None):
         super().__init__('Изменить запись' if item else 'Новая запись',parent)
         self.store=store;self.user=user;self.category=category;self.item=item or {};self.inputs={}
+        if category=='materials' and self.item.get('unit_price_known') is False:
+            self.body.addWidget(label('Цена не указана. Введите фактическую цену по документу склада; ноль в поле — техническое начальное значение.','warning',True))
+        if self.item.get('reference_only'):
+            self.body.addWidget(label('Каталог производителя подтверждает модель. Применение на предприятии и совместимость с оборудованием требуют проверки.','muted',True))
         catalogs=store.catalogs(user)
         for key,(title,kind,default) in FIELDS[category].items():
             value=self.item.get(key,default)

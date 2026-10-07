@@ -55,7 +55,7 @@ class LocalAnythingAPI:
 class ServerChecks(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.folder=Path(self.temp.name);self.mock=LocalAnythingAPI()
-        self.settings=Settings(data_dir=self.folder/'data',base_url=self.mock.url,api_key='test-server-only-key',workspace='naryadai',timeout=10,model_label='Тестовый ответ HTTP')
+        self.settings=Settings(seed_demo=True,data_dir=self.folder/'data',base_url=self.mock.url,api_key='test-server-only-key',workspace='naryadai',timeout=10,model_label='Тестовый ответ HTTP')
         self.app=create_app(self.settings);self.client=TestClient(self.app);self.client.__enter__();self.windows=[]
         def transport(path,payload,token,binary):
             r=self.client.request('POST' if payload is not None else 'GET',path,json=payload,headers={'Authorization':'Bearer '+token} if token else {})

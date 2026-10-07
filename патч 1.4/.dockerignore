@@ -1,5 +1,7 @@
 .git
 .venv
+.naryadai-runtime.json
+.naryadai-runtime.json.tmp
 __pycache__
 *.pyc
 *.db*

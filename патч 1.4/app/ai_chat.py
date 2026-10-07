@@ -5,6 +5,7 @@ from PySide6.QtCore import QObject,Signal,QTimer,Qt
 from PySide6.QtGui import QKeySequence,QShortcut
 from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QTextBrowser,QPlainTextEdit,QLabel,QComboBox
 from app.widgets import button,label,card
+from app.motion import BusyIndicator,Reveal
 
 
 class ChatRequest(QObject):
@@ -34,10 +35,15 @@ class AdminChatWidget(QWidget):
         top.addWidget(label('Помощник администратора','title'));top.addStretch()
         self.switcher=QComboBox();self.switcher.setMinimumWidth(220);self.switcher.activated.connect(self.select_chat);top.addWidget(self.switcher)
         self.new_button=button('Новый чат',self.new_chat,'secondary','plus');top.addWidget(self.new_button);body.addLayout(top)
-        self.status=label('Подключаемся к чату…','muted',True);body.addWidget(self.status)
+        self.status=label('Подключаемся к чату…','muted',True)
+        self.indicator=BusyIndicator(self)
+        status_row=QHBoxLayout();status_row.setSpacing(8)
+        status_row.addWidget(self.indicator,0,Qt.AlignmentFlag.AlignVCenter);status_row.addWidget(self.status,1)
+        body.addLayout(status_row)
         self.history=QTextBrowser();self.history.setObjectName('aiChatHistory');self.history.setMinimumHeight(340)
         self.history.setOpenExternalLinks(False);self.history.setOpenLinks(False);body.addWidget(self.history)
-        self.error=label('','muted',True);self.error.hide();body.addWidget(self.error)
+        self.error=label('','error',True);self.error.hide();body.addWidget(self.error)
+        self.error.setAccessibleName('Ошибка подключения к ИИ');self.error_reveal=Reveal(self.error)
         self.editor=QPlainTextEdit();self.editor.setObjectName('aiChatMessage');self.editor.setPlaceholderText('Напишите вопрос… Например: помоги составить понятный отчёт о работе.')
         self.editor.setFixedHeight(105);body.addWidget(self.editor)
         controls=QHBoxLayout();controls.addWidget(label('Ctrl + Enter — отправить · до 4000 символов','muted'));controls.addStretch()
@@ -91,13 +97,17 @@ class AdminChatWidget(QWidget):
     @staticmethod
     def text(value):return html.escape(value).replace('\n','<br>')
 
-    def failed(self,message):self.error.setText(message);self.error.show()
+    def failed(self,message):
+        self.error.setText(message);self.error.show();self.error_reveal.start()
     def finished(self):self._request=None;self.controls()
 
     def controls(self):
         busy=bool(self._request);text=self.editor.toPlainText().strip()
         enabled=bool(self.state and self.state['ai_enabled'])
         pending=bool(self.state and self.state['pending'])
+        # Ordinary 3-second refreshes remain quiet. The spinner belongs to a
+        # first connection, explicit operation or confirmed pending AI reply.
+        self.indicator.set_running(pending or (busy and (not self.state or self._operation!='poll')))
         self.send_button.setEnabled(not busy and enabled and not pending and 0<len(text)<=4000)
         self.send_button.setText('Повторить отправку' if self._retry else 'Отправить')
         self.new_button.setEnabled(not busy and bool(self.state) and not pending)

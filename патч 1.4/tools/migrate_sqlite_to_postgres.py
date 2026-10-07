@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from app.migrations import migrate,backfill,DB
 
-ORDER=('sites','brigades','equipment','defect_codes','materials','users','work_norms','material_norms','tasks','reports','events','shift_rules','shifts','pauses','report_materials','task_photos','equipment_downtimes','task_assignments','brigade_memberships','task_refusals','ai_jobs','notification_outbox')
+ORDER=('reference_sources','sites','brigades','equipment','defect_codes','materials','users','work_norms','material_norms','tasks','reports','events','shift_rules','shifts','pauses','report_materials','task_photos','equipment_downtimes','task_assignments','brigade_memberships','task_refusals','ai_jobs','notification_outbox','material_reference_metadata','account_provenance','equipment_reference_types','work_order_templates','training_photos','reference_provenance')
 TRIGGERS=(('resolve_task_catalogs_trigger','tasks'),('resolve_report_defect_trigger','reports'),('sync_report_details_trigger','reports'),('task_audit_v2','tasks'),('downtime_guard_v2','equipment_downtimes'))
 
 def transfer(source,database_env,backup_dir,upload_photos=False):

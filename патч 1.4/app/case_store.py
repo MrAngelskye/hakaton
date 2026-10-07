@@ -41,7 +41,10 @@ class SQLiteConnection:
             if sql.strip():self.execute(sql)
 
 class CaseWorkflow:
-    def __init__(self,*args,**kwargs):
+    def __init__(self,*args,seed_demo=None,**kwargs):
+        # Production is empty by default. Demo fixtures require an explicit opt-in.
+        self.seed_demo=getattr(getattr(self,'settings',None),'seed_demo',False) if seed_demo is None else seed_demo
+        if type(self.seed_demo) is not bool:raise ValueError('seed_demo должен быть true/false.')
         self._local=threading.local()
         super().__init__(*args,**kwargs)
         if not getattr(getattr(self,'settings',None),'database_url',''):
@@ -107,6 +110,7 @@ class CaseWorkflow:
                   (tid,actor_id,message,stamp(),action,from_status,to_status,reason,j(data or {}),actor_kind,device_at))
 
     def seed(self):
+        if not self.seed_demo:return
         from app.store import SITES,password_hash
         with self.transaction(write=True) as c:
             if c.execute('SELECT count(*) FROM users').fetchone()[0]:return
@@ -148,7 +152,9 @@ class CaseWorkflow:
     def catalogs(self,actor):
         with self.transaction() as c:
             self.require(c,actor)
-            return {name:[dict(r) for r in c.execute('SELECT * FROM '+name+' ORDER BY id')] for name in ('sites','equipment','defect_codes','materials','brigades','work_norms','material_norms') if name!='material_norms'} | {'material_norms':[dict(r) for r in c.execute('SELECT * FROM material_norms ORDER BY norm_id,material_id')]}
+            result={name:[dict(r) for r in c.execute('SELECT * FROM '+name+' ORDER BY id')] for name in ('sites','equipment','defect_codes','materials','brigades','work_norms','material_norms') if name!='material_norms'} | {'material_norms':[dict(r) for r in c.execute('SELECT * FROM material_norms ORDER BY norm_id,material_id')]}
+            from app.production_data import enrich_catalogs
+            return enrich_catalogs(c,result)
 
     def catalog_upsert(self,actor,catalog,values,record_id=None):
         fields={'sites':('code','name'),'equipment':('inventory_number','name','site_id','equipment_type','criticality'),'materials':('code','name','unit','unit_price'),'defect_codes':('code','name','category'),'brigades':('code','name'),'work_norms':('equipment_type','kind','defect_code_id','hours','complexity','active')}
@@ -162,8 +168,11 @@ class CaseWorkflow:
             if record_id:
                 if not c.execute('SELECT 1 FROM '+catalog+' WHERE id=?',(record_id,)).fetchone():raise ValueError('Запись не найдена.')
                 c.execute('UPDATE '+catalog+' SET '+','.join(k+'=?' for k in fields[catalog])+' WHERE id=?',tuple(values[k] for k in fields[catalog])+(record_id,))
-                return record_id
-            return c.execute('INSERT INTO '+catalog+'('+','.join(fields[catalog])+') VALUES('+','.join('?' for _ in fields[catalog])+')',tuple(values[k] for k in fields[catalog])).lastrowid
+            else:record_id=c.execute('INSERT INTO '+catalog+'('+','.join(fields[catalog])+') VALUES('+','.join('?' for _ in fields[catalog])+')',tuple(values[k] for k in fields[catalog])).lastrowid
+            if catalog=='materials':
+                from app.production_data import mark_material_price
+                mark_material_price(c,record_id)
+            return record_id
 
     def set_material_norm(self,actor,norm_id,material_id,quantity):
         if not math.isfinite(quantity) or quantity<=0:raise ValueError('Норматив расхода должен быть положительным.')
@@ -182,11 +191,15 @@ class CaseWorkflow:
                 c.execute('UPDATE brigade_memberships SET left_at=? WHERE worker_id=? AND left_at IS NULL',(stamp(),wid))
                 if brigade_id:c.execute('INSERT INTO brigade_memberships(worker_id,brigade_id,joined_at) VALUES(?,?,?)',(wid,brigade_id,stamp()))
             c.execute('UPDATE users SET specialty=?,grade=?,brigade_id=? WHERE id=?',(specialty.strip(),grade,brigade_id,wid))
+            from app.production_data import mark_employee_profile
+            mark_employee_profile(c,wid)
 
     def users(self,actor,workers_only=False):
         with self.transaction() as c:
             self.require(c,actor)
-            return [dict(r) for r in c.execute('SELECT id,username,name,job,role,active,specialty,grade,brigade_id FROM users'+(" WHERE role='worker'" if workers_only else '')+' ORDER BY name')]
+            rows=[dict(r) for r in c.execute('SELECT id,username,name,job,role,active,specialty,grade,brigade_id FROM users'+(" WHERE role='worker'" if workers_only else '')+' ORDER BY name')]
+            from app.production_data import enrich_users
+            return enrich_users(c,rows)
 
     def _visible(self,actor,alias='t'):
         if actor['role']!='worker':return '',()
@@ -403,6 +416,8 @@ class CaseWorkflow:
             try:qty=Decimal(str(line['quantity']))*factor
             except Exception:raise ValueError('Некорректное количество материала.') from None
             if not qty.is_finite() or not 0<qty<=1000000:raise ValueError('Количество должно быть положительным и конечным.')
+            from app.production_data import assert_material_priced
+            assert_material_priced(c,m['id'])
             out.append({'material_id':m['id'],'name':m['name'],'quantity':float(qty),'unit':m['unit'],'price':float(m['unit_price'])})
         return out
 

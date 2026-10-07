@@ -1,0 +1,14 @@
+/* Report dictation follows the existing company palette and touch targets. */
+.voice-trigger{display:inline-flex;align-items:center;gap:8px;margin:0 0 8px;min-height:48px}
+.voice-trigger:before{content:"";display:block;width:20px;height:20px;background:currentColor;mask:url('/assets/icons/mic.svg') center/contain no-repeat;-webkit-mask:url('/assets/icons/mic.svg') center/contain no-repeat}
+.voice-panel{margin:18px 0;padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--tint)}
+.voice-heading{margin-bottom:8px}
+.voice-note,.voice-interim{color:var(--muted);font-size:14px;overflow-wrap:anywhere}
+.voice-consent{display:flex;align-items:flex-start;gap:10px;margin:14px 0;font-weight:400}
+.voice-consent input{flex:none;margin-top:2px}
+.voice-preview{min-height:120px;max-width:100%}
+.voice-status{min-height:24px;margin:10px 0;overflow-wrap:anywhere}
+.voice-actions{display:flex;gap:8px;flex-wrap:wrap}
+.voice-actions button{min-height:48px}
+.voice-stop:not(:disabled){border-color:var(--red);color:var(--red)}
+@media(max-width:480px){.voice-panel{padding:14px}.voice-actions{display:grid;grid-template-columns:1fr 1fr}.voice-actions button{min-width:0;padding:10px 8px}.voice-apply{grid-column:1/-1}.voice-cancel{grid-column:1/-1}}

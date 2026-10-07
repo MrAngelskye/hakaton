@@ -1,0 +1,35 @@
+{
+  "assets": 25,
+  "verified": 25,
+  "errors": [],
+  "total_image_bytes": 7162917,
+  "categories": {
+    "bearing": 6,
+    "gear": 3,
+    "welded_component": 1,
+    "heat_exchanger": 2,
+    "impeller_or_propeller": 1,
+    "pipe": 4,
+    "conveyor": 3,
+    "pump": 3,
+    "welding_process": 2
+  },
+  "licenses": {
+    "Public domain": 8,
+    "CC BY-SA 3.0": 3,
+    "CC BY-SA 4.0": 6,
+    "CC0": 2,
+    "CC BY-SA 2.5": 1,
+    "CC BY 2.0": 2,
+    "CC BY-SA 2.0": 2,
+    "CC BY 2.5": 1
+  },
+  "split_groups": 22,
+  "expert_approved": 0,
+  "company_photos": 0,
+  "verified_before_after_pairs": 0,
+  "optional_metadata_absent": true,
+  "metadata_sanitized_files": 7,
+  "lossless_rgb_and_scan_audit_verified": true,
+  "qa_scope": "file integrity, lossless metadata removal, source/license metadata, safe provenance flags; expert defect annotation is pending"
+}

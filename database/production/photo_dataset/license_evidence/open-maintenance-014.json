@@ -1,0 +1,106 @@
+{
+  "pageid": 5335321,
+  "title": "File:Corroded pipe.jpg",
+  "revision": {
+    "revid": 881554049,
+    "parentid": 868711180,
+    "timestamp": "2024-06-05T15:36:35Z",
+    "slots": {
+      "main": {
+        "contentmodel": "wikitext",
+        "contentformat": "text/x-wiki",
+        "*": "== {{int:filedesc}} ==\n{{Information\n|Description= Corroded pipe.\n|Source=[https://www.flickr.com/photos/25069384@N03/2492846876/ Corroded pipe]\n|Date=2003-08-19 16:40\n|Author=[https://www.cdc.gov/niosh/ National Institute for Occupational Safety and Health (NIOSH)] from USA\n|Permission=\n|other_versions=\n}}\n\n== {{int:license-header}} ==\n{{cc-by-2.0}}\n{{flickrreview|Mitchazenia|2008-12-03}}\n\n[[Category:Corroded objects]]\n\n== {{int:license-header}} ==\n{{PD-USGov-HHS-NIOSH}}\n[[Category:National Institute for Occupational Safety and Health photographs]]"
+      }
+    }
+  },
+  "imageinfo": {
+    "size": 341324,
+    "width": 676,
+    "height": 1024,
+    "thumburl": "https://upload.wikimedia.org/wikipedia/commons/8/83/Corroded_pipe.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "thumbwidth": 1280,
+    "thumbheight": 1939,
+    "thumbattribs": {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/8/83/Corroded_pipe.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "decoding": "async",
+      "loading": "lazy",
+      "width": 1280,
+      "height": 1939
+    },
+    "url": "https://upload.wikimedia.org/wikipedia/commons/8/83/Corroded_pipe.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Corroded_pipe.jpg",
+    "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=5335321",
+    "sha1": "776d5a0c4346c481e9e62e3af7e7e1c66b37a928",
+    "extmetadata": {
+      "DateTime": {
+        "value": "2008-12-03 15:58:34",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+      },
+      "ObjectName": {
+        "value": "Corroded pipe",
+        "source": "mediawiki-metadata"
+      },
+      "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+      },
+      "Categories": {
+        "value": "Flickr images reviewed by trusted users|Flickr images missing SDC creator|Corroded objects|PD US HHS CDC NIOSH|National Institute for Occupational Safety and Health photographs",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "ImageDescription": {
+        "value": "Corroded pipe.",
+        "source": "commons-desc-page"
+      },
+      "DateTimeOriginal": {
+        "value": "2003-08-19 16:40",
+        "source": "commons-desc-page"
+      },
+      "Credit": {
+        "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/25069384@N03/2492846876/\">Corroded pipe</a>",
+        "source": "commons-desc-page"
+      },
+      "Artist": {
+        "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.cdc.gov/niosh/\">National Institute for Occupational Safety and Health (NIOSH)</a> from USA",
+        "source": "commons-desc-page"
+      },
+      "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+      },
+      "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+      }
+    }
+  }
+}

@@ -43,7 +43,7 @@ class CloudChecks(unittest.TestCase):
                 c.execute('DROP SCHEMA IF EXISTS naryadai CASCADE')
                 c.execute('CREATE TABLE IF NOT EXISTS public.unrelated_test(value text)')
                 c.execute("INSERT INTO public.unrelated_test SELECT 'keep' WHERE NOT EXISTS(SELECT 1 FROM public.unrelated_test)")
-        self.settings=Settings(data_dir=self.folder/'data',ai_mode='remote_worker',worker_token=self.key,
+        self.settings=Settings(seed_demo=True,data_dir=self.folder/'data',ai_mode='remote_worker',worker_token=self.key,
             database_url=DATABASE,bootstrap_password=self.password,offline_wait=120)
         with patch('server.storage.SupabaseStorage',return_value=self.storage):self.app=create_app(self.settings)
         self.socket=socket.socket();self.socket.bind(('127.0.0.1',0));self.url='http://127.0.0.1:'+str(self.socket.getsockname()[1])
@@ -56,7 +56,7 @@ class CloudChecks(unittest.TestCase):
         self.http=httpx.Client(base_url=self.url,timeout=15,trust_env=False)
         self.master=RemoteStore(self.url);self.worker=RemoteStore(self.url);self.other=RemoteStore(self.url)
         self.m=self.master.authenticate('master',self.password,'master');self.w=self.worker.authenticate('worker4',self.password,'worker');self.o=self.other.authenticate('worker3',self.password,'worker')
-        self.ai_settings=Settings(data_dir=self.folder,base_url=self.mock.url,api_key='test-anything-key',timeout=10,send_images=True,model_label='Тестовая модель')
+        self.ai_settings=Settings(seed_demo=True,data_dir=self.folder,base_url=self.mock.url,api_key='test-anything-key',timeout=10,send_images=True,model_label='Тестовая модель')
         self.processor=Worker(self.url,self.key,AnythingLLM(self.ai_settings))
         self.day=(date.today()+timedelta(days=1)).isoformat()
     def tearDown(self):

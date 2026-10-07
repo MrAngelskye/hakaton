@@ -1,0 +1,124 @@
+{
+  "pageid": 45205934,
+  "title": "File:Chittenden Locks - old pump room under Administration Building 17 - pipe sections showing corrosion.jpg",
+  "revision": {
+    "revid": 1123711235,
+    "parentid": 856844736,
+    "timestamp": "2025-12-01T02:25:10Z",
+    "slots": {
+      "main": {
+        "contentmodel": "wikitext",
+        "contentformat": "text/x-wiki",
+        "*": "{{NRHP|78002751}}\n== {{int:filedesc}} ==\n{{Information\n|Description={{en|Old pump room under the Hiram M. Chittenden Locks Administration Building, Seattle, Washington. Pipe sections, showing corrosion.}}\n|Source=Photo by [[User:Jmabel|Joe Mabel]]\n|Date=2015-11-22\n|Author=[[User:Jmabel|Joe Mabel]]\n|Permission={{self|author=[[User:Jmabel|Joe Mabel]]|GFDL|Cc-by-sa-4.0}}\n|other_versions=\n}}\n[[Category:Hiram M. Chittenden Locks pumping plant]]\n[[Category:Corroded objects]]\n[[Category:November 2015 in Seattle]]\n[[Category:Photographs taken on 2015-11-22]]"
+      }
+    }
+  },
+  "imageinfo": {
+    "size": 4551610,
+    "width": 2848,
+    "height": 4288,
+    "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Chittenden_Locks_-_old_pump_room_under_Administration_Building_17_-_pipe_sections_showing_corrosion.jpg/1280px-Chittenden_Locks_-_old_pump_room_under_Administration_Building_17_-_pipe_sections_showing_corrosion.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "thumbwidth": 1280,
+    "thumbheight": 1927,
+    "responsiveUrls": {
+      "2": "https://upload.wikimedia.org/wikipedia/commons/0/06/Chittenden_Locks_-_old_pump_room_under_Administration_Building_17_-_pipe_sections_showing_corrosion.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+    },
+    "thumbattribs": {
+      "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Chittenden_Locks_-_old_pump_room_under_Administration_Building_17_-_pipe_sections_showing_corrosion.jpg/1280px-Chittenden_Locks_-_old_pump_room_under_Administration_Building_17_-_pipe_sections_showing_corrosion.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "decoding": "async",
+      "loading": "lazy",
+      "width": 1280,
+      "height": 1927,
+      "srcset": "https://upload.wikimedia.org/wikipedia/commons/0/06/Chittenden_Locks_-_old_pump_room_under_Administration_Building_17_-_pipe_sections_showing_corrosion.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+    },
+    "url": "https://upload.wikimedia.org/wikipedia/commons/0/06/Chittenden_Locks_-_old_pump_room_under_Administration_Building_17_-_pipe_sections_showing_corrosion.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Chittenden_Locks_-_old_pump_room_under_Administration_Building_17_-_pipe_sections_showing_corrosion.jpg",
+    "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=45205934",
+    "sha1": "febb8bda3fec3e6f01ed1fa6ab3919739b2f6876",
+    "extmetadata": {
+      "DateTime": {
+        "value": "2015-11-24 00:13:11",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+      },
+      "ObjectName": {
+        "value": "Chittenden Locks - old pump room under Administration Building 17 - pipe sections showing corrosion",
+        "source": "mediawiki-metadata"
+      },
+      "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+      },
+      "Categories": {
+        "value": "GFDL|License migration redundant|Self-published work|National Register of Historic Places with known IDs|Corroded objects|November 2015 in Seattle|Photographs taken on 2015-11-22|Hiram M. Chittenden Locks pumping plant",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "ImageDescription": {
+        "value": "Old pump room under the Hiram M. Chittenden Locks Administration Building, Seattle, Washington. Pipe sections, showing corrosion.",
+        "source": "commons-desc-page"
+      },
+      "DateTimeOriginal": {
+        "value": "2015-11-22",
+        "source": "commons-desc-page"
+      },
+      "Credit": {
+        "value": "Photo by <a href=\"//commons.wikimedia.org/wiki/User:Jmabel\" title=\"User:Jmabel\">Joe Mabel</a>",
+        "source": "commons-desc-page"
+      },
+      "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/User:Jmabel\" title=\"User:Jmabel\">Joe Mabel</a>",
+        "source": "commons-desc-page"
+      },
+      "Permission": {
+        "value": "You may select the license of your choice.",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "LicenseShortName": {
+        "value": "CC BY-SA 4.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 4.0",
+        "source": "commons-desc-page"
+      },
+      "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Attribution": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/User:Jmabel\" title=\"User:Jmabel\">Joe Mabel</a>",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/4.0",
+        "source": "commons-desc-page"
+      },
+      "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "License": {
+        "value": "cc-by-sa-4.0",
+        "source": "commons-templates",
+        "hidden": ""
+      }
+    }
+  }
+}

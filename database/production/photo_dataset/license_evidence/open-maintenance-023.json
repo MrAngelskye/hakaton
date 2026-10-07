@@ -1,0 +1,114 @@
+{
+  "pageid": 122610979,
+  "title": "File:Closed cooling water system pumps and its pipe connections.jpg",
+  "revision": {
+    "revid": 862385342,
+    "parentid": 708612442,
+    "timestamp": "2024-03-21T19:12:59Z",
+    "slots": {
+      "main": {
+        "contentmodel": "wikitext",
+        "contentformat": "text/x-wiki",
+        "*": "=={{int:filedesc}}==\n{{Information\n|description={{tr|1=Enkapower Adapazarı-Gebze Kombine Çevrim Santralleri}}\n{{en|1=[[Gebze power plant]]}}\n|date=2021-11-01\n|source={{own}}\n|author=[[User:Harald the Bard|Harald the Bard]]\n|permission=\n|other versions=\n}}\n\n=={{int:license-header}}==\n{{self|cc-by-sa-4.0}}\n\n[[Category:Centrifugal pumps]]"
+      }
+    }
+  },
+  "imageinfo": {
+    "size": 3468203,
+    "width": 4160,
+    "height": 3120,
+    "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/Closed_cooling_water_system_pumps_and_its_pipe_connections.jpg/1280px-Closed_cooling_water_system_pumps_and_its_pipe_connections.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "thumbwidth": 1280,
+    "thumbheight": 960,
+    "responsiveUrls": {
+      "2": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/Closed_cooling_water_system_pumps_and_its_pipe_connections.jpg/3840px-Closed_cooling_water_system_pumps_and_its_pipe_connections.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    },
+    "thumbattribs": {
+      "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/Closed_cooling_water_system_pumps_and_its_pipe_connections.jpg/1280px-Closed_cooling_water_system_pumps_and_its_pipe_connections.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "decoding": "async",
+      "loading": "lazy",
+      "width": 1280,
+      "height": 960,
+      "srcset": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/Closed_cooling_water_system_pumps_and_its_pipe_connections.jpg/3840px-Closed_cooling_water_system_pumps_and_its_pipe_connections.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail 2x"
+    },
+    "url": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Closed_cooling_water_system_pumps_and_its_pipe_connections.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Closed_cooling_water_system_pumps_and_its_pipe_connections.jpg",
+    "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=122610979",
+    "sha1": "caf69a797d3bee251493528098e437348164e577",
+    "extmetadata": {
+      "DateTime": {
+        "value": "2022-09-03 19:30:03",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+      },
+      "ObjectName": {
+        "value": "Closed cooling water system pumps and its pipe connections",
+        "source": "mediawiki-metadata"
+      },
+      "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+      },
+      "Categories": {
+        "value": "Centrifugal pumps|Self-published work",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "ImageDescription": {
+        "value": "<a href=\"//commons.wikimedia.org/w/index.php?title=Gebze_power_plant&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"Gebze power plant (page does not exist)\">Gebze power plant</a>",
+        "source": "commons-desc-page"
+      },
+      "DateTimeOriginal": {
+        "value": "2021-11-01",
+        "source": "commons-desc-page"
+      },
+      "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+      },
+      "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Harald_the_Bard&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Harald the Bard (page does not exist)\">Harald the Bard</a>",
+        "source": "commons-desc-page"
+      },
+      "LicenseShortName": {
+        "value": "CC BY-SA 4.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 4.0",
+        "source": "commons-desc-page"
+      },
+      "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/4.0",
+        "source": "commons-desc-page"
+      },
+      "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "License": {
+        "value": "cc-by-sa-4.0",
+        "source": "commons-templates",
+        "hidden": ""
+      }
+    }
+  }
+}

@@ -82,7 +82,7 @@ class LegacyStore:
     def migrate_schedules(self):
         # Идемпотентное обновление 1.1: существующие наряды и фото сохраняются.
         with self.transaction() as c:
-            for u in c.execute("SELECT id FROM users WHERE role='worker'").fetchall():
+            for u in c.execute("SELECT id FROM users WHERE role='worker'").fetchall() if getattr(self,'seed_demo',False) else ():
                 for weekday in range(7):
                     c.execute('INSERT OR IGNORE INTO shift_rules VALUES(?,?,8,18)',(u['id'],weekday))
             for t in c.execute("SELECT id FROM tasks WHERE status='paused'").fetchall():
@@ -464,17 +464,21 @@ class LegacyStore:
         return sorted(out,key=lambda u:u['score'] if u['score'] is not None else -1,reverse=True)
 
     def add_user(self,actor,username,name,job,role,password):
-        if not username.strip() or len(name.strip())<3 or len(password)<4 or role not in ROLES:
-            raise ValueError('Заполните логин, имя и пароль (от 4 символов).')
+        minimum=4 if getattr(self,'seed_demo',False) else 12
+        if not username.strip() or len(username.strip())>100 or len(name.strip())<3 or (not getattr(self,'seed_demo',False) and not job.strip()) or len(password)<minimum or len(password)>300 or role not in ROLES:
+            raise ValueError(f'Заполните логин (до 100 символов), имя, должность и пароль ({minimum}–300 символов).')
         salt=secrets.token_hex(16)
         with self.transaction() as c:
             self.require(c,actor,('admin',))
             try:
                 c.execute('INSERT INTO users(username,name,job,role,salt,password_hash) VALUES(?,?,?,?,?,?)',
                           (username.strip(),name.strip(),job.strip(),role,salt,password_hash(password,salt)))
-                if role=='worker':
-                    uid=c.execute('SELECT id FROM users WHERE username=?',(username.strip(),)).fetchone()[0]
+                uid=c.execute('SELECT id FROM users WHERE username=?',(username.strip(),)).fetchone()[0]
+                if role=='worker' and getattr(self,'seed_demo',False):
                     c.executemany('INSERT INTO shift_rules VALUES(?,?,8,18)',[(uid,d) for d in range(7)])
+                if not getattr(self,'seed_demo',False):
+                    from app.production_data import register_user_profile
+                    register_user_profile(c,uid)
             except sqlite3.IntegrityError as e: raise ValueError('Этот логин уже занят.') from e
 
     def set_active(self,actor,uid,active):
@@ -498,7 +502,8 @@ class LegacyStore:
 
 
     def reset_password(self,actor,uid,password):
-        if len(password)<4:raise ValueError('Пароль должен содержать не меньше 4 символов.')
+        minimum=4 if getattr(self,'seed_demo',False) else 12
+        if not minimum<=len(password)<=300:raise ValueError(f'Пароль должен содержать {minimum}–300 символов.')
         with self.transaction() as c:
             self.require(c,actor,('admin',))
             if not c.execute('SELECT 1 FROM users WHERE id=?',(uid,)).fetchone():raise ValueError('Пользователь не найден.')

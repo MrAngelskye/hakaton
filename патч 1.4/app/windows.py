@@ -54,7 +54,8 @@ class LoginWindow(QMainWindow):
                                        ('Выполнить и отправить отчёт','Работы, время, материалы и фото'),
                                        ('Получить обратную связь','Комментарий и оценка мастера')],1):
             s.addWidget(label(f'{i:02d}  {title}','',True));s.addWidget(label(sub,'muted',True))
-        l.addWidget(steps);l.addStretch();l.addWidget(label('Общий сервер · проверка мастером' if getattr(store,'is_remote',False) else 'Демонстрационная версия · ручная проверка','muted'))
+        self.demo=bool(getattr(store,'seed_demo',False))
+        l.addWidget(steps);l.addStretch();l.addWidget(label('Учебная версия · ручная проверка' if self.demo else 'Наряды и отчёты · проверка мастером','muted'))
         layout.addWidget(story,1)
         form=QWidget();f=QVBoxLayout(form);f.setSpacing(14);f.setContentsMargins(0,8,0,8)
         f.addStretch();f.addWidget(label('Добро пожаловать','heading'));f.addWidget(label('Войдите в свою рабочую смену','muted'))
@@ -64,15 +65,17 @@ class LoginWindow(QMainWindow):
             b=button(title+'\n'+sub,kind='role',ico={'worker':'user','master':'tool','admin':'shield','manager':'chart'}[role]);b.setCheckable(True)
             self.roles.addButton(b,i);b.clicked.connect(lambda checked=False,r=role:self.choose_role(r));f.addWidget(b)
         self.roles.button(0).setChecked(True);self.role='worker'
-        f.addWidget(label('Логин'));self.username=QLineEdit('worker1');self.username.setObjectName('username');self.username.setPlaceholderText('worker1');f.addWidget(self.username)
-        f.addWidget(label('Пароль'));self.password=QLineEdit('' if getattr(store,'is_remote',False) else '1234');self.password.setObjectName('password');self.password.setEchoMode(QLineEdit.EchoMode.Password);f.addWidget(self.password)
+        f.addWidget(label('Логин'));self.username=QLineEdit('worker1' if self.demo else '');self.username.setObjectName('username');self.username.setPlaceholderText('Логин, выданный администратором');f.addWidget(self.username)
+        f.addWidget(label('Пароль'));self.password=QLineEdit('1234' if self.demo else '');self.password.setObjectName('password');self.password.setEchoMode(QLineEdit.EchoMode.Password);f.addWidget(self.password)
         self.error=label('','error',True);self.error.hide();f.addWidget(self.error)
         self.enter=button('Войти',self.login,'primary');self.enter.setObjectName('primary');self.enter.setDefault(True);f.addWidget(self.enter)
         self.password.returnPressed.connect(self.login);self.username.returnPressed.connect(self.login)
-        f.addWidget(label('Тестовые аккаунты: master, worker1–worker15, admin, manager.\n'+('Пароль выдаёт администратор сервера.' if getattr(store,'is_remote',False) else 'Пароль для всех: 1234.'),'muted',True));f.addWidget(motion_toggle());f.addStretch()
+        f.addWidget(label('Учебные аккаунты: master, worker1–worker15, admin, manager.\nУчебный пароль: 1234.' if self.demo else 'Логин и личный пароль выдаёт администратор.','muted',True));f.addWidget(motion_toggle());f.addStretch()
         layout.addWidget(form,1);self.setCentralWidget(host)
     def choose_role(self,role):
-        self.role=role;self.username.setText({'worker':'worker1','master':'master','admin':'admin','manager':'manager'}[role]);self.error.hide()
+        self.role=role
+        if self.demo:self.username.setText({'worker':'worker1','master':'master','admin':'admin','manager':'manager'}[role])
+        self.error.hide()
     def login(self):
         try:self.logged_in.emit(self.store.authenticate(self.username.text(),self.password.text(),self.role))
         except (ValueError,PermissionError,OSError) as e:self.error.setText(str(e));self.error.show()
@@ -125,7 +128,7 @@ class MainWindow(QMainWindow):
             b=button(title,lambda k=key:self.navigate(k),'nav',ico);b.setCheckable(True);self.nav[key]=b;self.side.addWidget(b)
         if user['role'] in ('master','admin'):
             self.create_button=button('Создать наряд',self.create_task,'primary','plus');self.side.addWidget(self.create_button)
-        self.side.addStretch();self.side.addWidget(label('Поддержка и полный доступ' if user['role']=='admin' else 'Демонстрационная версия','muted',True))
+        self.side.addStretch();self.side.addWidget(label('Управление доступом' if user['role']=='admin' else ('Учебная версия' if getattr(store,'seed_demo',False) else 'Рабочее пространство'),'muted',True))
         account=row(avatar(user['name']),label(user['name'].split()[0]+'\n'+ROLES[user['role']],'muted'));self.side.addLayout(account)
         self.side.addWidget(motion_toggle());self.side.addWidget(button('Выйти',self.logged_out.emit,'nav','logout'))
         sidebar_scroll=QScrollArea();sidebar_scroll.setObjectName('sidebarScroll');sidebar_scroll.setFixedWidth(246)
@@ -218,7 +221,7 @@ class MainWindow(QMainWindow):
         page=QWidget();page.setMaximumWidth(1220);self.body=QVBoxLayout(page);self.body.setContentsMargins(36,32,36,30);self.body.setSpacing(23)
         methods={'overview':self.overview,'tasks':self.tasks_page,'reports':self.reports_page,'team':self.team_page,
                  'schedule':self.schedule_page,'team_schedule':self.team_schedule_page,'profile':self.profile_page,'costs':self.costs_page,'users':self.users_page,'integrations':self.integrations_page,'ai_chat':self.ai_chat_page,'analytics':self.analytics_page,'references':self.references_page,'equipment':self.equipment_page}
-        methods[self.page_key]();self.body.addStretch();self.body.addWidget(label('Костанайские минералы · НарядAI · Демонстрационная версия','muted'))
+        methods[self.page_key]();self.body.addStretch();self.body.addWidget(label('Костанайские минералы · НарядAI'+(' · Учебная версия' if getattr(self.store,'seed_demo',False) else ''),'muted'))
         old=self.scroll.takeWidget()
         if old:old.deleteLater()
         self.scroll.setWidget(page)
@@ -452,6 +455,7 @@ class MainWindow(QMainWindow):
         for u in self.store.users(self.user):
             w,l=card();l.addLayout(row(avatar(u['name']),label(u['name']+' · '+u['username'],'title',True),tag('Активен' if u['active'] else 'Отключён','success' if u['active'] else 'urgent')))
             l.addWidget(label(ROLES[u['role']]+' · '+u['job'],'muted',True))
+            if u.get('identity_status')=='unassigned_anonymized_profile':l.addWidget(label('Обезличенный аккаунт. Сотрудник, разряд, бригада и график требуют подтверждения.','muted',True))
             if u['id']!=self.user['id']:l.addWidget(button('Отключить' if u['active'] else 'Включить',lambda user=u:self.toggle_user(user),'danger' if u['active'] else 'secondary'))
             if u['role']=='worker':l.addWidget(button('Профиль и бригада',lambda person=u:self.employee_profile(person),'secondary','team'))
             l.addWidget(button('Сбросить пароль',lambda uid=u['id']:self.reset_password(uid),'secondary'))
@@ -460,7 +464,9 @@ class MainWindow(QMainWindow):
         from app.dialogs import number
         d=Sheet('Профиль сотрудника',self)
         specialty=d.field('Специальность',QLineEdit(person['specialty'] or person['job']))
-        grade=d.field('Разряд 1–6',number(person['grade'] or 1,1,6,1));grade.setDecimals(0)
+        unknown=person.get('grade_confirmed') is False
+        grade=d.field('Разряд 1–6',number(0 if unknown else (person['grade'] or 1),0 if unknown else 1,6,1));grade.setDecimals(0)
+        if unknown:grade.setSpecialValueText('Не подтверждён')
         brigade=d.field('Бригада',combo([('Без бригады',None)]+[(b['name'],b['id']) for b in self.store.catalogs(self.user)['brigades']]))
         brigade.setCurrentIndex(max(0,brigade.findData(person['brigade_id'])))
         d.body.addWidget(label('Изменение состава сохраняет историю уже выданных нарядов.','muted',True))
@@ -469,7 +475,7 @@ class MainWindow(QMainWindow):
 
     def reset_password(self,uid):
         d=Sheet('Новый пароль',self);password=QLineEdit();password.setEchoMode(QLineEdit.EchoMode.Password)
-        d.field('Новый пароль (от 4 символов)',password)
+        d.field('Новый пароль (от '+('4' if getattr(self.store,'seed_demo',False) else '12')+' символов)',password)
         d.actions.addWidget(button('Сохранить пароль',lambda:d.run_action(lambda:self.store.reset_password(self.user,uid,password.text())),'primary'))
         if d.exec():self.notify_success('Пароль обновлён')
     def add_user(self):

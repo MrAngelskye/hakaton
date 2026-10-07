@@ -1,0 +1,119 @@
+{
+  "pageid": 18724297,
+  "title": "File:Pitting Differential Detail.jpg",
+  "revision": {
+    "revid": 1250740305,
+    "parentid": 1142797026,
+    "timestamp": "2026-07-23T01:39:44Z",
+    "slots": {
+      "main": {
+        "contentmodel": "wikitext",
+        "contentformat": "text/x-wiki",
+        "*": "== {{int:filedesc}} ==\n{{Information\n|Description={{de|Pitting, Materialermüdung Kegelrad Differentialgetriebe Opel/GM F23-SRT}}\n|Source=Carsten Seehawer\n|Date=2011-12-31\n|Author=[[:de:User:Carsten Seehawer|Carsten Seehawer]]\n|Permission= \n|other_versions=\n}}\n\n== {{int:license-header}} ==\n{{self|author=[[:de:User:Carsten Seehawer|Carsten Seehawer]]|GFDL|migration=not-eligible|Cc-by-sa-3.0|Cc-by-sa-3.0-de}}\n\n== {{Original upload log}} ==\n{{original description page|de.wikipedia|Pitting_Differential.jpg}}\n* 2011-12-31 11:22 [[:de:User:Carsten Seehawer|Carsten Seehawer]] 4000×3000× (2122058 bytes) ''<nowiki>{{Information |Beschreibung = Pitting, Materialermüdung Kegelrad Differentialgetriebe Opel/GM F23-SRT |Quelle = Carsten Seehawer |Urheber = Carsten Seehawer |Datum = 31.12.2011 |Genehmigung = |Andere Versionen = |</nowiki>''\n\n[[Category:Wear (materials science)]]\n[[Category:Gears]]\n[[Category:Taken with Canon PowerShot G9]]"
+      }
+    }
+  },
+  "imageinfo": {
+    "size": 2122058,
+    "width": 4000,
+    "height": 3000,
+    "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Pitting_Differential_Detail.jpg/1280px-Pitting_Differential_Detail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "thumbwidth": 1280,
+    "thumbheight": 960,
+    "responsiveUrls": {
+      "2": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Pitting_Differential_Detail.jpg/3840px-Pitting_Differential_Detail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    },
+    "thumbattribs": {
+      "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Pitting_Differential_Detail.jpg/1280px-Pitting_Differential_Detail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "decoding": "async",
+      "loading": "lazy",
+      "width": 1280,
+      "height": 960,
+      "srcset": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Pitting_Differential_Detail.jpg/3840px-Pitting_Differential_Detail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail 2x"
+    },
+    "url": "https://upload.wikimedia.org/wikipedia/commons/d/df/Pitting_Differential_Detail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Pitting_Differential_Detail.jpg",
+    "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=18724297",
+    "sha1": "20be74a3407722dc55679efe6a446dbda3ad069c",
+    "extmetadata": {
+      "DateTime": {
+        "value": "2012-03-17 01:59:45",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+      },
+      "ObjectName": {
+        "value": "Pitting Differential Detail",
+        "source": "mediawiki-metadata"
+      },
+      "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+      },
+      "Categories": {
+        "value": "GFDL|Taken with Canon PowerShot G9|Gears|Wear (materials science)|License migration not eligible|Self-published work",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "ImageDescription": {
+        "value": "Pitting, Materialermüdung Kegelrad Differentialgetriebe Opel/GM F23-SRT",
+        "source": "commons-desc-page"
+      },
+      "DateTimeOriginal": {
+        "value": "2011-12-31",
+        "source": "commons-desc-page"
+      },
+      "Credit": {
+        "value": "Carsten Seehawer",
+        "source": "commons-desc-page"
+      },
+      "Artist": {
+        "value": "<a href=\"https://de.wikipedia.org/wiki/User:Carsten_Seehawer\" class=\"extiw\" title=\"de:User:Carsten Seehawer\">Carsten Seehawer</a>",
+        "source": "commons-desc-page"
+      },
+      "LicenseShortName": {
+        "value": "CC BY-SA 3.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 3.0",
+        "source": "commons-desc-page"
+      },
+      "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Attribution": {
+        "value": "<a href=\"https://de.wikipedia.org/wiki/User:Carsten_Seehawer\" class=\"extiw\" title=\"de:User:Carsten Seehawer\">Carsten Seehawer</a>",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/3.0",
+        "source": "commons-desc-page"
+      },
+      "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "License": {
+        "value": "cc-by-sa-3.0",
+        "source": "commons-templates",
+        "hidden": ""
+      }
+    }
+  }
+}

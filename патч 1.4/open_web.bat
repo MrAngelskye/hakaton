@@ -1,8 +1,11 @@
 @echo off
+setlocal
 chcp 65001 >nul
+set PYTHONUTF8=1
 cd /d "%~dp0"
-set "NARYADAI_OPEN_PYTHON=.venv\Scripts\python.exe"
-if not exist "%NARYADAI_OPEN_PYTHON%" set "NARYADAI_OPEN_PYTHON=.webvenv\Scripts\python.exe"
-if not exist "%NARYADAI_OPEN_PYTHON%" set "NARYADAI_OPEN_PYTHON=python"
-"%NARYADAI_OPEN_PYTHON%" tools\open_web.py %*
-if errorlevel 1 pause
+call tools\run.bat --web-fallback --system-fallback tools\open_web.py %*
+if errorlevel 1 goto failed
+exit /b 0
+:failed
+pause
+exit /b 1

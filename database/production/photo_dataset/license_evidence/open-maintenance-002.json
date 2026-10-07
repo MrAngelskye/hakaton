@@ -1,0 +1,110 @@
+{
+  "pageid": 80649023,
+  "title": "File:BEARING DAMAGE - NARA - 17500147.jpg",
+  "revision": {
+    "revid": 810351367,
+    "parentid": 785318428,
+    "timestamp": "2023-10-09T12:14:07Z",
+    "slots": {
+      "main": {
+        "contentmodel": "wikitext",
+        "contentformat": "text/x-wiki",
+        "*": "== {{int:filedesc}} ==\n{{NARA-image-full\n | Title                   = BEARING DAMAGE\n | Scope and content       = The original finding aid described this as:\n\nCapture Date: 10/6/1980\n\nPhotographer: DONALD HUEBLER\n\nKeywords: Larsen Scan\n | General notes           = \n | NAID                    = 17500147\n | Local identifier        = 255_GRC_1980_05355.jpg\n | Creator                 = National Aeronautics and Space Administration. John H. Glenn Research Center at Lewis Field. 3/1/1999-\n | Creator NAID            = 10501290\n | Author                  = \n | Location                = National Archives at College Park - Archives II (College Park, MD)\n | Date                    = {{date|1973}} &ndash; {{date|2013}}\n | Record group            = Record Group 255: Records of the National Aeronautics and Space Administration\n | Record group NAID       = 582\n | Series                  = Photographs Relating to Agency Activities, Facilities and Personnel\n | Series NAID             = 12005631\n | File unit               = \n | File unit NAID          = \n | Variant control numbers = \n | Other versions          =\n | Other pages             = \n}}\n\n=={{int:license-header}}==\n\n{{NARA-cooperation}}\n{{PD-USGov-NASA}}\n\n[[Category:Bearings]]\n[[Category:Photographs by Donald Huebler]]"
+      }
+    }
+  },
+  "imageinfo": {
+    "size": 24846039,
+    "width": 6197,
+    "height": 4817,
+    "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/BEARING_DAMAGE_-_NARA_-_17500147.jpg/1280px-BEARING_DAMAGE_-_NARA_-_17500147.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "thumbwidth": 1280,
+    "thumbheight": 995,
+    "responsiveUrls": {
+      "2": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/BEARING_DAMAGE_-_NARA_-_17500147.jpg/3840px-BEARING_DAMAGE_-_NARA_-_17500147.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    },
+    "thumbattribs": {
+      "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/BEARING_DAMAGE_-_NARA_-_17500147.jpg/1280px-BEARING_DAMAGE_-_NARA_-_17500147.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "decoding": "async",
+      "loading": "lazy",
+      "width": 1280,
+      "height": 995,
+      "srcset": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/BEARING_DAMAGE_-_NARA_-_17500147.jpg/3840px-BEARING_DAMAGE_-_NARA_-_17500147.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail 2x"
+    },
+    "url": "https://upload.wikimedia.org/wikipedia/commons/e/e3/BEARING_DAMAGE_-_NARA_-_17500147.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:BEARING_DAMAGE_-_NARA_-_17500147.jpg",
+    "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=80649023",
+    "sha1": "a274e6965c325f82f71f1a43b8534c3b8ed33f65",
+    "extmetadata": {
+      "DateTime": {
+        "value": "2019-07-23 08:07:02",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+      },
+      "ObjectName": {
+        "value": "<div class=\"fn\">\n<i>BEARING DAMAGE</i></div>",
+        "source": "commons-desc-page"
+      },
+      "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+      },
+      "Categories": {
+        "value": "Bearings|PD NASA|Images from the National Archives and Records Administration|Media contributed by the National Archives and Records Administration|Artworks without Wikidata item|Template Unknown (author)|US National Archives series: Photographs Relating to Agency Activities, Facilities and Personnel|US National Archives location: other|Photographs by Donald Huebler",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "Artist": {
+        "value": "<div class=\"fn value\">\nUnknown author<span style=\"display: none;\">Unknown author</span> or not provided</div>",
+        "source": "commons-desc-page"
+      },
+      "ImageDescription": {
+        "value": "<div class=\"description\">\n<ul><li><b>Scope and content:</b>  The original finding aid described this as:</li></ul>\n<p>Capture Date: 10/6/1980\n</p><p>Photographer: DONALD HUEBLER\n</p>\nKeywords: Larsen Scan</div>",
+        "source": "commons-desc-page"
+      },
+      "DateTimeOriginal": {
+        "value": "1973 – 2013",
+        "source": "commons-desc-page"
+      },
+      "Credit": {
+        "value": "<a href=\"https://en.wikipedia.org/wiki/U.S._National_Archives_and_Records_Administration\" class=\"extiw\" title=\"en:U.S. National Archives and Records Administration\">U.S. National Archives and Records Administration</a>",
+        "source": "commons-desc-page"
+      },
+      "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+      },
+      "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+      }
+    }
+  }
+}

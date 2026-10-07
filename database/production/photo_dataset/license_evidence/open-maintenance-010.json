@@ -1,0 +1,124 @@
+{
+  "pageid": 39341270,
+  "title": "File:Stress-Corrosion-Cracking-caused-by-weld-stress-01.jpg",
+  "revision": {
+    "revid": 1194007418,
+    "parentid": 730391359,
+    "timestamp": "2026-04-08T20:16:33Z",
+    "slots": {
+      "main": {
+        "contentmodel": "wikitext",
+        "contentformat": "text/x-wiki",
+        "*": "=={{int:filedesc}}==\n{{Information\n|description={{en|1=Stress corrosion cracking, caused by tension in a unsuitable welded reinforment collar}}{{de|1=Spannungsrisskorrosion, verursacht durch nicht spannungsgerechte Schweissung eines Verstärkungskragens}}{{Focus stack|1=14|software=}}\n|date=2015-04-01\n|source={{own}}\n|author=[[User:Cccefalon|CEphoto, Uwe Aranas]]\n|permission={{User:Cccefalon/permission}}\n|other_versions=\n|other_fields={{User:Cccefalon/attribution}}\n}}\n\n{{User:Cccefalon/no-new-version}}\n{{QualityImage}}\n\n=={{int:license-header}}==\n{{self|cc-by-sa-3.0|attribution={{User:Cccefalon/attribution1}} }}\n\n[[Category:Stress corrosion cracking]]\n[[Category:Images by Cccefalon]]\n[[Category:Images of objects by User:Cccefalon]]\n[[Category:Images of material failures by User:Cccefalon]]\n[[Category:Quality images by Cccefalon]]\n[[Category:Quality images of objects]]\n[[Category:Quality images of objects by User:Cccefalon]]\n[[Category:Focus stacks by User:Cccefalon]]"
+      }
+    }
+  },
+  "imageinfo": {
+    "size": 11619701,
+    "width": 5545,
+    "height": 3697,
+    "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Stress-Corrosion-Cracking-caused-by-weld-stress-01.jpg/1280px-Stress-Corrosion-Cracking-caused-by-weld-stress-01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "thumbwidth": 1280,
+    "thumbheight": 853,
+    "responsiveUrls": {
+      "2": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Stress-Corrosion-Cracking-caused-by-weld-stress-01.jpg/3840px-Stress-Corrosion-Cracking-caused-by-weld-stress-01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    },
+    "thumbattribs": {
+      "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Stress-Corrosion-Cracking-caused-by-weld-stress-01.jpg/1280px-Stress-Corrosion-Cracking-caused-by-weld-stress-01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "decoding": "async",
+      "loading": "lazy",
+      "width": 1280,
+      "height": 853,
+      "srcset": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Stress-Corrosion-Cracking-caused-by-weld-stress-01.jpg/3840px-Stress-Corrosion-Cracking-caused-by-weld-stress-01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail 2x"
+    },
+    "url": "https://upload.wikimedia.org/wikipedia/commons/7/72/Stress-Corrosion-Cracking-caused-by-weld-stress-01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Stress-Corrosion-Cracking-caused-by-weld-stress-01.jpg",
+    "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=39341270",
+    "sha1": "3f1b74fe3bf63f9a62f738c8a571128d6a01420d",
+    "extmetadata": {
+      "DateTime": {
+        "value": "2015-04-01 19:20:18",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+      },
+      "ObjectName": {
+        "value": "Stress-Corrosion-Cracking-caused-by-weld-stress-01",
+        "source": "mediawiki-metadata"
+      },
+      "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+      },
+      "Categories": {
+        "value": "Stress corrosion cracking|Self-published work|Information field template with formatting|Images by Cccefalon|Images of objects by User:Cccefalon|Focus stacks by User:Cccefalon|Images of material failures by User:Cccefalon",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "Assessments": {
+        "value": "quality",
+        "source": "commons-categories",
+        "hidden": ""
+      },
+      "ImageDescription": {
+        "value": "Stress corrosion cracking, caused by tension in a unsuitable welded reinforment collar",
+        "source": "commons-desc-page"
+      },
+      "DateTimeOriginal": {
+        "value": "2015-04-01",
+        "source": "commons-desc-page"
+      },
+      "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+      },
+      "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/User:Cccefalon\" title=\"User:Cccefalon\">CEphoto, Uwe Aranas</a>",
+        "source": "commons-desc-page"
+      },
+      "Permission": {
+        "value": "<div style=\"border:1px solid green; background-color:#eaeeed;\">\n<table cellpadding=\"3px\">\n<tbody><tr>\n<td align=\"center\">\n<p><span class=\"mw-default-size\" typeof=\"mw:File\"><a href=\"//commons.wikimedia.org/wiki/File:LOGO-CEphotoUweAranas.png\" class=\"mw-file-description\"><img src=\"https://upload.wikimedia.org/wikipedia/commons/4/4b/LOGO-CEphotoUweAranas.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail_unscaled\" decoding=\"async\" loading=\"lazy\" width=\"80\" height=\"80\" class=\"mw-file-element\" data-file-width=\"80\" data-file-height=\"80\"></a></span>\n</p>\n</td>\n<td valign=\"top\" colspan=\"2\">\n<p>This photo was created by <a href=\"//commons.wikimedia.org/wiki/User:Cccefalon/Profile\" title=\"User:Cccefalon/Profile\">Uwe Aranas</a>. It is protected by law and is <u>not</u> in the <a href=\"https://en.wikipedia.org/wiki/Public_Domain\" class=\"extiw\" title=\"w:Public Domain\">Public Domain</a>. However, it can be used free of charge by everyone under the terms of the license stated below. \n</p>\n<ul><li><b>The requirements to comply with the terms of licence are:</b></li></ul>\n<dl><dd>- The image is credited with <b>\"Photo by CEphoto, Uwe Aranas\"</b> or alternatively with <b>\"© CEphoto, Uwe Aranas\"</b> in close relation to the image. If this is not possible due to shortage of space, please contact me <u>first</u>.</dd>\n<dd>- You are required to release the image under the same license.</dd></dl>\n<ul><li><b>Not required by the license but highly appreciated:</b></li></ul>\n<dl><dd>- Set up a weblink to the original image when you use the image in online media: <a class=\"external free\" href=\"https://commons.wikimedia.org/wiki/File:Stress-Corrosion-Cracking-caused-by-weld-stress-01.jpg\">https://commons.wikimedia.org/wiki/File:Stress-Corrosion-Cracking-caused-by-weld-stress-01.jpg</a></dd>\n<dd>- Send me a specimen copy or a pdf when used in print media or the URL of the website where the image is used.</dd></dl>\n<p>Please write an email to spam@aranas.de <small>(where you substitute the word <i>spam</i> by <i>cephoto2020</i>)</small>, if you\n</p>\n<ul><li>need the image in a higher resolution</li>\n<li>need my postal address for sending a specimen copy</li>\n<li>have further questions to the terms of licence</li></ul>\n</td>\n</tr>\n</tbody></table>\n</div>",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Attribution": {
+        "value": "Photo by CEphoto, Uwe Aranas <b>or alternatively</b> © CEphoto, Uwe Aranas",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "LicenseShortName": {
+        "value": "CC BY-SA 3.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 3.0",
+        "source": "commons-desc-page"
+      },
+      "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/3.0",
+        "source": "commons-desc-page"
+      },
+      "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+      },
+      "License": {
+        "value": "cc-by-sa-3.0",
+        "source": "commons-templates",
+        "hidden": ""
+      }
+    }
+  }
+}

@@ -19,4 +19,6 @@ def apply_theme(app):
     for role in ('Text', 'ButtonText', 'WindowText'):
         palette.setColor(QPalette.ColorGroup.Disabled, getattr(QPalette.ColorRole, role), QColor(COLORS['disabled']))
     app.setPalette(palette)
-    app.setStyleSheet(Template((ASSETS / 'styles.qss').read_text(encoding='utf-8')).substitute(COLORS, check_icon=(ASSETS/'icons/check-white.svg').as_posix()))
+    icons = {name+'_icon': (ASSETS/'icons'/filename).as_posix() for name, filename in (
+        ('check','check-white.svg'), ('down','chevron-down.svg'), ('up','chevron-up.svg'))}
+    app.setStyleSheet(Template((ASSETS / 'styles.qss').read_text(encoding='utf-8')).substitute(COLORS, **icons))

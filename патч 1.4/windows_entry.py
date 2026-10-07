@@ -12,6 +12,8 @@ def enable_worker_console():
     if not kernel.AttachConsole(-1):
         kernel.AllocConsole()
     kernel.SetConsoleTitleW('НарядAI — обработчик ИИ')
+    kernel.SetConsoleOutputCP(65001)
+    kernel.SetConsoleCP(65001)
     # A windowed PyInstaller program initially has no standard streams.
     sys.stdout = io.TextIOWrapper(open('CONOUT$', 'wb', buffering=0), encoding='utf-8', line_buffering=True)
     sys.stderr = io.TextIOWrapper(open('CONOUT$', 'wb', buffering=0), encoding='utf-8', line_buffering=True)
@@ -31,6 +33,12 @@ if __name__ == '__main__':
         raise SystemExit(main())
     except Exception as error:
         import traceback
+        if '--smoke-test' in sys.argv:
+            import json
+            report = Path(sys.argv[sys.argv.index('--smoke-test') + 1])
+            report.parent.mkdir(parents=True, exist_ok=True)
+            report.write_text(json.dumps({'ok': False, 'error': traceback.format_exc()}, ensure_ascii=False), encoding='utf-8')
+            raise SystemExit(1)
         from app.packaged import configuration_dir
         from PySide6.QtWidgets import QApplication, QMessageBox
         folder = configuration_dir().parent

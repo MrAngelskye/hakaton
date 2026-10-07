@@ -13,7 +13,7 @@ def choose_settings():
     QMessageBox.information(None, 'НарядAI — обработчик ИИ',
                             'Выберите папку прежнего проекта, где находятся ваши '
                             'worker_config.json и server_config.json. '
-                            'Файлы с ключами останутся только на этом компьютере.')
+                            'Настройки будут сохранены в вашем профиле на этом компьютере.')
     folder = QFileDialog.getExistingDirectory(None, 'Папка настроек AnythingLLM')
     if not folder:
         return None
@@ -36,6 +36,20 @@ def load_worker(worker_path, server_path):
     return Worker(data['server'], data['token'], AnythingLLM(settings))
 
 
+def import_settings(worker_path, server_path):
+    worker = load_worker(worker_path, server_path)
+    settings = worker.ai.settings
+    worker_copy = save_object('ai_worker_config.json', {'server': worker.server, 'token': worker.token})
+    # Copy only local AI options; no cloud database or Storage credentials.
+    options = {name: getattr(settings, name) for name in (
+        'base_url', 'api_key', 'workspace', 'chat_workspace', 'ai_enabled',
+        'timeout', 'send_images', 'model_label')}
+    options.update({'data_dir': 'ai_data', 'ai_mode': 'local'})
+    server_copy = save_object('ai_server_config.json', options)
+    save_object('ai_paths.json', {'worker': str(worker_copy), 'server': str(server_copy)})
+    return worker
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--change-settings', action='store_true')
@@ -55,8 +69,7 @@ def main():
         paths = choose_settings()
     if paths is None:
         return 0
-    worker = load_worker(*paths)
-    save_object('ai_paths.json', {'worker': str(paths[0].resolve()), 'server': str(paths[1].resolve())})
+    worker = import_settings(*paths)
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
     print('НарядAI — обработчик ИИ', flush=True)
     print('Сервер: ' + worker.server, flush=True)

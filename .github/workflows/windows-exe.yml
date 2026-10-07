@@ -32,7 +32,7 @@ jobs:
             патч 1.4/requirements.txt
             патч 1.4/requirements-voice.txt
       - name: Install build dependencies
-        run: python -m pip install -r requirements.txt -r requirements-voice.txt "pyinstaller>=6.11,<7"
+        run: python -m pip install -r requirements.txt -r requirements-voice.txt "pyinstaller==6.22.3"
       - name: Launcher regression tests
         run: python -m unittest discover -s tests -p test_packaged.py -v
       - name: Build and test Windows executables
@@ -57,9 +57,9 @@ jobs:
           $notes = @"
           Windows 10/11 x64. Python is included. Install NaryadAI-Setup-1.7.exe or unpack NaryadAI-Portable-1.7.zip.
           Run NaryadAI.exe for the shared cloud application.
-          Run NaryadAI-AI.exe on the PC with Ollama and AnythingLLM; choose the folder containing your existing worker_config.json and server_config.json once.
+          Run NaryadAI-AI.exe on the PC with Ollama and AnythingLLM; choose the folder containing your existing worker_config.json and server_config.json once. Local AI settings are saved in your user profile; database credentials are not copied.
           Voice dictation and its Russian model are included. No passwords or API keys are included.
-          Both packaged executables passed offline Windows smoke tests. Real AI performance depends on the local model and hardware.
+          Both packaged executables passed offline Windows smoke tests before and after installation. The installer/uninstaller preserved user settings. Real AI performance depends on the local model and hardware.
           "@
           $notes | Set-Content -Encoding utf8 release-notes.txt
           gh release create $tag dist/NaryadAI-Setup-1.7.exe dist/NaryadAI-Portable-1.7.zip dist/SHA256SUMS.txt --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "НарядAI 1.7 — Windows EXE" --notes-file release-notes.txt

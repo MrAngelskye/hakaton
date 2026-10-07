@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -63,6 +64,29 @@ def main():
         raise RuntimeError('Install Inno Setup 6 to build the installer.')
     subprocess.run([iscc, '/DDistributionDir=' + str(DIST), '/DIconFile=' + str(BUILD / 'naryadai.ico'),
                     '/O' + str(DIST), str(ROOT / 'packaging/installer.iss')], cwd=ROOT, check=True)
+    if os.environ.get('GITHUB_ACTIONS') == 'true':
+        # Isolated runner only: don't alter a developer's installed app/registry.
+        installed = BUILD_ROOT / 'installed'
+        subprocess.run([str(DIST / 'NaryadAI-Setup-1.7.exe'), '/VERYSILENT', '/SUPPRESSMSGBOXES',
+                        '/NORESTART', '/SP-', '/DIR=' + str(installed)], check=True, timeout=120)
+        for name in ('NaryadAI.exe', 'NaryadAI-AI.exe'):
+            result = BUILD / ('installed-' + name + '.smoke.json')
+            process = subprocess.run([str(installed / name), '--smoke-test', str(result)], cwd=BUILD, timeout=120)
+            if process.returncode or not result.is_file():
+                raise RuntimeError(f'Installed {name} failed its smoke test')
+            print(result.read_text(encoding='utf-8'), flush=True)
+        saved = Path(os.environ['LOCALAPPDATA']) / 'NaryadAI/config/client_config.json'
+        saved.parent.mkdir(parents=True, exist_ok=True)
+        saved.write_text('{"server":"https://example.com"}', encoding='utf-8')
+        subprocess.run([str(installed / 'unins000.exe'), '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'], check=True, timeout=120)
+        for _ in range(40):
+            if not (installed / 'NaryadAI.exe').exists():
+                break
+            time.sleep(0.25)
+        assert not (installed / 'NaryadAI.exe').exists(), 'Uninstaller failed'
+        assert saved.read_text(encoding='utf-8') == '{"server":"https://example.com"}', 'Uninstaller removed user settings'
+        saved.unlink()
+        (BUILD / 'installer.smoke.json').write_text('{"ok":true,"install":true,"uninstall":true,"settings_preserved":true}', encoding='utf-8')
     files = [DIST / 'NaryadAI-Setup-1.7.exe', archive]
     (DIST / 'SHA256SUMS.txt').write_text(''.join(hashlib.sha256(path.read_bytes()).hexdigest() + '  ' + path.name + '\n' for path in files), encoding='utf-8')
     (ROOT / 'dist').mkdir(exist_ok=True)

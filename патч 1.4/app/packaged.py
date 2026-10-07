@@ -31,6 +31,7 @@ def save_object(name, data):
     destination = folder / name
     temporary = destination.with_suffix('.tmp')
     temporary.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
+    temporary.chmod(0o600)
     temporary.replace(destination)
     return destination
 

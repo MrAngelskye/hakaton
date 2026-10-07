@@ -12,7 +12,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app import packaged
 from tools import client_launcher
-from worker_entry import load_worker
+from worker_entry import load_worker, import_settings
 
 
 class PackagedTests(unittest.TestCase):
@@ -73,6 +73,21 @@ class PackagedTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             load_worker(worker, server)
         self.assertFalse((packaged.configuration_dir() / 'ai_paths.json').exists())
+
+    def test_imported_ai_settings_work_after_old_project_is_deleted(self):
+        worker = self.root / 'worker_config.json'
+        server = self.root / 'server_config.json'
+        worker.write_text(json.dumps({'server': 'https://example.com', 'token': 'x' * 32}))
+        server.write_text(json.dumps({'api_key': 'local-secret', 'database_url': 'private-database-password',
+                                      'supabase_secret_key': 'private-storage-key'}))
+        import_settings(worker, server)
+        worker.unlink()
+        server.unlink()
+        paths = packaged.worker_config_paths()
+        self.assertEqual(load_worker(*paths).ai.settings.api_key, 'local-secret')
+        copied = paths[1].read_text()
+        self.assertNotIn('private-database-password', copied)
+        self.assertNotIn('private-storage-key', copied)
 
 
 if __name__ == '__main__':

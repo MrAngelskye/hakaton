@@ -74,8 +74,9 @@ def load_reference_package(path):
         if row.get('company_usage_confirmed') or row.get('unit_price') is not None or row.get('stock_quantity') is not None:
             raise ValueError('Открытый каталог не подтверждает закупки, цены или остатки предприятия.')
     for row in payload['accounts']:
-        if row['role'] not in ('worker', 'master', 'admin', 'manager') or not re.fullmatch(r'km\.[a-z]+\.\d{2}', row['username']):
-            raise ValueError('Используйте отдельные логины km.role.01.')
+        # Accept old exported packages too; newly generated logins have no km. prefix.
+        if row['role'] not in ('worker', 'master', 'admin', 'manager') or not re.fullmatch(r'(?:km\.)?[a-z]+\.\d{2}', row['username']):
+            raise ValueError('Используйте отдельные логины worker.01, master.01, admin.01 или manager.01.')
         if row.get('identity_status') != 'unassigned_anonymized_profile':
             raise ValueError('Публичные имена сотрудников не импортируются как учётные записи.')
         if row.get('identity_origin') not in (None, 'fictional'):

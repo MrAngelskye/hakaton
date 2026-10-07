@@ -1,6 +1,12 @@
 @echo off
+setlocal
 chcp 65001 >nul
 set PYTHONUTF8=1
 cd /d "%~dp0"
-".venv\Scripts\python.exe" tools\enable_photo_analysis.py
+call tools\run.bat tools\enable_photo_analysis.py %*
+if errorlevel 1 goto failed
 pause
+exit /b 0
+:failed
+pause
+exit /b 1

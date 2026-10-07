@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from app.speech import MODEL_NAME, default_model_path, valid_model_path
+from tools.environment import resolve_python
 
 MODEL_URL = 'https://alphacephei.com/vosk/models/vosk-model-small-ru-0.22.zip'
 MAX_DOWNLOAD = 96 * 1024 * 1024
@@ -25,10 +26,7 @@ MAX_MEMBERS = 2000
 
 
 def environment_python():
-    python = ROOT / '.venv' / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
-    if not python.is_file():
-        raise RuntimeError('Сначала установите приложение через install.bat. Виртуальное окружение .venv не найдено.')
-    return python
+    return resolve_python(ROOT)
 
 
 def download_model(destination):

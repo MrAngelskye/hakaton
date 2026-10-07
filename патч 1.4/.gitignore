@@ -1,4 +1,6 @@
 .venv/
+.naryadai-runtime.json
+.naryadai-runtime.json.tmp
 voice_models/
 .webvenv/
 __pycache__/

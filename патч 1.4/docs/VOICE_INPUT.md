@@ -23,9 +23,9 @@
 Дополнительные команды из папки приложения:
 
 ```text
-.venv\Scripts\python.exe tools\setup_voice.py --check
-.venv\Scripts\python.exe tools\setup_voice.py --model-only
-.venv\Scripts\python.exe tools\setup_voice.py --model-only --target C:\NaryadAI\voice_models\vosk-model-small-ru-0.22
+py -3 tools\run.py tools\setup_voice.py --check
+py -3 tools\run.py tools\setup_voice.py --model-only
+py -3 tools\run.py tools\setup_voice.py --model-only --target C:\NaryadAI\voice_models\vosk-model-small-ru-0.22
 ```
 
 `--check` ничего не скачивает. `--target` задаёт конечную папку модели; её можно затем выбрать в приложении. Существующая неполная папка не перезаписывается. Большие модели не входят в Git.

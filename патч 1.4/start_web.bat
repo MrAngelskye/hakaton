@@ -1,13 +1,12 @@
 @echo off
+setlocal
 chcp 65001 >nul
+set PYTHONUTF8=1
 cd /d "%~dp0"
-set "NARYADAI_WEB_PYTHON=.webvenv\Scripts\python.exe"
-if not exist "%NARYADAI_WEB_PYTHON%" set "NARYADAI_WEB_PYTHON=.venv\Scripts\python.exe"
-if not exist "%NARYADAI_WEB_PYTHON%" (
-  echo Сначала запустите install_web.bat для браузерной версии или install.bat для настольной.
-  pause
-  exit /b 1
-)
-echo Откройте http://127.0.0.1:8841 в браузере после запуска сервера.
-"%NARYADAI_WEB_PYTHON%" run_demo.py %*
-if errorlevel 1 pause
+echo Откройте http://127.0.0.1:8841 после запуска сервера.
+call tools\run.bat --web-first run_demo.py %*
+if errorlevel 1 goto failed
+exit /b 0
+:failed
+pause
+exit /b 1

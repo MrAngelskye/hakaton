@@ -1,0 +1,65 @@
+name: Windows EXE
+on:
+  push:
+    branches: [cloud-1.4]
+    paths:
+      - '.github/workflows/windows-exe.yml'
+      - 'патч 1.4/**'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: windows-exe-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 35
+    env:
+      PYTHONUTF8: '1'
+      TZ: Asia/Qyzylorda
+      QT_QPA_PLATFORM: offscreen
+    defaults:
+      run:
+        working-directory: 'патч 1.4'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            патч 1.4/requirements.txt
+            патч 1.4/requirements-voice.txt
+      - name: Install build dependencies
+        run: python -m pip install -r requirements.txt -r requirements-voice.txt "pyinstaller>=6.11,<7"
+      - name: Launcher regression tests
+        run: python -m unittest discover -s tests -p test_packaged.py -v
+      - name: Build and test Windows executables
+        run: python tools/build_windows.py
+      - name: Save binaries and smoke test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: NaryadAI-Windows
+          path: |
+            патч 1.4/dist/NaryadAI-Setup-1.7.exe
+            патч 1.4/dist/NaryadAI-Portable-1.7.zip
+            патч 1.4/dist/SHA256SUMS.txt
+            патч 1.4/build/windows/*.smoke.json
+          retention-days: 14
+      - name: Publish ready Windows download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $tag = "windows-1.7-$($env:GITHUB_SHA.Substring(0, 7))"
+          $notes = @"
+          Windows 10/11 x64. Python is included. Install NaryadAI-Setup-1.7.exe or unpack NaryadAI-Portable-1.7.zip.
+          Run NaryadAI.exe for the shared cloud application.
+          Run NaryadAI-AI.exe on the PC with Ollama and AnythingLLM; choose the folder containing your existing worker_config.json and server_config.json once.
+          Voice dictation and its Russian model are included. No passwords or API keys are included.
+          Both packaged executables passed offline Windows smoke tests. Real AI performance depends on the local model and hardware.
+          "@
+          $notes | Set-Content -Encoding utf8 release-notes.txt
+          gh release create $tag dist/NaryadAI-Setup-1.7.exe dist/NaryadAI-Portable-1.7.zip dist/SHA256SUMS.txt --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "НарядAI 1.7 — Windows EXE" --notes-file release-notes.txt

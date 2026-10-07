@@ -23,3 +23,6 @@ cloud-secrets.txt
 *credentials*.csv
 ui.ini
 ui-previews/
+build/
+dist/
+release-notes.txt

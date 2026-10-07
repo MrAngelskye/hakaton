@@ -13,20 +13,21 @@ from app.motion import preferences
 from app.desktop_notifications import configure_windows_notifications
 
 
-def main():
+def main(argv=None,store_override=None):
     parser=argparse.ArgumentParser(description='НарядAI — локальный или сетевой клиент')
     parser.add_argument('--data-dir',type=Path,help='Папка локальной базы и фото')
     parser.add_argument('--server',help='Адрес общего сервера, например http://192.168.1.10:8000')
     parser.add_argument('--demo',action='store_true',help='Создать учебные аккаунты и справочники только для демонстрации')
-    args=parser.parse_args()
+    args=parser.parse_args(argv)
     configure_windows_notifications()
-    app=QApplication(sys.argv[:1]);app.setApplicationName('NaryadAI');app.setOrganizationName('NaryadAI')
+    app=QApplication.instance() or QApplication(sys.argv[:1]);app.setApplicationName('NaryadAI');app.setOrganizationName('NaryadAI')
     app.setStyle('Fusion');app.setFont(QFont('Segoe UI',10));apply_theme(app)
     app.setWindowIcon(QIcon(str(ROOT/'assets/branding/km-mark-blue.svg')))
     app.setQuitOnLastWindowClosed(False)
     data=args.data_dir or Path(os.environ.get('NARYADAI_DATA_DIR') or QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppLocalDataLocation))
     try:
-        if args.server:
+        if store_override is not None:store=store_override
+        elif args.server:
             from app.remote import RemoteStore
             store=RemoteStore(args.server)
         else:store=Store(data,seed_demo=args.demo)

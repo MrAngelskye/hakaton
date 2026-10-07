@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+/generated/
+/exports/
+/dataset.json
+*.sqlite3

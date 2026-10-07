@@ -1,0 +1,98 @@
+{
+  "valid": true,
+  "errors": [],
+  "warnings": [],
+  "statistics": {
+    "counts": {
+      "sites": 4,
+      "people": 19,
+      "brigades": 3,
+      "equipment": 64,
+      "materials": 40,
+      "fault_codes": 20,
+      "work_norms": 21,
+      "shifts": 184,
+      "work_orders": 500,
+      "reports": 500,
+      "material_usage": 790,
+      "status_events": 3165,
+      "downtime_intervals": 435,
+      "photo_evidence": 644,
+      "answer_keys": 500
+    },
+    "verdicts": {
+      "accepted": 188,
+      "accepted_with_remarks": 116,
+      "rework_required": 196
+    },
+    "issue_codes": {
+      "empty_report": 39,
+      "excess_material": 35,
+      "fault_code_mismatch": 18,
+      "long_duration": 62,
+      "missing_after_photo": 10,
+      "missing_fault_code": 36,
+      "overdue": 102,
+      "shift_delay": 55,
+      "slow_acceptance": 25,
+      "very_short_duration": 15,
+      "work_mismatch": 35,
+      "wrong_material": 41
+    },
+    "distinct_scores": [
+      32,
+      41,
+      50,
+      59,
+      60,
+      69,
+      78,
+      87,
+      96
+    ],
+    "active_work_interval": "started_at <= t < reported_at; rework waiting does not lock a worker",
+    "answer_keys_with_recalculated_evidence": 500,
+    "recalculated_analytics": {
+      "frequent_conveyor_failure": {
+        "unplanned_count": 46,
+        "peer_mean_unplanned_count": 4.5714,
+        "ratio_to_peer_mean": 10.0625
+      },
+      "worker_rework_rate": {
+        "orders_count": 148,
+        "rework_count": 128,
+        "rework_rate": 0.8649,
+        "others_rework_rate": 0.1932
+      },
+      "repeat_fault_within_14_days": {
+        "flagged_orders_count": 45,
+        "lookback_days": 14
+      },
+      "shift_downtime_difference": {
+        "by_shift": {
+          "day": {
+            "interval_count": 223,
+            "mean_minutes": 74.9731,
+            "long_intervals_count": 3
+          },
+          "late": {
+            "interval_count": 212,
+            "mean_minutes": 96.9245,
+            "long_intervals_count": 47
+          }
+        }
+      }
+    },
+    "split_records": {
+      "train": 364,
+      "validation": 63,
+      "test": 73
+    },
+    "split_equipment": {
+      "train": 44,
+      "validation": 9,
+      "test": 11
+    }
+  },
+  "scope": "Synthetic corpus only; no expert judgement or image quality validation."
+}

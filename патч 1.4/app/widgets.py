@@ -5,7 +5,7 @@ from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (QWidget,QFrame,QLabel,QPushButton,QVBoxLayout,QHBoxLayout,
                               QGridLayout,QScrollArea,QSizePolicy,QDialog,QApplication,QCheckBox)
 from app.theme import COLORS
-from app.motion import Reveal, preferences
+from app.motion import Reveal, preferences, BusyIndicator
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -51,7 +51,7 @@ def button(text,callback=None,kind='',ico=None):
     w=ScrollButton(text)
     if kind:w.setObjectName(kind)
     if ico:
-        color=COLORS['surface' if kind=='primary' else 'sidebar_muted' if kind=='nav' else 'text' if kind=='secondary' else 'muted']
+        color=COLORS['surface' if kind=='primary' else 'sidebar_muted' if kind=='nav' else 'danger' if kind=='danger' else 'text' if kind=='secondary' else 'muted']
         w.setIcon(icon(ico,color));w.setIconSize(QSize(20,20))
         if kind=='nav':w.toggled.connect(lambda checked:w.setIcon(icon(ico,COLORS['sidebar_text'] if checked else color)))
     w.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -93,7 +93,8 @@ def brand():
 
 def company_logo():
     w=QLabel();w.setPixmap(QIcon(str(ROOT/'assets/branding/km-logo-white.svg')).pixmap(148,96))
-    w.setFixedSize(148,96);w.setAccessibleName('АО «Костанайские Минералы»');return w
+    w.setFixedSize(148,96);w.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    w.setAccessibleName('АО «Костанайские Минералы»');return w
 
 
 class CardGrid(QWidget):
@@ -137,15 +138,28 @@ class Toast(QFrame):
         super().__init__(parent);self.setObjectName('toast')
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         layout=QHBoxLayout(self);layout.setContentsMargins(16,12,16,12)
-        check=QLabel();check.setPixmap(icon('check',COLORS['success']).pixmap(20,20));layout.addWidget(check)
-        self.message=label('');layout.addWidget(self.message)
+        self.symbol=QLabel();self.symbol.setFixedSize(24,24);self.symbol.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.symbol,0,Qt.AlignmentFlag.AlignVCenter)
+        self.message=label('',wrap=True);layout.addWidget(self.message,1)
         self.timer=QTimer(self);self.timer.setSingleShot(True);self.timer.timeout.connect(self.hide)
         self.reveal=Reveal(self);parent.installEventFilter(self);self.hide()
-    def show_message(self,text):
+    def show_message(self,text,error=False):
         if not text:return
-        self.message.setText(text);self.adjustSize();self.position();self.show();self.raise_()
-        self.reveal.start();self.timer.start(3200)
-    def position(self):self.move(max(12,self.parentWidget().width()-self.width()-28),94)
+        self.setProperty('tone','error' if error else 'success')
+        self.style().unpolish(self);self.style().polish(self)
+        self.message.style().unpolish(self.message);self.message.style().polish(self.message)
+        self.symbol.setPixmap(icon('info' if error else 'check',COLORS['danger' if error else 'success']).pixmap(20,20))
+        text=str(text)
+        self.setAccessibleDescription(text)
+        self.message.setText(text if len(text)<=320 else text[:317].rstrip()+'…')
+        self.message.setMaximumWidth(max(180,min(420,self.parentWidget().width()-92)))
+        self.message.setMaximumHeight(max(36,min(180,self.parentWidget().height()-72)))
+        self.setMaximumWidth(max(220,self.parentWidget().width()-40))
+        self.adjustSize();self.position();self.show();self.raise_()
+        self.reveal.start();self.timer.start(6000 if error else 3600)
+    def position(self):
+        self.move(max(12,self.parentWidget().width()-self.width()-28),
+                  max(12,min(94,self.parentWidget().height()-self.height()-16)))
     def eventFilter(self,watched,event):
         if event.type()==QEvent.Type.Resize:self.position()
         elif event.type()==QEvent.Type.Hide:self.hide();self.timer.stop()
@@ -158,14 +172,15 @@ class Sheet(AnimatedDialog):
         self.setMinimumWidth(580)
         main=QVBoxLayout(self.content);main.setContentsMargins(24,20,24,20);main.setSpacing(18)
         top=row(label(title,'section'));top.addStretch()
-        close=button('Закрыть',self.reject);top.addWidget(close);main.addLayout(top)
+        close=button('Закрыть',self.reject,ico='close');top.addWidget(close);main.addLayout(top)
         scroll=QScrollArea();scroll.setWidgetResizable(True)
         body=QWidget();self.body=QVBoxLayout(body);self.body.setContentsMargins(0,0,12,0);self.body.setSpacing(16)
         scroll.setWidget(body);main.addWidget(scroll)
-        self.error=label('','error',True);self.error.hide();main.addWidget(self.error)
+        self.error=label('','error',True);self.error.setAccessibleName('Ошибка выполнения действия')
+        self.error.hide();main.addWidget(self.error);self.error_reveal=Reveal(self.error)
         self.actions=QHBoxLayout();self.actions.setSpacing(12);main.addLayout(self.actions)
     def fail(self,e):
-        self.error.setText(str(e));self.error.show()
+        self.error.setText(str(e));self.error.show();self.error_reveal.start()
     def run_action(self,fn):
         try:fn();self.accept()
         except (ValueError,PermissionError,OSError) as e:self.fail(e)
@@ -204,8 +219,10 @@ class CalendarDialog(AnimatedDialog):
         self.calendar.setFirstDayOfWeek(Qt.DayOfWeek.Monday);self.calendar.setSelectedDate(value)
         self.calendar.setMinimumSize(530,280)
         self.month=label('','title');self.month.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        main.addLayout(row(button('◀ Назад',self.calendar.showPreviousMonth,'secondary'),self.month,
-                           button('Вперёд ▶',self.calendar.showNextMonth,'secondary')))
+        self.previous_button=button('Назад',self.calendar.showPreviousMonth,'secondary','chevron-left')
+        self.next_button=button('Вперёд',self.calendar.showNextMonth,'secondary','chevron-right')
+        self.previous_button.setAccessibleName('Предыдущий месяц');self.next_button.setAccessibleName('Следующий месяц')
+        main.addLayout(row(self.previous_button,self.month,self.next_button))
         self.calendar.currentPageChanged.connect(self.update_month)
         self.update_month(self.calendar.yearShown(),self.calendar.monthShown())
         main.addWidget(self.calendar,1)
@@ -225,7 +242,7 @@ class DatePicker(QWidget):
         super().__init__(parent);self._value=value if value and value.isValid() else QDate.currentDate()
         l=QHBoxLayout(self);l.setContentsMargins(0,0,0,0);l.setSpacing(12)
         self.display=button('',self.choose,'secondary','calendar');self.display.setMinimumHeight(30)
-        self.choose_button=button('Выбрать дату',self.choose,ico='calendar');self.choose_button.setMinimumHeight(30)
+        self.choose_button=button('Выбрать дату',self.choose,ico='chevron-down');self.choose_button.setMinimumHeight(30)
         l.addWidget(self.display,1);l.addWidget(self.choose_button);self.update_text()
     def date(self):return QDate(self._value)
     def setDate(self,value):
@@ -267,7 +284,7 @@ class TimePicker(QWidget):
         super().__init__(parent);self._value=QTime(value or QTime(8,0))
         l=QHBoxLayout(self);l.setContentsMargins(0,0,0,0);l.setSpacing(12)
         self.display=button('',self.choose,'secondary','clock');self.display.setMinimumHeight(30)
-        self.choose_button=button('Выбрать время',self.choose,ico='clock');self.choose_button.setMinimumHeight(30)
+        self.choose_button=button('Выбрать время',self.choose,ico='chevron-down');self.choose_button.setMinimumHeight(30)
         l.addWidget(self.display,1);l.addWidget(self.choose_button);self.update_text()
     def time(self):return QTime(self._value)
     def setTime(self,value):

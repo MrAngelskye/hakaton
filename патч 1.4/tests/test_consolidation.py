@@ -86,6 +86,7 @@ class DesktopConsolidation(unittest.TestCase):
         from PySide6.QtWidgets import QApplication
         cls.qt=QApplication.instance() or QApplication([])
     def test_draft_score_and_catalog_pages(self):
+        from PySide6.QtCore import QCoreApplication,QEvent
         from app.dialogs import SubmitReport,CreateTask,ReviewReport
         from app.windows import MainWindow
         from app.reference_dialogs import ReferenceEditor,NAMES
@@ -103,10 +104,12 @@ class DesktopConsolidation(unittest.TestCase):
             review.score.setValue(0);review.decide(True);self.assertEqual(store.task(master,tid)['status'],'approved')
             create=CreateTask(store,master,None);self.assertEqual(create.priority.currentData(),'normal')
             for name in NAMES:
-                items=store.catalogs(master)[name];editor=ReferenceEditor(store,master,name,None,items[0] if items else None);editor.close()
+                items=store.catalogs(master)[name];editor=ReferenceEditor(store,master,name,None,items[0] if items else None);editor.close();editor.deleteLater()
             window=MainWindow(store,master);window.navigate('references');window.navigate('equipment');window.close()
             worker_window=MainWindow(store,worker);self.assertEqual(worker_window.task_filter,'mine');worker_window.close()
-            for obj in (d,again,review,create):obj.close()
+            for obj in (d,again,review,create,window,worker_window):obj.close();obj.deleteLater()
+            QCoreApplication.sendPostedEvents(None,QEvent.Type.DeferredDelete)
+            self.qt.processEvents()
             store.close()
 
 if __name__=='__main__':unittest.main(verbosity=2)

@@ -1,8 +1,9 @@
 """Optional, local report dictation. Reviewed text uses existing report fields/drafts."""
 from pathlib import Path
 from PySide6.QtCore import QObject, Signal, Qt, QSettings
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QFileDialog, QApplication
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QFileDialog, QApplication
 from app.widgets import label, button, row
+from app.motion import BusyIndicator, Reveal
 from app.speech import DictationSession, default_model_path
 
 
@@ -42,12 +43,20 @@ class ReportVoiceInput(QWidget):
             self.triggers.append(trigger)
         layout.addLayout(triggers)
         self.panel = QWidget(self)
+        self.panel.setObjectName('voicePanel')
         body = QVBoxLayout(self.panel)
-        body.setContentsMargins(0, 8, 0, 0)
+        body.setContentsMargins(16, 16, 16, 16)
+        body.setSpacing(12)
         self.heading = label('Голосовой ввод', 'section')
         self.note = label('Речь распознаётся локально на этом компьютере. Аудиозапись не сохраняется и не отправляется. Проверьте названия узлов, числа и результат перед добавлением.', 'muted', True)
         self.configure = button('Выбрать локальную модель', self.choose_model, 'secondary')
-        self.status = label('', 'muted', True)
+        self.status = label('', 'voiceStatus', True)
+        self.status_reveal = Reveal(self.status)
+        self.indicator = BusyIndicator(self.panel)
+        status_row = QHBoxLayout()
+        status_row.setSpacing(8)
+        status_row.addWidget(self.indicator, 0, Qt.AlignmentFlag.AlignVCenter)
+        status_row.addWidget(self.status, 1)
         self.partial = label('', 'muted', True)
         self.preview = QTextEdit()
         self.preview.setAcceptRichText(False)
@@ -57,8 +66,11 @@ class ReportVoiceInput(QWidget):
         self.stop_button = button('Остановить', self.stop, 'secondary')
         self.apply_button = button('Добавить в отчёт', self.apply, 'primary')
         self.cancel_button = button('Отменить диктовку', self.cancel)
-        for widget in (self.heading, self.note, self.configure, self.status, self.preview, self.partial):
+        for widget in (self.heading, self.note, self.configure):
             body.addWidget(widget)
+        body.addLayout(status_row)
+        body.addWidget(self.preview)
+        body.addWidget(self.partial)
         body.addLayout(row(self.start_button, self.stop_button))
         body.addLayout(row(self.apply_button, self.cancel_button))
         layout.addWidget(self.panel)
@@ -69,6 +81,14 @@ class ReportVoiceInput(QWidget):
             self.app.applicationStateChanged.connect(self._app_state)
         self.render()
 
+    def feedback(self, text, error=False):
+        self.status.setProperty('tone', 'error' if error else 'neutral')
+        self.status.style().unpolish(self.status)
+        self.status.style().polish(self.status)
+        self.status.setText(text)
+        if error:
+            self.status_reveal.start()
+
     def model_path(self):
         configured = self.settings.value('model_path', '')
         return Path(str(configured)) if configured else default_model_path()
@@ -77,12 +97,12 @@ class ReportVoiceInput(QWidget):
         if self.disposed or self.busy:
             return
         if self.target is not field and self.preview.toPlainText().strip():
-            self.status.setText('Добавьте текущий текст или отмените диктовку перед выбором другого поля.')
+            self.feedback('Добавьте текущий текст или отмените диктовку перед выбором другого поля.', True)
             return
         self.target = field
         self.heading.setText('Диктовка: ' + title.lower())
         self.panel.show()
-        self.status.setText('Нажмите «Начать диктовку». Для первой настройки запустите install_voice.bat.' if not self.model_path().is_dir() else 'Нажмите «Начать диктовку». После остановки проверьте текст.')
+        self.feedback('Нажмите «Начать диктовку». Для первой настройки запустите install_voice.bat.' if not self.model_path().is_dir() else 'Нажмите «Начать диктовку». После остановки проверьте текст.')
         self.render()
 
     def choose_model(self):
@@ -90,10 +110,10 @@ class ReportVoiceInput(QWidget):
         if path:
             model = Path(path)
             if not (model / 'am' / 'final.mdl').is_file() or not (model / 'conf' / 'mfcc.conf').is_file():
-                self.status.setText('Выберите папку распакованной модели: в ней должны быть am/final.mdl и conf/mfcc.conf.')
+                self.feedback('Выберите папку распакованной модели: в ней должны быть am/final.mdl и conf/mfcc.conf.', True)
                 return
             self.settings.setValue('model_path', str(model))
-            self.status.setText('Локальная модель выбрана. Можно начать диктовку.')
+            self.feedback('Локальная модель выбрана. Можно начать диктовку.')
 
     def _emit(self, signal, token, *args):
         if self.disposed or token != self.token:
@@ -107,16 +127,16 @@ class ReportVoiceInput(QWidget):
         if self.disposed or self.busy or self.target is None or not self.target.isEnabled():
             return
         if self.session and self.session.is_alive():
-            self.status.setText('Предыдущая диктовка завершается. Повторите через секунду.')
+            self.feedback('Предыдущая диктовка завершается. Повторите через секунду.', True)
             return
         if not self.model_path().is_dir():
-            self.status.setText('Русская модель не установлена. Запустите install_voice.bat или выберите уже распакованную модель. Ручной ввод доступен.')
+            self.feedback('Русская модель не установлена. Запустите install_voice.bat или выберите уже распакованную модель. Ручной ввод доступен.', True)
             return
         self.token += 1
         token = self.token
         self.baseline = self.preview.toPlainText().strip()
         self.busy = True
-        self.status.setText('Подготавливаем локальное распознавание…')
+        self.feedback('Подготавливаем локальное распознавание…')
         self.render()
         try:
             self.session = self.session_factory(
@@ -129,16 +149,16 @@ class ReportVoiceInput(QWidget):
             )
             if not self.session.start():
                 self.busy = False
-                self.status.setText('Диктовка уже запущена. Остановите предыдущую запись.')
+                self.feedback('Диктовка уже запущена. Остановите предыдущую запись.', True)
                 self.render()
         except Exception:
             self.busy = False
-            self.status.setText('Не удалось запустить голосовой ввод. Проверьте установку install_voice.bat; ручной ввод доступен.')
+            self.feedback('Не удалось запустить голосовой ввод. Проверьте установку install_voice.bat; ручной ввод доступен.', True)
             self.render()
 
     def _status(self, token, text):
         if token == self.token and not self.disposed:
-            self.status.setText(text)
+            self.feedback(text)
 
     def _partial(self, token, text):
         if token == self.token and not self.disposed:
@@ -147,10 +167,11 @@ class ReportVoiceInput(QWidget):
     def _final(self, token, text):
         if token == self.token and not self.disposed:
             self.preview.setPlainText('\n'.join(value for value in (self.baseline, text.strip()) if value))
-            self.status.setText('Проверьте текст и нажмите «Добавить в отчёт».' if text.strip() else 'Речь не распознана. Попробуйте снова или используйте ручной ввод.')
+            self.feedback('Проверьте текст и нажмите «Добавить в отчёт».' if text.strip() else 'Речь не распознана. Попробуйте снова или используйте ручной ввод.')
 
     def _error(self, token, text):
-        self._status(token, text)
+        if token == self.token and not self.disposed:
+            self.feedback(text, True)
 
     def _done(self, token):
         if token == self.token and not self.disposed:
@@ -161,7 +182,7 @@ class ReportVoiceInput(QWidget):
     def stop(self):
         if self.session and self.busy:
             self.stop_button.setEnabled(False)
-            self.status.setText('Завершаем распознавание…')
+            self.feedback('Завершаем распознавание…')
             self.session.stop()
 
     def _app_state(self, state):
@@ -180,11 +201,11 @@ class ReportVoiceInput(QWidget):
         previous = self.target.toPlainText()
         combined = previous + ('\n' if previous and not previous[-1].isspace() else '') + text
         if len(combined) > 10000:
-            self.status.setText('Предел поля — 10 000 символов. Сократите текст; ничего не добавлено.')
+            self.feedback('Предел поля — 10 000 символов. Сократите текст; ничего не добавлено.', True)
             return
         self.target.setPlainText(combined)  # Existing textChanged persists the report draft.
         self.preview.clear()
-        self.status.setText('Текст добавлен. Проверьте отчёт и отправьте его мастеру отдельно.')
+        self.feedback('Текст добавлен. Проверьте отчёт и отправьте его мастеру отдельно.')
         self.target.setFocus()
         self.render()
 
@@ -200,6 +221,7 @@ class ReportVoiceInput(QWidget):
         self.render()
 
     def render(self):
+        self.indicator.set_running(self.busy and not self.disposed)
         for trigger in self.triggers:
             trigger.setEnabled(not self.busy and not self.disposed)
         self.preview.setReadOnly(self.busy)

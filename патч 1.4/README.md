@@ -49,6 +49,8 @@ AnythingLLM и модель остаются на машине команды. �
 
 [Веб/PWA](web/README.md), [сценарии MVP](docs/MVP_GUIDE.md), [фотографии](docs/PHOTO_CHECKS.md), [состав объединения](docs/CONSOLIDATION.md), [анализ проекта](../docs/project/README.md).
 
+[Визуальный стиль, выравнивание и состояния интерфейса](docs/UI_POLISH.md).
+
 ## Проверки
 
 ```powershell

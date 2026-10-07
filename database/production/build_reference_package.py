@@ -5,6 +5,33 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 CASE = 'CASE1-REQUIREMENTS'
 
+# Invented display names, not names of company employees. Login identifiers stay stable.
+FICTIONAL_NAMES = [
+    'Белозёров Артём Сергеевич',
+    'Громов Виктор Алексеевич',
+    'Корнеев Павел Андреевич',
+    'Лебедева Марина Викторовна',
+    'Соколов Дмитрий Игоревич',
+    'Морозов Алексей Павлович',
+    'Волков Сергей Николаевич',
+    'Орлов Андрей Михайлович',
+    'Крылов Денис Олегович',
+    'Фролов Максим Евгеньевич',
+    'Белов Николай Петрович',
+    'Захаров Роман Владимирович',
+    'Тихонов Иван Анатольевич',
+    'Макаров Антон Дмитриевич',
+    'Ермаков Олег Вячеславович',
+    'Комаров Евгений Валерьевич',
+    'Савельев Михаил Борисович',
+    'Новиков Кирилл Романович',
+    'Петрова Светлана Александровна',
+]
+FICTIONAL_IDENTITY_NOTE = (
+    'ФИО полностью вымышлено, совпадения случайны. Источник подтверждает только название '
+    'должности, а не личность. Разряд, бригада и смена не подтверждены.'
+)
+
 TOPICS = [
  ('Насос','Диагностика заявленной течи насоса','Внеплановая'),
  ('Насос','Осмотр доступных соединений насосного узла','Плановая'),
@@ -52,8 +79,9 @@ def build():
     by_job = {r['code']:r for r in raw['job_titles']}
     accounts = []
     def account(role, number, job, source):
-        accounts.append({'username':f'km.{role}.{number:02}', 'name':f'{job} · профиль {number:02}',
-            'job':job,'role':role,'source_id':source,'identity_status':'unassigned_anonymized_profile'})
+        accounts.append({'username':f'km.{role}.{number:02}', 'name':FICTIONAL_NAMES[len(accounts)],
+            'job':job,'role':role,'source_id':source,'identity_status':'unassigned_anonymized_profile',
+            'identity_origin':'fictional','note':FICTIONAL_IDENTITY_NOTE})
     account('admin',1,'Администратор системы',CASE)
     account('manager',1,'Руководитель участка',CASE)
     for i,key in enumerate(('master_electric','shift_senior_master'),1):

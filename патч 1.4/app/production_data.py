@@ -75,9 +75,11 @@ def load_reference_package(path):
             raise ValueError('Открытый каталог не подтверждает закупки, цены или остатки предприятия.')
     for row in payload['accounts']:
         if row['role'] not in ('worker', 'master', 'admin', 'manager') or not re.fullmatch(r'km\.[a-z]+\.\d{2}', row['username']):
-            raise ValueError('Используйте отдельные обезличенные логины km.role.01.')
+            raise ValueError('Используйте отдельные логины km.role.01.')
         if row.get('identity_status') != 'unassigned_anonymized_profile':
             raise ValueError('Публичные имена сотрудников не импортируются как учётные записи.')
+        if row.get('identity_origin') not in (None, 'fictional'):
+            raise ValueError('ФИО в стартовом справочнике должны быть вымышленными.')
     return payload
 
 
@@ -137,8 +139,10 @@ def bootstrap(store, payload, credentials):
                  password_hash(passwords[row['username']], salt), row['job'] if row['role'] == 'worker' else ''))
             uid = c.execute('SELECT id FROM users WHERE username=?', (row['username'],)).fetchone()[0]
             c.execute('INSERT INTO account_provenance(user_id,source_id,identity_status,note) VALUES(?,?,?,?)',
-                      (uid, row['source_id'], row['identity_status'], 'Должностной профиль без установленного физического лица. Разряд, бригада и смена не подтверждены.'))
-            _provenance(c, 'users', row['username'], row['source_id'], 'anonymized_profile', 'Распределение аккаунтов не является штатным расписанием.')
+                      (uid, row['source_id'], row['identity_status'], row.get('note') or 'Должностной профиль без установленного физического лица. Разряд, бригада и смена не подтверждены.'))
+            note = ('ФИО вымышлено. Источник подтверждает название должности, а не личность. '
+                    if row.get('identity_origin') == 'fictional' else '')
+            _provenance(c, 'users', row['username'], row['source_id'], 'anonymized_profile', note+'Распределение аккаунтов не является штатным расписанием.')
     return {'users': len(payload['accounts']), 'sites': len(payload['sites']), 'materials': len(payload['materials']),
             'work_order_templates': len(payload['work_order_templates']), 'tasks': 0, 'reports': 0, 'equipment': 0}
 

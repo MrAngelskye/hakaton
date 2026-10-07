@@ -305,7 +305,7 @@
       "source_ids": [
         "KM-NEWS-ELECTRIC-2024"
       ],
-      "identity_policy": "anonymous_account_only",
+      "identity_policy": "fictional_identity_only",
       "current_staff_roster_confirmed": false,
       "department_mapping_is_reference": true
     },
@@ -316,7 +316,7 @@
       "source_ids": [
         "KM-NEWS-ELECTRIC-2024"
       ],
-      "identity_policy": "anonymous_account_only",
+      "identity_policy": "fictional_identity_only",
       "current_staff_roster_confirmed": false,
       "department_mapping_is_reference": true
     },
@@ -327,7 +327,7 @@
       "source_ids": [
         "KM-NEWS-ELECTRIC-2024"
       ],
-      "identity_policy": "anonymous_account_only",
+      "identity_policy": "fictional_identity_only",
       "current_staff_roster_confirmed": false,
       "department_mapping_is_reference": true
     },
@@ -338,7 +338,7 @@
       "source_ids": [
         "KM-NEWS-SUBSTATION-2026"
       ],
-      "identity_policy": "anonymous_account_only",
+      "identity_policy": "fictional_identity_only",
       "current_staff_roster_confirmed": false,
       "department_mapping_is_reference": true
     },
@@ -349,7 +349,7 @@
       "source_ids": [
         "KM-NEWS-SUBSTATION-2026"
       ],
-      "identity_policy": "anonymous_account_only",
+      "identity_policy": "fictional_identity_only",
       "current_staff_roster_confirmed": false,
       "department_mapping_is_reference": true
     },
@@ -360,7 +360,7 @@
       "source_ids": [
         "KM-NEWS-JOBS-2025"
       ],
-      "identity_policy": "anonymous_account_only",
+      "identity_policy": "fictional_identity_only",
       "current_staff_roster_confirmed": false,
       "department_mapping_is_reference": true
     },
@@ -371,7 +371,7 @@
       "source_ids": [
         "KM-NEWS-JOBS-2025"
       ],
-      "identity_policy": "anonymous_account_only",
+      "identity_policy": "fictional_identity_only",
       "current_staff_roster_confirmed": false,
       "department_mapping_is_reference": true
     },
@@ -382,7 +382,7 @@
       "source_ids": [
         "KM-NEWS-JOBS-2025"
       ],
-      "identity_policy": "anonymous_account_only",
+      "identity_policy": "fictional_identity_only",
       "current_staff_roster_confirmed": false,
       "department_mapping_is_reference": true
     },
@@ -393,7 +393,7 @@
       "source_ids": [
         "KM-NEWS-JOBS-2025"
       ],
-      "identity_policy": "anonymous_account_only",
+      "identity_policy": "fictional_identity_only",
       "current_staff_roster_confirmed": false,
       "department_mapping_is_reference": true
     },
@@ -404,7 +404,7 @@
       "source_ids": [
         "KM-NEWS-JOBS-2025"
       ],
-      "identity_policy": "anonymous_account_only",
+      "identity_policy": "fictional_identity_only",
       "current_staff_roster_confirmed": false,
       "department_mapping_is_reference": true
     },
@@ -415,7 +415,7 @@
       "source_ids": [
         "KM-NEWS-TRANSPORT-2021"
       ],
-      "identity_policy": "anonymous_account_only",
+      "identity_policy": "fictional_identity_only",
       "current_staff_roster_confirmed": false,
       "department_mapping_is_reference": true
     },
@@ -426,7 +426,7 @@
       "source_ids": [
         "KM-NEWS-TRANSPORT-2021"
       ],
-      "identity_policy": "anonymous_account_only",
+      "identity_policy": "fictional_identity_only",
       "current_staff_roster_confirmed": false,
       "department_mapping_is_reference": true
     }
@@ -1257,7 +1257,7 @@
       "code": "master_electric",
       "name": "Мастер по ремонту и обслуживанию электрооборудования",
       "source_id": "KM-NEWS-ELECTRIC-2024",
-      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для аккаунта с вымышленным ФИО; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
       "site_code": "REF-OK",
       "department_mapping_is_reference": true
     },
@@ -1265,7 +1265,7 @@
       "code": "electric_fitter",
       "name": "Электрослесарь по ремонту и обслуживанию оборудования",
       "source_id": "KM-NEWS-ELECTRIC-2024",
-      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для аккаунта с вымышленным ФИО; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
       "site_code": "REF-OK",
       "department_mapping_is_reference": true
     },
@@ -1273,7 +1273,7 @@
       "code": "shift_senior_master",
       "name": "Старший мастер смены",
       "source_id": "KM-NEWS-ELECTRIC-2024",
-      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для аккаунта с вымышленным ФИО; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
       "site_code": "REF-OK",
       "department_mapping_is_reference": true
     },
@@ -1281,7 +1281,7 @@
       "code": "substation_electrician",
       "name": "Электромонтер по обслуживанию подстанции",
       "source_id": "KM-NEWS-SUBSTATION-2026",
-      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для аккаунта с вымышленным ФИО; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
       "site_code": "REF-EU",
       "department_mapping_is_reference": true
     },
@@ -1289,7 +1289,7 @@
       "code": "automation_electric_fitter",
       "name": "Электрослесарь по обслуживанию и ремонту оборудования участка автоматизации",
       "source_id": "KM-NEWS-SUBSTATION-2026",
-      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для аккаунта с вымышленным ФИО; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
       "site_code": "REF-EU",
       "department_mapping_is_reference": true
     },
@@ -1297,7 +1297,7 @@
       "code": "maintenance_fitter",
       "name": "Слесарь по обслуживанию и ремонту оборудования",
       "source_id": "KM-NEWS-JOBS-2025",
-      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для аккаунта с вымышленным ФИО; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
       "site_code": "REF-OK",
       "department_mapping_is_reference": true
     },
@@ -1305,7 +1305,7 @@
       "code": "welder",
       "name": "Электрогазосварщик",
       "source_id": "KM-NEWS-JOBS-2025",
-      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для аккаунта с вымышленным ФИО; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
       "site_code": "REF-GTK",
       "department_mapping_is_reference": true
     },
@@ -1313,7 +1313,7 @@
       "code": "turner",
       "name": "Токарь",
       "source_id": "KM-NEWS-JOBS-2025",
-      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для аккаунта с вымышленным ФИО; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
       "site_code": "REF-GTK",
       "department_mapping_is_reference": true
     },
@@ -1321,7 +1321,7 @@
       "code": "locomotive_driver",
       "name": "Машинист тепловоза",
       "source_id": "KM-NEWS-JOBS-2025",
-      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для аккаунта с вымышленным ФИО; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
       "site_code": "REF-GTK",
       "department_mapping_is_reference": true
     },
@@ -1329,7 +1329,7 @@
       "code": "loader_driver",
       "name": "Водитель погрузчика",
       "source_id": "KM-NEWS-JOBS-2025",
-      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для аккаунта с вымышленным ФИО; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
       "site_code": "REF-OK",
       "department_mapping_is_reference": true
     },
@@ -1337,7 +1337,7 @@
       "code": "vehicle_fitter",
       "name": "Слесарь по ремонту автомобилей",
       "source_id": "KM-NEWS-TRANSPORT-2021",
-      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для аккаунта с вымышленным ФИО; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
       "site_code": "REF-ATP",
       "department_mapping_is_reference": true
     },
@@ -1345,7 +1345,7 @@
       "code": "rolling_stock_fitter",
       "name": "Слесарь по ремонту подвижного состава",
       "source_id": "KM-NEWS-TRANSPORT-2021",
-      "note": "Название профессии подтверждено публикацией на дату источника. Только для обезличенного аккаунта; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
+      "note": "Название профессии подтверждено публикацией на дату источника. Только для аккаунта с вымышленным ФИО; не актуальное штатное расписание и не удостоверение конкретного сотрудника.",
       "site_code": "REF-GTK",
       "department_mapping_is_reference": true
     }

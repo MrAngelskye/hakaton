@@ -4,6 +4,7 @@ from PySide6.QtGui import QPixmap,QDesktopServices
 from PySide6.QtWidgets import (QLineEdit,QTextEdit,QComboBox,QDoubleSpinBox,QSpinBox,QDateEdit,
     QDateTimeEdit,QTimeEdit,QInputDialog,QTableWidget,QTableWidgetItem,QHeaderView,QFileDialog,QAbstractItemView)
 from app.drafts import ReportDraft
+from app.voice_input import ReportVoiceInput
 from app.store import STATUS,SITES,ROLES
 from app.case_store import PRIORITIES
 from app.widgets import (Sheet,label,button,row,card,tag,DatePicker,TimePicker,DateTimePicker,
@@ -218,6 +219,8 @@ class SubmitReport(Sheet):
         if old:self.body.addWidget(label('Нужна доработка: '+old['comment'],'',True))
         self.work=self.field('Выполненные работы *',QTextEdit());self.work.setFixedHeight(110)
         self.result_text=self.field('Результат контрольной проверки *',QTextEdit());self.result_text.setFixedHeight(85)
+        self.voice=ReportVoiceInput([('Выполненные работы',self.work),('Результат проверки',self.result_text)],self)
+        self.body.addWidget(self.voice);self.finished.connect(self.voice.dispose)
         self.defect=self.field('Дефект',combo([(d['code']+' · '+d['name'],d['code']) for d in store.catalogs(user)['defect_codes']]))
         self.hours=self.field('Фактическое время, ч',number(t['duration'],.1,24,.1))
         self.body.addWidget(label('Материалы и стоимость','section'))
@@ -259,7 +262,9 @@ class SubmitReport(Sheet):
             materials.append(item)
         try:self.draft.save({'work':self.work.toPlainText(),'result':self.result_text.toPlainText(),'defect':self.defect.currentText(),'hours':self.hours.value(),'materials':materials,'photo_sources':self.photo_sources})
         except OSError as e:self.fail('Не удалось сохранить черновик: '+str(e))
-    def save_draft(self):self.persist_draft();self.reject()
+    def save_draft(self):
+        if self.voice.has_unapplied():self.fail('Добавьте распознанный текст в отчёт или отмените диктовку перед сохранением.');return
+        self.persist_draft();self.reject()
 
     def add_material(self,m=None):
         m=m if isinstance(m,dict) else {'name':'','quantity':1,'unit':'шт.','price':0}
@@ -299,6 +304,7 @@ class SubmitReport(Sheet):
             self.photo_layout.addLayout(line)
     def remove_photo(self,p):self.photo_sources.remove(p);self.refresh_photos();self.persist_draft()
     def save(self):
+        if self.voice.has_unapplied():self.fail('Добавьте распознанный текст в отчёт или отмените диктовку перед отправкой.');return
         def action():
             materials=[]
             for n in range(self.table.rowCount()):

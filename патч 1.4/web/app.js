@@ -69,6 +69,8 @@ async function rpc(method,args=[],kwargs={},photos=[],requestId=null) {
   }
 }
 let draftDB;
+let reportVoice=null;
+function destroyReportVoice(){reportVoice?.destroy();reportVoice=null;}
 function database() { return draftDB ||= new Promise((resolve,reject) => {const r=indexedDB.open('naryadai-private-drafts',1);r.onupgradeneeded=() => r.result.createObjectStore('drafts');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);}); }
 async function draftGet(key) { const db=await database();return new Promise((resolve,reject) => {const r=db.transaction('drafts').objectStore('drafts').get(key);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);}); }
 async function draftWrite(key,value) { const sessionToken=state.token;const db=await database();if(!state.user||state.token!==sessionToken)throw new Error('Сеанс завершён.');return new Promise((resolve,reject) => {const tx=db.transaction('drafts','readwrite');tx.objectStore('drafts').put(value,key);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);}); }
@@ -77,6 +79,7 @@ async function clearDrafts() { try{const db=await database();await new Promise((
 const draftKey = id => `${state.user.id}:${id}`;
 function clearPhotos() { state.photoURLs.forEach(url => URL.revokeObjectURL(url));state.photoURLs.clear(); }
 async function endSession(send=true) {
+  destroyReportVoice();
   await NaryadNotifications.stop();
   if(send){try{await request('/api/logout',{method:'POST'});}catch(_){/* local logout always succeeds */}}
   state.token='';state.user=null;state.snapshot=null;state.refs={};state.draft=null;state.taskId=null;
@@ -242,6 +245,7 @@ function bindPage() {
   if($('#install-app'))$('#install-app').onclick=async()=>{if(state.installPrompt){await state.installPrompt.prompt();state.installPrompt=null;$('#install-app').disabled=true;}};
 }
 function showDialog(title,subtitle,body) {
+  destroyReportVoice();
   if(state.draft&&state.taskId)persistDraft().catch(()=>toast('Черновик не сохранился. Проверьте свободное место в браузере.',true));
   state.dialogVersion++;state.reportDialog=null;state.taskId=null;state.draft=null;const dialog=$('#dialog');
   dialog.innerHTML=`<div class="dialog-header"><div><small>${h(subtitle)}</small><h2 id="dialog-title">${h(title)}</h2></div><button id="close-dialog" class="ghost" aria-label="Закрыть">${icon('close')}</button></div><div class="dialog-body">${body}</div>`;
@@ -316,13 +320,19 @@ async function openReportForm(task) {
   showDialog('Отчёт о выполнении',`НР-${task.id} · ${task.equipment}`,`<form id="report-form"><div class="notice ${task.status==='revision'?'warning':''}">${task.status==='revision'?`Замечание мастера: ${h(prior?.comment||'Исправьте отчёт')}`:'Опишите фактические работы и результат контрольной проверки. Мастер принимает окончательное решение.'}</div><div id="pending-notice"></div><fieldset id="report-fields"><div class="field"><label for="work">Что выполнено *</label><textarea id="work" minlength="10" maxlength="10000" required placeholder="Узел, выполненные действия, устранённая проблема">${h(draft.work)}</textarea></div><div class="field"><label for="result">Результат контрольной проверки *</label><textarea id="result" minlength="3" maxlength="10000" required placeholder="Как проверили работоспособность и что получили">${h(draft.result)}</textarea></div><div class="form-grid"><div class="field"><label for="defect">Шифр неисправности</label><select id="defect" required>${options(refs('defect_codes').map(item=>({...item,name:`${item.code || ''} · ${item.name}`})),refs('defect_codes').find(item=>draft.defect===`${item.code} · ${item.name}`||draft.defect===item.name)?.id,'Выберите шифр')}</select></div>${field('hours','Фактическое время, ч *','number',draft.hours,'min="0.1" max="24" step="0.1" required')}</div><section class="form-section"><div class="section-head"><h3>Использованные материалы</h3><button id="add-material" type="button">Добавить</button></div><div id="materials"></div><small>Выберите материал или впишите свой. Для нового материала укажите единицу и цену; мастер проверит запись. Если материалы не использовались, оставьте список пустым.</small></section><section class="form-section"><h3>Фотографии результата ${task.kind==='Внеплановая'?'*':''}</h3><p class="muted">${task.kind==='Внеплановая'?'Для закрытия внеплановой работы обязательно фото после выполнения. Неполный отчёт можно отправить для уточнения.':'Приложите фото результата, если требуется для подтверждения.'} До 5 фото JPG, PNG или WebP, до 8 МБ каждое. Исходные файлы сохраняются без изменения.</p><label for="photo-input">Снять или выбрать фотографию</label><input id="photo-input" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" multiple><div id="draft-photos" class="photo-grid"></div></section></fieldset><p id="draft-status" class="sync-note" role="status">${saved?'Черновик восстановлен на этом устройстве.':'Черновик сохраняется на этом устройстве.'}</p><div id="form-error" class="error-text" role="alert"></div><div class="dialog-actions"><button type="button" id="save-draft">Сохранить черновик</button><button id="submit-report" type="submit" class="primary">Отправить мастеру</button></div></form>`);
   state.draft=draft;state.taskId=task.id;renderMaterials();renderDraftPhotos();renderPending();
   $('#report-fields').addEventListener('input',()=>saveDraftSoon());$('#report-fields').addEventListener('change',()=>saveDraftSoon());
+  const voiceToken=state.token,voiceVersion=state.dialogVersion;
+  reportVoice=window.NaryadVoice?.mount($('#report-form'),{
+    isCurrent:()=>state.token===voiceToken&&state.dialogVersion===voiceVersion&&state.draft===draft&&state.taskId===task.id&&$('#dialog').open&&!state.busy&&!draft.pending,
+    onApply:()=>persistDraft().catch(()=>toast('Текст добавлен, но черновик не сохранился. Проверьте свободное место в браузере.',true))
+  });
   $('#add-material').onclick=()=>{captureDraft();state.draft.materials.push({name:'',quantity:1,unit:'',price:0});renderMaterials();saveDraftSoon();};
-  $('#save-draft').onclick=async()=>{try{await persistDraft();toast('Черновик сохранён');}catch(_){toast('Не удалось сохранить черновик: проверьте свободное место в браузере.',true);}};
+  $('#save-draft').onclick=async()=>{if(reportVoice?.hasUnapplied()){$('#form-error').textContent='Добавьте распознанный текст в отчёт или отмените диктовку перед сохранением.';return;}try{await persistDraft();toast('Черновик сохранён');}catch(_){toast('Не удалось сохранить черновик: проверьте свободное место в браузере.',true);}};
   $('#photo-input').onchange=async event=>{
     const editingDraft=state.draft;const sessionToken=state.token;const files=[...event.target.files];event.target.value='';if(editingDraft.photos.length+files.length>5){toast('Можно приложить до 5 фотографий.',true);return;}
     for(const file of files){if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024){toast('Фото: JPG, PNG или WebP до 8 МБ.',true);continue;}try{const content=await fileData(file);if(state.draft!==editingDraft||state.token!==sessionToken)return;editingDraft.photos.push({name:file.name,content,type:file.type});}catch(_){toast('Не удалось прочитать фото.',true);}}
     renderDraftPhotos();await persistDraft().catch(()=>toast('Фото не сохранились в черновике: возможно, заполнено хранилище браузера.',true));
   };
+  $('#submit-report').addEventListener('click',event=>{if(reportVoice?.hasUnapplied()){event.preventDefault();$('#form-error').textContent='Добавьте распознанный текст в отчёт или отмените диктовку перед отправкой.';}});
   $('#report-form').onsubmit=event=>{event.preventDefault();submitReport(task);};
 }
 function fileData(file) { return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file);}); }
@@ -355,6 +365,8 @@ function renderPending() {
   $('#pending-notice').innerHTML=pending?'<div class="notice warning">Результат предыдущей отправки пока не подтверждён. Повторите запрос: используется тот же идентификатор, чтобы не создать второй отчёт. До получения ответа данные зафиксированы.</div>':'';renderDraftPhotos();
 }
 async function submitReport(task) {
+  if(reportVoice?.hasUnapplied()){$('#form-error').textContent='Добавьте распознанный текст в отчёт или отмените диктовку перед отправкой.';return;}
+  reportVoice?.cancel();
   if(state.busy)return;captureDraft();const draft=state.draft;
     state.busy=true;$('#submit-report').disabled=true;$('#form-error').textContent='';
   if(!draft.pending)draft.pending={request_id:uuid(),args:[task.id],kwargs:{work:draft.work,result:draft.result,defect:draft.defect,hours:draft.hours,materials:draft.materials},photos:draft.photos.map(({name,content})=>({name,content}))};
@@ -363,7 +375,7 @@ async function submitReport(task) {
   // Save the exact payload before transport. Retrying after a lost response sends the same request_id.
   try{await persistDraft();const pending=draft.pending;transportStarted=true;await rpc('submit',pending.args,pending.kwargs,pending.photos,pending.request_id);await draftDelete(draftKey(task.id));state.draft=null;state.taskId=null;$('#dialog').close();toast('Отчёт отправлен. Он появится на проверке у мастера.');await refresh(true);}
   catch(error){if(!transportStarted||error instanceof APIError&&error.status>=400&&error.status<500){draft.pending=null;}$('#form-error')&&($('#form-error').textContent=transportStarted?error.message:'Не удалось сохранить запрос до отправки. Проверьте свободное место в браузере или уменьшите количество фотографий; данные ещё не отправлены.');await persistDraft().catch(()=>{});renderPending();}
-  finally{state.busy=false;if($('#submit-report'))$('#submit-report').disabled=false;}
+  finally{state.busy=false;if($('#submit-report'))$('#submit-report').disabled=false;reportVoice?.refresh();}
 }
 function findingText(finding) { return typeof finding==='string'?finding: finding.message||finding.description||finding.text||({mandatory_after_photo_missing:'Не хватает фото после внеплановой работы',duplicate_other_task:'Фото уже использовано в другом наряде',captured_before_issue:'Фото снято до выдачи наряда',capture_time_unknown:'Время съёмки неизвестно',invalid_exif_time:'Некорректная дата съёмки'}[finding.code])||JSON.stringify(finding); }
 function aiBlock(report) {
@@ -430,7 +442,7 @@ function addUser() {
   showDialog('Добавить пользователя','Администратор · управление доступом',`<form id="user-form">${field('new-name','Имя и фамилия','text','','minlength="3" required')}${field('new-username','Логин','text','','required maxlength="100"')}${field('new-job','Должность','text','','maxlength="200"')}<div class="field"><label for="new-role">Роль</label><select id="new-role">${Object.entries(roleNames).map(([key,value])=>`<option value="${key}">${h(value)}</option>`).join('')}</select></div>${field('new-password','Начальный пароль','password','','minlength="4" maxlength="300" required autocomplete="new-password"')}<div id="form-error" class="error-text" role="alert"></div><div class="dialog-actions"><button class="primary">Создать пользователя</button></div></form>`);$('#user-form').onsubmit=event=>{event.preventDefault();mutate($('#user-form button'),'add_user',[$('#new-username').value,$('#new-name').value,$('#new-job').value,$('#new-role').value,$('#new-password').value]);};
 }
 $('#dialog').addEventListener('cancel',event=>{if(state.busy)event.preventDefault();});
-$('#dialog').addEventListener('close',()=>{clearTimeout(saveTimer);if(state.draft&&state.taskId)persistDraft().catch(()=>toast('Черновик не сохранён.',true));state.reportDialog=null;});
+$('#dialog').addEventListener('close',()=>{destroyReportVoice();clearTimeout(saveTimer);if(state.draft&&state.taskId)persistDraft().catch(()=>toast('Черновик не сохранён.',true));state.reportDialog=null;});
 window.addEventListener('pagehide',()=>{if(state.draft&&state.taskId)persistDraft().catch(()=>{});});
 window.addEventListener('offline',()=>network('offline'));window.addEventListener('online',()=>{network('connecting');refresh();});
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();state.installPrompt=event;if($('#install-app'))$('#install-app').disabled=false;});

@@ -1,0 +1,3 @@
+# Optional offline desktop dictation; leave base/server installations unchanged.
+vosk==0.3.45
+sounddevice==0.5.6

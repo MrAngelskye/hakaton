@@ -1,4 +1,5 @@
 .venv/
+voice_models/
 .webvenv/
 __pycache__/
 demo_data/

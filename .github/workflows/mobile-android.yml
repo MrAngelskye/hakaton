@@ -1,0 +1,42 @@
+name: Android APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [cloud-1.4, codex/flutter-android]
+    paths: ['mobile/**', '.github/workflows/mobile-android.yml']
+  pull_request:
+    paths: ['mobile/**', '.github/workflows/mobile-android.yml']
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.6'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+        working-directory: mobile
+      - run: dart format --output=none --set-exit-if-changed lib test
+        working-directory: mobile
+      - run: flutter analyze
+        working-directory: mobile
+      - run: flutter test
+        working-directory: mobile
+      - run: python3 tool/prepare_voice.py
+        working-directory: mobile
+      - run: flutter build apk --release
+        working-directory: mobile
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NaryadAI-Android-${{ github.sha }}
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30

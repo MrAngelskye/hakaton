@@ -1,0 +1,29 @@
+name: naryadai_mobile
+description: Android client for НарядAI, ByteX / Костанайские минералы.
+publish_to: none
+version: 1.0.1+2
+environment:
+  sdk: '>=3.11.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  http: ^1.6.0
+  flutter_secure_storage: ^11.2.0
+  shared_preferences: ^2.5.6
+  image_picker: ^1.2.4
+  path_provider: ^2.1.6
+  url_launcher: ^6.3.3
+  flutter_svg: ^2.3.0
+  uuid: ^4.6.0
+  crypto: ^3.0.7
+  intl: ^0.20.3
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/km-logo-white.svg

@@ -1,0 +1,13 @@
+.dart_tool/
+.flutter-plugins-dependencies
+.idea/
+build/
+android/.gradle/
+android/.kotlin/
+android/local.properties
+android/key.properties
+*.jks
+*.keystore
+*.iml
+.env
+android/app/src/main/assets/model-ru/

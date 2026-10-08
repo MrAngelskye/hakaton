@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS knowledge_documents(id TEXT PRIMARY KEY,title TEXT NO
             support=[dict(r) for r in c.execute('SELECT a.id,a.action,a.detail AS message,a.created,u.name AS actor FROM support_audit a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.created DESC LIMIT ?',(limit,))]
             return sorted(actions+support,key=lambda r:r['created'],reverse=True)[:limit]
     def documents(self,user):
-        if user['role'] not in ('admin','master','manager'):raise PermissionError('Нет доступа к документации.')
+        if user['role'] not in ('admin','master'):raise PermissionError('Нет доступа к документации.')
         with self.store.transaction() as c:return [dict(r) for r in c.execute('SELECT id,title,created,length(body) AS size FROM knowledge_documents ORDER BY created DESC')]
     def put_document(self,user,title,body,request_id):
         self.admin(user);title=title.strip();body=body.strip()

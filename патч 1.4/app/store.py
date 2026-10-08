@@ -16,7 +16,7 @@ STATUS = {'available':'Выдан без исполнителя', 'planned':'В�
           'aiPending':'Проверяет ИИ',
           'paused':'Приостановлен', 'submitted':'На проверке', 'approved':'Закрыт',
           'revision':'Доработка', 'cancelled':'Отменён', 'superseded':'Предыдущая версия'}
-ROLES = {'worker':'Сотрудник', 'master':'Мастер', 'admin':'Администратор','manager':'Руководитель'}
+ROLES = {'worker':'Сотрудник', 'master':'Мастер', 'admin':'Администратор'}
 SITES = ['Карьер','Дробильно-сортировочный комплекс','Обогатительная фабрика','Ремонтно-механический цех']
 EMPLOYEE_STATUS = {'free':('Свободен','employeeGreen'), 'busy':('В работе','employeeYellow'),
                    'queued':('Есть в очереди','employeeBlue'), 'off':('Не на смене','employeeGray')}
@@ -169,7 +169,7 @@ class LegacyStore:
     @staticmethod
     def require(c, actor, roles=None):
         u = c.execute('SELECT * FROM users WHERE id=? AND active=1', (actor['id'],)).fetchone()
-        if not u or (roles and u['role'] not in roles):
+        if not u or u['role'] not in ROLES or (roles and u['role'] not in roles):
             raise PermissionError('Недостаточно прав для этого действия.')
         return dict(u)
 
@@ -236,7 +236,7 @@ class LegacyStore:
     def authenticate(self,username,password,role):
         with self.transaction() as c:
             u=c.execute('SELECT * FROM users WHERE username=? AND active=1',(username.strip(),)).fetchone()
-        if not u or u['role']!=role or not hmac.compare_digest(u['password_hash'],password_hash(password,u['salt'])):
+        if role not in ROLES or not u or u['role']!=role or not hmac.compare_digest(u['password_hash'],password_hash(password,u['salt'])):
             raise ValueError('Проверьте логин, пароль и выбранную роль.')
         return {k:u[k] for k in ('id','username','name','job','role','active')}
 
@@ -244,7 +244,7 @@ class LegacyStore:
         with self.transaction() as c:
             self.require(c,actor)
             q="SELECT id,username,name,job,role,active FROM users"
-            q += " WHERE role='worker'" if workers_only else ''
+            q += " WHERE role='worker'" if workers_only else " WHERE role IN ('worker','master','admin')"
             return [dict(r) for r in c.execute(q+' ORDER BY name')]
 
     def tasks(self,actor):
@@ -485,6 +485,8 @@ class LegacyStore:
         with self.transaction() as c:
             self.require(c,actor,('admin',))
             if uid==actor['id']: raise ValueError('Нельзя отключить собственный аккаунт.')
+            target=c.execute('SELECT role FROM users WHERE id=?',(uid,)).fetchone()
+            if target and target['role'] not in ROLES:raise ValueError('Эта роль больше не поддерживается.')
             if not active and c.execute("SELECT 1 FROM tasks WHERE worker_id=? AND status NOT IN ('approved','cancelled')",(uid,)).fetchone():
                 raise ValueError('У сотрудника есть текущие наряды. Сначала завершите или отмените их.')
             c.execute('UPDATE users SET active=? WHERE id=?',(int(active),uid))

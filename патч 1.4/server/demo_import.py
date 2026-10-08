@@ -17,6 +17,7 @@ def prepare(source,target_columns,base):
     rows={};mapping={};foreign={}
     for table in ORDER:
         rows[table]=[dict(r) for r in source.execute('SELECT * FROM '+table)]
+        if table=='users':rows[table]=[row for row in rows[table] if row['role'] in ('worker','master','admin')]
         info=source.execute('PRAGMA table_info('+table+')').fetchall()
         if any(r['name']=='id' and r['pk'] for r in info):mapping[table]={r['id']:base+r['id'] for r in rows[table]}
         foreign[table]={r['from']:r['table'] for r in source.execute('PRAGMA foreign_key_list('+table+')') if r['to']=='id'}
@@ -32,7 +33,7 @@ def prepare(source,target_columns,base):
             if table=='tasks':
                 row['site']=catalog_names['sites'].get(row['site'],row['site']);row['equipment']=catalog_names['equipment'].get(row['equipment'],row['equipment'])
             if table=='report_materials':row['name_snapshot']=catalog_names['materials'].get(row['name_snapshot'],row['name_snapshot'])
-            if table=='users':row['username']='demo.'+row['username'];row['active']=0 if row['role'] in ('admin','manager','master') else row['active']
+            if table=='users':row['username']='demo.'+row['username'];row['active']=0 if row['role'] in ('admin','master') else row['active']
             if table in ('sites','brigades','defect_codes','materials'):row['code']='DEMO-'+row['code']
             if table=='equipment':row['inventory_number']='DEMO-'+row['inventory_number']
             if table=='task_photos':row['object_key']='demo_'+row['object_key'];row['is_demo']=True

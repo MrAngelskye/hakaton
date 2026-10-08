@@ -44,7 +44,7 @@ class Knowledge:
     def retrieve(self,user,message):
         start,end,explicit=period(message);tokens=words(message);ids={int(n) for n in re.findall(r'(?:нр[-\s]*|наряд\s*[№#]?\s*)(\d+)',message,re.I)}
         with self.store.transaction() as c:
-            self.store.require(c,user,('master','manager','admin'))
+            self.store.require(c,user,('master','admin'))
             names=[dict(r) for r in c.execute('SELECT id,name,username FROM users')]
             def redact(text):
                 for p in sorted(names,key=lambda x:len(x['name']),reverse=True):

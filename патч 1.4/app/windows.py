@@ -61,8 +61,8 @@ class LoginWindow(QMainWindow):
         f.addStretch();f.addWidget(label('Добро пожаловать','heading'));f.addWidget(label('Войдите в свою рабочую смену','muted'))
         f.addSpacing(10);f.addWidget(label('Выберите роль','title'))
         self.roles=QButtonGroup(self);self.roles.setExclusive(True)
-        for i,(role,title,sub) in enumerate([('worker','Сотрудник','Задачи, график и результаты'),('master','Мастер','Наряды, отчёты и команда'),('admin','Администратор','Пользователи и настройки'),('manager','Руководитель','Отчёты и рейтинг')]):
-            b=button(title+'\n'+sub,kind='role',ico={'worker':'user','master':'tool','admin':'shield','manager':'chart'}[role]);b.setCheckable(True)
+        for i,(role,title,sub) in enumerate([('worker','Сотрудник','Задачи, график и результаты'),('master','Мастер','Наряды, отчёты и команда'),('admin','Администратор','Пользователи и настройки')]):
+            b=button(title+'\n'+sub,kind='role',ico={'worker':'user','master':'tool','admin':'shield'}[role]);b.setCheckable(True)
             self.roles.addButton(b,i);b.clicked.connect(lambda checked=False,r=role:self.choose_role(r));f.addWidget(b)
         self.roles.button(0).setChecked(True);self.role='worker'
         f.addWidget(label('Логин'));self.username=QLineEdit('worker1' if self.demo else '');self.username.setObjectName('username');self.username.setPlaceholderText('Логин, выданный администратором');f.addWidget(self.username)
@@ -70,11 +70,11 @@ class LoginWindow(QMainWindow):
         self.error=label('','error',True);self.error.hide();f.addWidget(self.error)
         self.enter=button('Войти',self.login,'primary');self.enter.setObjectName('primary');self.enter.setDefault(True);f.addWidget(self.enter)
         self.password.returnPressed.connect(self.login);self.username.returnPressed.connect(self.login)
-        f.addWidget(label('Учебные аккаунты: master, worker1–worker15, admin, manager.\nУчебный пароль: 1234.' if self.demo else 'Логин и личный пароль выдаёт администратор.','muted',True));f.addWidget(motion_toggle());f.addStretch()
+        f.addWidget(label('Учебные аккаунты: master, worker1–worker15, admin.\nУчебный пароль: 1234.' if self.demo else 'Логин и личный пароль выдаёт администратор.','muted',True));f.addWidget(motion_toggle());f.addStretch()
         layout.addWidget(form,1);self.setCentralWidget(host)
     def choose_role(self,role):
         self.role=role
-        if self.demo:self.username.setText({'worker':'worker1','master':'master','admin':'admin','manager':'manager'}[role])
+        if self.demo:self.username.setText({'worker':'worker1','master':'master','admin':'admin'}[role])
         self.error.hide()
     def login(self):
         try:self.logged_in.emit(self.store.authenticate(self.username.text(),self.password.text(),self.role))
@@ -121,9 +121,9 @@ class MainWindow(QMainWindow):
         items=[('overview','grid','Смена'),('tasks','tasks','Наряды'),('reports','report','Отчёты'),('team','team','Команда'),('team_schedule','calendar','График команды'),('costs','chart','Материалы'),('analytics','chart','Сводка за период')]
         if user['role']=='worker':items=[('tasks','tasks','Задачи'),('schedule','calendar','График'),('reports','report','Отчёты'),('profile','user','Профиль')]
         elif user['role']=='admin':items=[('overview','grid','Обзор'),('ai_chat','spark','Чат с ИИ'),('integrations','shield','Веб-панель управления')]
-        elif user['role'] in ('master','manager'):items += [('ai_chat','spark','Чат с аналитикой')]
+        elif user['role']=='master':items += [('ai_chat','spark','Чат с аналитикой')]
         if user['role']=='master':items += [('references','tasks','Справочники')]
-        if user['role'] in ('master','manager'):items += [('equipment','tasks','Оборудование')]
+        if user['role']=='master':items += [('equipment','tasks','Оборудование')]
         for key,ico,title in items:
             b=button(title,lambda k=key:self.navigate(k),'nav',ico);b.setCheckable(True);self.nav[key]=b;self.side.addWidget(b)
         if user['role'] in ('master','admin'):

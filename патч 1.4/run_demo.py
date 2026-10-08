@@ -22,7 +22,7 @@ def main():
     app=create_app(settings)
     print(f'Демонстрационные данные: {args.data_dir.resolve()}')
     print(f'Откройте http://{args.host}:{args.port}. ИИ отключён: приёмка вручную.')
-    print('Демо-аккаунты: master / worker1 / admin / manager, пароль '+('DemoOnly-2026!' if args.dataset else '1234')+'. Для предприятия используйте настроенный HTTPS-сервер.')
+    print('Демо-аккаунты: master / worker1 / admin, пароль '+('DemoOnly-2026!' if args.dataset else '1234')+'. Для предприятия используйте настроенный HTTPS-сервер.')
     uvicorn.run(app,host=args.host,port=args.port)
 
 

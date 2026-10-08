@@ -8,7 +8,7 @@
 
 ПК: install.bat, затем start.bat.
 Браузер: install_web.bat, затем start_web.bat.
-Маленькая новая демо-база: master / worker1 / admin / manager, пароль 1234.
+Маленькая новая демо-база: master / worker1 / admin, пароль 1234.
 
 Полный учебный набор: start_web.bat --dataset --data-dir demo_dataset
 Откройте http://127.0.0.1:8841. Пароль полного набора DemoOnly-2026!

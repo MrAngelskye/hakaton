@@ -74,7 +74,6 @@ class CaseWorkflow:
                         definition=definition.replace("priority IN ('urgent','normal')","priority IN ('urgent','high','normal','scheduled')")
                         definition=definition.replace("status IN ('available','planned','inProgress','paused','aiPending','submitted','approved','revision','cancelled')","status IN ('available','planned','accepted','queued','rejected','inProgress','paused','aiPending','submitted','approved','revision','cancelled')")
                         definition=definition.replace('start>=0 AND start<24','start>=0 AND start<48').replace('start+duration<=24','start+duration<=48')
-                    elif table=='users':definition=definition.replace("role IN ('worker','master','admin')","role IN ('worker','master','admin','manager')")
                     else:definition=definition.replace('start>=0 AND start<"end" AND "end"<24','start>=0 AND start<24 AND "end">start AND "end"<=start+24')
                     if definition==original:continue
                     extras=[r['sql'] for r in raw.execute("SELECT sql FROM sqlite_master WHERE tbl_name=? AND type IN ('trigger','index') AND sql IS NOT NULL",(table,))]
@@ -116,7 +115,7 @@ class CaseWorkflow:
             if c.execute('SELECT count(*) FROM users').fetchone()[0]:return
             for i,name in enumerate(SITES,1):c.execute('INSERT INTO sites(code,name) VALUES(?,?) ON CONFLICT(name) DO NOTHING',(f'S{i:02}',name))
             for i in range(1,4):c.execute('INSERT INTO brigades(code,name) VALUES(?,?) ON CONFLICT(code) DO NOTHING',(f'B{i:02}',f'Демо бригада {i}'))
-            accounts=[('master','Демо мастер 1','Мастер смены','master'),('master2','Демо мастер 2','Мастер смены','master')]+[(f'worker{i}',f'Демо сотрудник {i:02}',['Механик','Электрик','Слесарь'][(i-1)%3],'worker') for i in range(1,16)]+[('admin','Администратор','Управление доступом','admin'),('manager','Демо руководитель','Руководитель','manager')]
+            accounts=[('master','Демо мастер 1','Мастер смены','master'),('master2','Демо мастер 2','Мастер смены','master')]+[(f'worker{i}',f'Демо сотрудник {i:02}',['Механик','Электрик','Слесарь'][(i-1)%3],'worker') for i in range(1,16)]+[('admin','Администратор','Управление доступом','admin')]
             for username,name,job,role in accounts:
                 salt=secrets.token_hex(16)
                 c.execute('INSERT INTO users(username,name,job,role,salt,password_hash,specialty,brigade_id) VALUES(?,?,?,?,?,?,?,?)',
@@ -140,7 +139,7 @@ class CaseWorkflow:
     def equipment_history(self,actor,equipment_id):
         if type(equipment_id) is not int:raise ValueError('Укажите ID оборудования.')
         with self.transaction() as c:
-            self.require(c,actor,('master','admin','manager'))
+            self.require(c,actor,('master','admin'))
             equipment=c.execute('SELECT * FROM equipment WHERE id=?',(equipment_id,)).fetchone()
             if not equipment:raise ValueError('Оборудование не найдено.')
             tasks=[t for t in self.tasks(actor) if t['equipment_id']==equipment_id]
@@ -197,7 +196,7 @@ class CaseWorkflow:
     def users(self,actor,workers_only=False):
         with self.transaction() as c:
             self.require(c,actor)
-            rows=[dict(r) for r in c.execute('SELECT id,username,name,job,role,active,specialty,grade,brigade_id FROM users'+(" WHERE role='worker'" if workers_only else '')+' ORDER BY name')]
+            rows=[dict(r) for r in c.execute('SELECT id,username,name,job,role,active,specialty,grade,brigade_id FROM users'+(" WHERE role='worker'" if workers_only else " WHERE role IN ('worker','master','admin')")+' ORDER BY name')]
             from app.production_data import enrich_users
             return enrich_users(c,rows)
 
@@ -562,7 +561,7 @@ class CaseWorkflow:
 
     def assistant_context(self,actor):
         with self.transaction() as c:
-            self.require(c,actor,('master','manager','admin'))
+            self.require(c,actor,('master','admin'))
             end=(date.today()+timedelta(days=1)).isoformat();start=(date.today()-timedelta(days=6)).isoformat()
             analytics=self.analytics(actor,start,end);people=self.users(actor,True);statuses=self.availability(actor,date.today().isoformat())[2]
             return {'period':{'start':start,'end_exclusive':end},'counts':analytics['counts'],
@@ -635,7 +634,6 @@ class CaseWorkflow:
         clock=moment(at) if at else datetime.now(TZ).replace(tzinfo=None);settings=getattr(self,'settings',None)
         normal=getattr(settings,'acceptance_minutes',10);urgent=getattr(settings,'urgent_acceptance_minutes',3);remind=getattr(settings,'deadline_reminder_minutes',30);repeat=getattr(settings,'overdue_repeat_minutes',30)
         with self.transaction(write=True) as c:
-            managers=[r['id'] for r in c.execute("SELECT id FROM users WHERE role='manager' AND active=1")]
             assignments=defaultdict_list(c.execute('SELECT task_id,worker_id FROM task_assignments WHERE ended_at IS NULL'),'task_id','worker_id')
             rows=c.execute("SELECT * FROM tasks WHERE status NOT IN ('approved','cancelled','aiPending','submitted')").fetchall()
             for t in rows:
@@ -646,12 +644,12 @@ class CaseWorkflow:
                 due=moment(t['deadline']);payload={'title':t['title'],'deadline':t['deadline'],'status':t['status'],'priority':t['priority']}
                 version=f'{t["id"]}:{t["assignment_version"]}'
                 if t['status'] in ('available','planned') and not t['accepted_at'] and clock-moment(t['issued_at'])>=timedelta(minutes=urgent if t['priority']=='urgent' else normal):
-                    for uid in {t['master_id'],*managers}:self._notify(c,uid,t['id'],'unaccepted',f'unaccepted:{version}:{uid}',payload)
+                    for uid in {t['master_id']}:self._notify(c,uid,t['id'],'unaccepted',f'unaccepted:{version}:{uid}',payload)
                 if timedelta(0)<due-clock<=timedelta(minutes=remind):
                     for uid in people:self._notify(c,uid,t['id'],'deadline_reminder',f'reminder:{version}:{t["deadline"]}:{uid}',payload)
                 if due<=clock:
                     bucket=int((clock-due).total_seconds()//(repeat*60))
-                    for uid in people|set(managers):self._notify(c,uid,t['id'],'overdue',f'overdue:{version}:{t["deadline"]}:{bucket}:{uid}',payload)
+                    for uid in people:self._notify(c,uid,t['id'],'overdue',f'overdue:{version}:{t["deadline"]}:{bucket}:{uid}',payload)
 
             # One next job per free employee, including brigade members and night shifts.
             busy=set();candidates={}

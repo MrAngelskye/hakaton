@@ -166,10 +166,11 @@ class Case1Tests(unittest.TestCase):
         kwargs={'work':'Проверено состояние оборудования','result':'Контроль выполнен','defect':self.catalog['defect_codes'][0]['code'],'hours':1,'materials':[]}
         self.rpc('submit',self.worker,args=[tid],kwargs=kwargs,photos=[image_data(exif_time='2099:01:01 10:00:00')],expected=400)
         self.rpc('submit',self.worker,args=[tid],kwargs=kwargs,photos=[image_data(),image_data()],expected=400)
-    def test_manager_is_read_only(self):
-        username='test_'+uuid.uuid4().hex[:16];self.rpc('add_user',self.admin,args=[username,'Демо руководитель','Руководитель','manager','test-password']);manager,person=self.login(username,'test-password','manager')
-        self.rpc('create_task',manager,kwargs=self.task_fields(),expected=403)
-        result=self.client.get('/api/analytics?start='+date.today().isoformat()+'&end='+(date.today()+timedelta(days=1)).isoformat(),headers=manager);self.assertEqual(result.status_code,200,result.text)
+    def test_manager_role_is_removed(self):
+        username='test_'+uuid.uuid4().hex[:16]
+        self.rpc('add_user',self.admin,args=[username,'Удалённая роль','Участок','manager','test-password'],expected=400)
+        self.assertEqual(self.client.post('/api/login',json={'username':'admin','password':'1234','role':'manager'}).status_code,400)
+        self.assertNotIn('manager',{u['role'] for u in self.store.users(self.a)})
     def test_ai_norms_privacy_and_human_closure(self):
         norm=self.rpc('catalog_upsert',self.master,args=['work_norms',{'equipment_type':self.equipment['equipment_type'],'kind':'Внеплановая','defect_code_id':None,'hours':2,'complexity':2,'active':1}])
         material=self.catalog['materials'][0];self.rpc('set_material_norm',self.master,args=[norm,material['id'],.5])

@@ -30,7 +30,7 @@ class AdminChat:
 
     @staticmethod
     def admin(user):
-        if user['role'] not in ('master','manager','admin'):raise PermissionError('Чат с аналитикой доступен мастеру, руководителю и администратору.')
+        if user['role'] not in ('master','admin'):raise PermissionError('Чат с аналитикой доступен мастеру и администратору.')
 
     def conversation(self,c,user,cid=''):
         self.admin(user)
@@ -104,7 +104,7 @@ class AdminChat:
         with self.store.transaction() as c:
             c.execute('BEGIN IMMEDIATE');self.expire(c)
             if not self.settings.ai_enabled:return None
-            row=c.execute("SELECT r.*,u.id AS owner_id,u.role AS owner_role FROM chat_requests r JOIN chat_conversations t ON t.id=r.conversation_id JOIN users u ON u.id=t.user_id WHERE r.status='queued' AND u.active=1 AND u.role IN ('master','manager','admin') ORDER BY r.created,r.id LIMIT 1").fetchone()
+            row=c.execute("SELECT r.*,u.id AS owner_id,u.role AS owner_role FROM chat_requests r JOIN chat_conversations t ON t.id=r.conversation_id JOIN users u ON u.id=t.user_id WHERE r.status='queued' AND u.active=1 AND u.role IN ('master','admin') ORDER BY r.created,r.id LIMIT 1").fetchone()
             if not row:return None
             lease=secrets.token_urlsafe(32)
             c.execute("UPDATE chat_requests SET status='processing',lease_token=?,lease_until=? WHERE id=?",(lease,time.time()+660,row['id']))

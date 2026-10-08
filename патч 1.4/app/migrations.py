@@ -71,10 +71,12 @@ class DB:
 
 def migrate(raw, postgres=False):
     from app.production_schema import ensure_reference_schema
+    from app.roles_migration import ensure_supported_roles
     db=DB(raw,postgres)
     db.ddl(TABLES.split(';')[0])
     if db.execute('SELECT 1 FROM schema_migrations WHERE version=?',(VERSION,)).fetchone():
         ensure_reference_schema(db)
+        ensure_supported_roles(db)
         return False
     if postgres:
         # Old baseline triggers tolerate strings but lose facts. Replaced below.
@@ -103,6 +105,7 @@ def migrate(raw, postgres=False):
         db.execute((Path(__file__).parent/'migration_v2_pg.sql').read_text(encoding='utf-8'))
     db.execute('INSERT INTO schema_migrations(version,description,applied_at) VALUES(?,?,CURRENT_TIMESTAMP)',(VERSION,'Case 1 workflow, units, facts, assignment history and durable notifications'))
     ensure_reference_schema(db)
+    ensure_supported_roles(db)
     return True
 
 

@@ -75,8 +75,8 @@ def load_reference_package(path):
             raise ValueError('Открытый каталог не подтверждает закупки, цены или остатки предприятия.')
     for row in payload['accounts']:
         # Accept old exported packages too; newly generated logins have no km. prefix.
-        if row['role'] not in ('worker', 'master', 'admin', 'manager') or not re.fullmatch(r'(?:km\.)?[a-z]+\.\d{2}', row['username']):
-            raise ValueError('Используйте отдельные логины worker.01, master.01, admin.01 или manager.01.')
+        if row['role'] not in ('worker', 'master', 'admin') or not re.fullmatch(r'(?:km\.)?[a-z]+\.\d{2}', row['username']):
+            raise ValueError('Используйте отдельные логины worker.01, master.01, admin.01.')
         if row.get('identity_status') != 'unassigned_anonymized_profile':
             raise ValueError('Публичные имена сотрудников не импортируются как учётные записи.')
         if row.get('identity_origin') not in (None, 'fictional'):

@@ -51,7 +51,7 @@ class ProductionDataTests(unittest.TestCase):
     def test_default_bootstrap_has_only_staff_and_no_operational_catalogs(self):
         credentials=make_credentials(self.payload)
         result=bootstrap(self.store,self.payload,credentials)
-        self.assertEqual(result['users'],19)
+        self.assertEqual(result['users'],18)
         with self.store.transaction() as c:
             for table in ('tasks','reports','materials','sites','equipment','shifts','shift_rules','defect_codes','brigades','training_photos','work_order_templates'):
                 self.assertEqual(c.execute('SELECT count(*) FROM '+table).fetchone()[0],0,table)
@@ -59,8 +59,8 @@ class ProductionDataTests(unittest.TestCase):
             self.assertTrue(self.store.authenticate(row['username'],row['password'],row['role']))
     def test_verified_refs_and_unique_credentials_without_fake_history(self):
         result,credentials=self.populate()
-        self.assertEqual(result['users'],19)
-        self.assertEqual(len({r['password'] for r in credentials}),19)
+        self.assertEqual(result['users'],18)
+        self.assertEqual(len({r['password'] for r in credentials}),18)
         for row in credentials:self.assertTrue(self.store.authenticate(row['username'],row['password'],row['role']))
         with self.store.transaction() as c:
             for table in ('tasks','reports','equipment','shift_rules','shifts','brigades'):

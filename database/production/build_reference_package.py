@@ -8,7 +8,6 @@ CASE = 'CASE1-REQUIREMENTS'
 # Invented display names, not names of company employees. Login identifiers stay stable.
 FICTIONAL_NAMES = [
     'Белозёров Артём Сергеевич',
-    'Громов Виктор Алексеевич',
     'Корнеев Павел Андреевич',
     'Лебедева Марина Викторовна',
     'Соколов Дмитрий Игоревич',
@@ -83,7 +82,6 @@ def build():
             'job':job,'role':role,'source_id':source,'identity_status':'unassigned_anonymized_profile',
             'identity_origin':'fictional','note':FICTIONAL_IDENTITY_NOTE})
     account('admin',1,'Администратор системы',CASE)
-    account('manager',1,'Руководитель участка',CASE)
     for i,key in enumerate(('master_electric','shift_senior_master'),1):
         row=by_job[key];account('master',i,row['name'],row['source_id'])
     worker_jobs=[r for r in raw['job_titles'] if r['code'] not in ('master_electric','shift_senior_master')]

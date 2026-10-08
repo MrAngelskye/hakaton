@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS materials (
 );
 CREATE TABLE IF NOT EXISTS users (
   id BIGSERIAL PRIMARY KEY, username TEXT UNIQUE NOT NULL, name TEXT NOT NULL, job TEXT NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('worker','master','admin','manager')),
+  role TEXT NOT NULL CHECK (role IN ('worker','master','admin')),
   salt TEXT NOT NULL, password_hash TEXT NOT NULL,
   active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1)),
   specialty TEXT NOT NULL DEFAULT '', grade INTEGER NOT NULL DEFAULT 1 CHECK (grade BETWEEN 1 AND 6),

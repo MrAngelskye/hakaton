@@ -50,7 +50,7 @@ def main():
         if process.returncode or not result.is_file():
             raise RuntimeError(f'{name} failed its frozen Windows smoke test')
         print(result.read_text(encoding='utf-8'), flush=True)
-    archive = DIST / 'NaryadAI-Portable-1.8.zip'
+    archive = DIST / 'NaryadAI-Portable-1.8.1.zip'
     with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=6) as output:
         for path in sorted(runtime.rglob('*')):
             if path.is_file():
@@ -68,7 +68,7 @@ def main():
     if os.environ.get('GITHUB_ACTIONS') == 'true':
         # Isolated runner only: don't alter a developer's installed app/registry.
         installed = BUILD_ROOT / 'installed'
-        subprocess.run([str(DIST / 'NaryadAI-Setup-1.8.exe'), '/VERYSILENT', '/SUPPRESSMSGBOXES',
+        subprocess.run([str(DIST / 'NaryadAI-Setup-1.8.1.exe'), '/VERYSILENT', '/SUPPRESSMSGBOXES',
                         '/NORESTART', '/SP-', '/DIR=' + str(installed)], check=True, timeout=120)
         for name in ('NaryadAI.exe', 'NaryadAI-AI.exe', 'NaryadAI-Diagnostics.exe'):
             result = BUILD / ('installed-' + name + '.smoke.json')
@@ -88,7 +88,7 @@ def main():
         assert saved.read_text(encoding='utf-8') == '{"server":"https://example.com"}', 'Uninstaller removed user settings'
         saved.unlink()
         (BUILD / 'installer.smoke.json').write_text('{"ok":true,"install":true,"uninstall":true,"settings_preserved":true}', encoding='utf-8')
-    files = [DIST / 'NaryadAI-Setup-1.8.exe', archive]
+    files = [DIST / 'NaryadAI-Setup-1.8.1.exe', archive]
     (DIST / 'SHA256SUMS.txt').write_text(''.join(hashlib.sha256(path.read_bytes()).hexdigest() + '  ' + path.name + '\n' for path in files), encoding='utf-8')
     (ROOT / 'dist').mkdir(exist_ok=True)
     for path in files + [DIST / 'SHA256SUMS.txt']:

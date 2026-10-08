@@ -37,6 +37,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p test_packaged.py -v
           python -m unittest discover -s tests -p test_training_diagnostics.py -v
+          python -m unittest discover -s tests -p test_role_retirement.py -v
       - name: Build and test Windows executables
         run: python tools/build_windows.py
       - name: Save binaries and smoke test results
@@ -45,8 +46,8 @@ jobs:
         with:
           name: NaryadAI-Windows
           path: |
-            патч 1.4/dist/NaryadAI-Setup-1.8.exe
-            патч 1.4/dist/NaryadAI-Portable-1.8.zip
+            патч 1.4/dist/NaryadAI-Setup-1.8.1.exe
+            патч 1.4/dist/NaryadAI-Portable-1.8.1.zip
             патч 1.4/dist/SHA256SUMS.txt
             патч 1.4/build/windows/*.smoke.json
           retention-days: 14
@@ -55,9 +56,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          $tag = "windows-1.8-$($env:GITHUB_SHA.Substring(0, 7))"
+          $tag = "windows-1.8.1-$($env:GITHUB_SHA.Substring(0, 7))"
           $notes = @"
-          Windows 10/11 x64. Python is included. Install NaryadAI-Setup-1.8.exe or unpack NaryadAI-Portable-1.8.zip.
+          Windows 10/11 x64. Python is included. Install NaryadAI-Setup-1.8.1.exe or unpack NaryadAI-Portable-1.8.1.zip.
           Run NaryadAI.exe for the shared cloud application.
           Run NaryadAI-AI.exe on the PC with Ollama and AnythingLLM; choose the folder containing your existing worker_config.json and server_config.json once. Local AI settings are saved in your user profile; database credentials are not copied.
           Run NaryadAI-Diagnostics.exe to measure cloud, Ollama and AnythingLLM delays.
@@ -65,4 +66,4 @@ jobs:
           All three packaged executables passed offline Windows smoke tests before and after installation. The installer/uninstaller preserved user settings. Real AI performance depends on the local model and hardware.
           "@
           $notes | Set-Content -Encoding utf8 release-notes.txt
-          gh release create $tag dist/NaryadAI-Setup-1.8.exe dist/NaryadAI-Portable-1.8.zip dist/SHA256SUMS.txt --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "НарядAI 1.8 — Windows EXE" --notes-file release-notes.txt
+          gh release create $tag dist/NaryadAI-Setup-1.8.1.exe dist/NaryadAI-Portable-1.8.1.zip dist/SHA256SUMS.txt --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "НарядAI 1.8.1 — Windows EXE" --notes-file release-notes.txt

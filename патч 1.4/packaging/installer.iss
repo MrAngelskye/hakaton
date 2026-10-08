@@ -1,4 +1,4 @@
-#define AppVersion "1.8"
+#define AppVersion "1.8.1"
 #ifndef DistributionDir
   #define DistributionDir "..\dist"
 #endif
@@ -14,7 +14,7 @@ DefaultDirName={localappdata}\Programs\NaryadAI
 DefaultGroupName=НарядAI
 PrivilegesRequired=lowest
 OutputDir=..\dist
-OutputBaseFilename=NaryadAI-Setup-1.8
+OutputBaseFilename=NaryadAI-Setup-1.8.1
 SetupIconFile={#IconFile}
 UninstallDisplayIcon={app}\NaryadAI.exe
 ArchitecturesAllowed=x64compatible

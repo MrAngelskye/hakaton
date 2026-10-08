@@ -48,7 +48,7 @@ def main():
     try:info=import_demo(args.data_dir)
     except (ValueError,OSError,zipfile.BadZipFile) as e:p.error(str(e))
     print(json.dumps(info,ensure_ascii=False,indent=2))
-    print('Учебные логины master, master2, worker1–worker15, admin, manager; пароль DemoOnly-2026!')
+    print('Учебные логины master, master2, worker1–worker15, admin; пароль DemoOnly-2026!')
     print('При запуске приложения автоматически применяется миграция 002.')
 
 if __name__=='__main__':main()

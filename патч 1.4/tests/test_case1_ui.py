@@ -28,8 +28,8 @@ class UISmoke(unittest.TestCase):
         details=TaskDetails(self.store,self.worker,tid,self.parent);self.assertTrue(any('Принять' in widget.text() for widget in details.findChildren(__import__('PySide6.QtWidgets',fromlist=['QPushButton']).QPushButton)))
         report=SubmitReport(self.store,self.worker,self.store.task(self.worker,tid),self.parent);report.add_material();self.assertIsNotNone(report.table.cellWidget(0,0));self.assertTrue(report.table.item(0,2).text());self.assertGreater(report.defect.count(),4)
         details.close();report.close();d.close()
-    def test_login_manager_and_main_pages(self):
-        login=LoginWindow(self.store);self.assertEqual(len(login.roles.buttons()),4);login.choose_role('manager');self.assertEqual(login.username.text(),'manager');login.close();login.deleteLater()
+    def test_login_three_roles_and_main_pages(self):
+        login=LoginWindow(self.store);self.assertEqual(len(login.roles.buttons()),3);login.choose_role('master');self.assertEqual(login.username.text(),'master');login.close();login.deleteLater()
         window=MainWindow(self.store,self.master)
         for page in ('overview','tasks','reports','team','team_schedule','costs','analytics'):window.navigate(page)
         window.close();window.deleteLater()

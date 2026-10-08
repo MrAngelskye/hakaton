@@ -15,7 +15,7 @@ class ConsolidatedAPI(unittest.TestCase):
     def setUpClass(cls):
         cls.temp=tempfile.TemporaryDirectory();cls.app=create_app(Settings(seed_demo=True,data_dir=Path(cls.temp.name),ai_enabled=False));cls.client=TestClient(cls.app)
         cls.headers={}
-        for role,login in [('master','master'),('worker','worker1'),('worker2','worker2'),('admin','admin'),('manager','manager')]:
+        for role,login in [('master','master'),('worker','worker1'),('worker2','worker2'),('admin','admin')]:
             r=cls.client.post('/api/login',json={'username':login,'password':'1234','role':'worker' if role=='worker2' else role});assert r.status_code==200,r.text
             cls.headers[role]={'Authorization':'Bearer '+r.json()['token']}
         cls.store=cls.app.state.store
@@ -30,7 +30,7 @@ class ConsolidatedAPI(unittest.TestCase):
             self.assertEqual(self.client.get(url).status_code,200,url)
         self.assertEqual(self.client.get('/api/catalogs').status_code,401)
         self.assertEqual(self.client.get('/api/snapshot').status_code,401)
-        self.assertEqual(self.client.get('/health').json()['version'],'1.8')
+        self.assertEqual(self.client.get('/health').json()['version'],'1.8.1')
     def test_web_payload_and_complete_cycle(self):
         cat=self.client.get('/api/catalogs',headers=self.headers['master']).json();e=cat['equipment'][0];s=next(s for s in cat['sites'] if s['id']==e['site_id'])
         day=(date.today()+timedelta(days=20)).isoformat()
@@ -44,7 +44,6 @@ class ConsolidatedAPI(unittest.TestCase):
         self.assertEqual(self.call('master','review',[rid,True,85,'Результат проверен мастером']).status_code,200)
         hist=self.call('master','equipment_history',[e['id']]);self.assertEqual(hist.status_code,200,hist.text);self.assertIn(tid,[t['id'] for t in hist.json()['result']['tasks']])
         self.assertEqual(self.call('worker','equipment_history',[e['id']]).status_code,403)
-        denied=self.call('manager','create_task',kwargs=payload);self.assertEqual(denied.status_code,403)
     def test_catalog_editor_contract(self):
         values={'code':'CONSOLIDATED','name':'Учебный участок объединения'}
         r=self.call('admin','catalog_upsert',['sites',values,None]);self.assertEqual(r.status_code,200,r.text)

@@ -63,6 +63,7 @@ abstract class Backend {
     List<dynamic> args = const [],
     Json kwargs = const {},
     List<Json> photos = const [],
+    String? operationContext,
   });
   Future<Uint8List> photo(String key);
   Future<void> logout();
@@ -192,6 +193,7 @@ class ServerApi implements Backend {
     List<dynamic> args = const [],
     Json kwargs = const {},
     List<Json> photos = const [],
+    String? operationContext,
   }) async {
     const readMethods = {
       'task',
@@ -225,6 +227,7 @@ class ServerApi implements Backend {
     }
     final payload = {
       'method': method,
+      'operationContext': operationContext,
       'args': args,
       'kwargs': kwargs,
       'photos': photos,

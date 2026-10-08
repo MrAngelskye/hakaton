@@ -347,6 +347,7 @@ class DemoApi implements Backend {
     List<dynamic> args = const [],
     Json kwargs = const {},
     List<Json> photos = const [],
+    String? operationContext,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 300));
     final tasks = (data['tasks'] as List).cast<Json>();

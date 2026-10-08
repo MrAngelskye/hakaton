@@ -161,11 +161,31 @@ class AppController extends ChangeNotifier {
     busy = true;
     changed();
     try {
+      const taskMethods = {
+        'transition',
+        'submit',
+        'claim',
+        'reassign_task',
+        'change_priority',
+        'reschedule',
+      };
+      final task = taskMethods.contains(method) && args.isNotEmpty
+          ? snapshot?.task(integer(args.first))
+          : null;
+      final context = task == null
+          ? null
+          : fingerprint({
+              'id': task['id'],
+              'status': task['status'],
+              'updated_at': task['updated_at'],
+              'report_id': snapshot?.report(integer(task['id']))?['id'],
+            });
       final result = await api!.call(
         method,
         args: args,
         kwargs: kwargs,
         photos: photos,
+        operationContext: context,
       );
       await refresh();
       return result;

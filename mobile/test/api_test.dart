@@ -56,6 +56,45 @@ void main() {
     ).call('free_slots', args: [1, '2026-10-08']);
     expect(store.values, isEmpty);
   });
+  test('same report after a new revision gets a new request id', () async {
+    final store = MemoryStore();
+    final ids = <String>[];
+    var fail = true;
+    final client = MockClient((request) async {
+      if (request.method == 'GET') return http.Response('{}', 200);
+      ids.add(object(jsonDecode(request.body))['request_id']);
+      if (fail) {
+        fail = false;
+        throw http.ClientException('lost response');
+      }
+      return http.Response('{"result":502}', 200);
+    });
+    final c = AppController(store);
+    c.api = ServerApi(session, store, client: client);
+    c.snapshot = const Snapshot({
+      'tasks': [
+        {'id': 14, 'status': 'inProgress', 'updated_at': '2026-10-08T09:00:00'},
+      ],
+    });
+    await expectLater(
+      c.mutate('submit', args: [14], kwargs: {'work': 'same report'}),
+      throwsA(isA<ApiException>()),
+    );
+    c.snapshot = const Snapshot({
+      'tasks': [
+        {'id': 14, 'status': 'revision', 'updated_at': '2026-10-08T11:00:00'},
+      ],
+      'reports': [
+        {'id': 501, 'task_id': 14, 'status': 'revision'},
+      ],
+    });
+    expect(
+      await c.mutate('submit', args: [14], kwargs: {'work': 'same report'}),
+      502,
+    );
+    expect(ids[0], isNot(ids[1]));
+    c.dispose();
+  });
   test(
     'definitive validation failure clears receipt, changed payload gets new id',
     () async {

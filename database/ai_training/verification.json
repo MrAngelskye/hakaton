@@ -1,0 +1,78 @@
+{
+  "synthetic": true,
+  "date": "2026-10-08",
+  "dataset_validation": {
+    "valid": true,
+    "errors": 0,
+    "answers_checked": 500
+  },
+  "tests": {
+    "passed": 12,
+    "failed": 0,
+    "command": "python -m unittest discover -s database/ai_training -p test_validate_dataset.py"
+  },
+  "archive_integrity": {
+    "valid": true,
+    "file_hashes_checked": 93
+  },
+  "postgresql": {
+    "valid": true,
+    "engine": "PGlite 0.5.8 PostgreSQL-compatible WASM",
+    "native_server_deployment_tested": false,
+    "public_tables": 0,
+    "table_counts": {
+      "sites": 4,
+      "people": 19,
+      "brigades": 3,
+      "equipment": 64,
+      "materials": 40,
+      "fault_codes": 20,
+      "work_norms": 21,
+      "shifts": 184,
+      "work_orders": 500,
+      "reports": 500,
+      "material_usage": 790,
+      "status_events": 3165,
+      "downtime_intervals": 435,
+      "photo_evidence": 644,
+      "answer_keys": 500
+    },
+    "analytics": {
+      "conveyor": {
+        "id": "SYN-f6c03c11053643d49ec1f58b0a127d71",
+        "name": "Конвейер — учебный объект 09",
+        "failures": 46,
+        "peer_mean": "4.57"
+      },
+      "simulated_rework": {
+        "username": "worker.04",
+        "name": "Орлов Андрей Михайлович",
+        "orders": 148,
+        "rework": 128,
+        "simulated_rework_percent": "86.49"
+      },
+      "target_repeat_faults": 45,
+      "shifts": [
+        {
+          "shift_code": "day",
+          "intervals": 223,
+          "mean_minutes": "74.97",
+          "over_150_minutes": 3
+        },
+        {
+          "shift_code": "late",
+          "intervals": 212,
+          "mean_minutes": "96.92",
+          "over_150_minutes": 47
+        }
+      ]
+    }
+  },
+  "protected_production_artifacts_unchanged": 3,
+  "model_trained": false,
+  "limitations": [
+    "Synthetic rule labels; not expert ground truth.",
+    "No real repair photographs; no visual defect evaluation.",
+    "Native PostgreSQL deployment on the team server has not been tested."
+  ]
+}

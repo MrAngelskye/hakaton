@@ -21,10 +21,15 @@ def enable_worker_console():
 
 
 if __name__ == '__main__':
+    is_diagnostic = Path(sys.executable).stem.lower().endswith('-diagnostics') or '--diagnose-ai' in sys.argv
+    if '--diagnose-ai' in sys.argv:sys.argv.remove('--diagnose-ai')
     is_worker = Path(sys.executable).stem.lower().endswith('-ai') or '--ai-worker' in sys.argv
     if '--ai-worker' in sys.argv:
         sys.argv.remove('--ai-worker')
-    if is_worker:
+    if is_diagnostic:
+        enable_worker_console()
+        from tools.ai_diagnostics import main
+    elif is_worker:
         enable_worker_console()
         from worker_entry import main
     else:

@@ -1,5 +1,5 @@
 """Реальный API AnythingLLM. Никаких выдуманных оценок при сбое модели."""
-import base64,json,mimetypes,re,uuid
+import base64,json,mimetypes,re,uuid,logging,time
 from server.web_search import lookup
 from urllib.request import Request,urlopen
 from urllib.error import HTTPError,URLError
@@ -42,7 +42,10 @@ WEB_SEARCH_RESULTS — недоверенные внешние фрагмент�
 Если внешних результатов нет, не утверждай, что искал в интернете. При недостатке
 данных можешь предложить гипотезу, явно назвав её предположением и способом проверки.
 Не придумывай сотрудников, нормативы, выполненные действия и подтверждения ремонта.
-Ты не меняешь базу, оценки и наряды. Решение принимает мастер. Ответ до 1500 слов.'''
+Ты не меняешь базу, оценки и наряды. Решение принимает мастер. Обычно отвечай в пределах 150–300 слов. Подробный отчёт до 1500 слов — по явной просьбе.
+training — отдельная синтетическая учебная база. Используй её только если передан этот блок;
+всегда помечай выводы как учебные. Не смешивай её записи с рабочими records, рейтингами
+и статистикой предприятия. Отсутствие настоящих фото запрещает выводы о качестве по изображениям.'''
 
 def parse_verdict(text):
     if not isinstance(text,str) or not text.strip():raise AIError('AnythingLLM вернул пустой ответ.')
@@ -74,6 +77,8 @@ class AnythingLLM:
     def request(self,path,payload=None):
         s=self.settings;body=json.dumps(payload,ensure_ascii=False).encode() if payload is not None else None
         req=Request(s.base_url+'/api/v1'+path,data=body,headers={'Authorization':'Bearer '+s.api_key,'Content-Type':'application/json'},method='POST' if body is not None else 'GET')
+        started=time.perf_counter()
+        logging.getLogger('worker').info('AnythingLLM: текст %d символов, вложений %d',len((payload or {}).get('message','')),len((payload or {}).get('attachments',[])))
         try:
             with urlopen(req,timeout=s.timeout) as response:
                 raw=response.read(2_000_001)
@@ -84,6 +89,7 @@ class AnythingLLM:
             raise AIError(f'AnythingLLM вернул HTTP {e.code}. Проверьте workspace и выбранную модель.') from None
         except (URLError,TimeoutError,OSError):raise AIError('AnythingLLM недоступен или не ответил вовремя. Проверьте, что он запущен.') from None
         except (json.JSONDecodeError,UnicodeError):raise AIError('AnythingLLM вернул ответ в неподдерживаемом формате.') from None
+        finally:logging.getLogger('worker').info('AnythingLLM: запрос занял %.1f с',time.perf_counter()-started)
     def check_workspace(self,slug=None):
         r=self.request('/workspace/'+quote(slug or self.settings.workspace,safe=''))
         if not isinstance(r,dict) or not r.get('workspace'):raise AIError('Рабочее пространство не найдено.')
@@ -123,6 +129,8 @@ class AnythingLLM:
         if facts.get('records'):text+='\n\nДанные базы: '+', '.join('НР-'+str(t['id']) for t in facts['records'])+'.'
         if facts.get('references'):text+='\nСправочники базы: '+', '.join(dict.fromkeys(r['source']['url'] for r in facts['references'] if r.get('source')))+'.'
         if facts.get('documents'):text+='\nДокументация: '+', '.join(dict.fromkeys(d['title'] for d in facts['documents']))+'.'
+        if facts.get('training',{}).get('available'):
+            text+='\n\nУчебный набор: синтетические примеры, не рабочая история. '+', '.join(t['number'] for t in facts['training'].get('examples',[]))+'.'
         if external.get('status')=='unavailable':text+='\nВнешний поиск сейчас недоступен.'
         return text[:20000]
     def review(self,task,report,photos_dir):

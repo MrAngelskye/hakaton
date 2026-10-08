@@ -79,7 +79,7 @@ def build():
     by_job = {r['code']:r for r in raw['job_titles']}
     accounts = []
     def account(role, number, job, source):
-        accounts.append({'username':f'km.{role}.{number:02}', 'name':FICTIONAL_NAMES[len(accounts)],
+        accounts.append({'username':f'{role}.{number:02}', 'name':FICTIONAL_NAMES[len(accounts)],
             'job':job,'role':role,'source_id':source,'identity_status':'unassigned_anonymized_profile',
             'identity_origin':'fictional','note':FICTIONAL_IDENTITY_NOTE})
     account('admin',1,'Администратор системы',CASE)

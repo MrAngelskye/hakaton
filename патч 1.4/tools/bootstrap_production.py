@@ -57,11 +57,12 @@ def main():
     mode.add_argument('--sqlite-dir',type=Path,help='Отдельная пустая папка для локальной проверки')
     mode.add_argument('--postgres-config',type=Path,help='Приватный JSON с database_url отдельной PostgreSQL')
     parser.add_argument('--credentials',required=True,type=Path,help='Новый локальный CSV за пределами репозитория')
+    parser.add_argument('--reference-catalogs',action='store_true',help='Явно импортировать справочники; по умолчанию создаются только сотрудники')
     parser.add_argument('--catalog',type=Path,default=REPO/'database'/'production'/'reference_catalog.json')
     parser.add_argument('--photo-manifest',type=Path,default=REPO/'database'/'production'/'photo_dataset'/'database_import.json')
     args=parser.parse_args()
     payload=load_reference_package(args.catalog)
-    photos=json.loads(args.photo_manifest.read_text(encoding='utf-8'))
+    photos=json.loads(args.photo_manifest.read_text(encoding='utf-8')) if args.reference_catalogs else {'photos':[]}
     photo_root=args.photo_manifest.resolve().parent
     for photo in photos.get('photos',photos.get('training_photos',[])):
         image=(photo_root/photo['relative_path']).resolve()
@@ -86,8 +87,8 @@ def main():
         credentials_path=reserve_credentials(args.credentials,rows)
         # Both catalogs and photos are atomic, including nested Store transactions.
         with store.transaction(write=True):
-            result=bootstrap(store,payload,rows)
-            result['training_reference_photos']=import_photo_manifest(store,photos)
+            result=bootstrap(store,payload,rows,include_catalogs=args.reference_catalogs)
+            result['training_reference_photos']=import_photo_manifest(store,photos) if args.reference_catalogs else 0
         committed=True
         result['credentials_file']=str(credentials_path)
         result['notice']='Пароли существуют только в указанном локальном CSV. Не загружайте его в GitHub.'

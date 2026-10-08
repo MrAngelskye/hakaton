@@ -1,4 +1,4 @@
-#define AppVersion "1.7"
+#define AppVersion "1.8"
 #ifndef DistributionDir
   #define DistributionDir "..\dist"
 #endif
@@ -14,7 +14,7 @@ DefaultDirName={localappdata}\Programs\NaryadAI
 DefaultGroupName=НарядAI
 PrivilegesRequired=lowest
 OutputDir=..\dist
-OutputBaseFilename=NaryadAI-Setup-1.7
+OutputBaseFilename=NaryadAI-Setup-1.8
 SetupIconFile={#IconFile}
 UninstallDisplayIcon={app}\NaryadAI.exe
 ArchitecturesAllowed=x64compatible
@@ -35,6 +35,7 @@ Name: "{group}\НарядAI"; Filename: "{app}\NaryadAI.exe"
 Name: "{group}\НарядAI — обработчик ИИ"; Filename: "{app}\NaryadAI-AI.exe"
 Name: "{group}\НарядAI — сменить сервер"; Filename: "{app}\NaryadAI.exe"; Parameters: "--change-server"
 Name: "{group}\НарядAI — настройки ИИ"; Filename: "{app}\NaryadAI-AI.exe"; Parameters: "--change-settings"
+Name: "{group}\НарядAI — проверка скорости ИИ"; Filename: "{app}\NaryadAI-Diagnostics.exe"
 Name: "{autodesktop}\НарядAI"; Filename: "{app}\NaryadAI.exe"; Tasks: desktopicon
 [Run]
 Filename: "{app}\NaryadAI.exe"; Description: "Открыть НарядAI"; Flags: nowait postinstall skipifsilent

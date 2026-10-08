@@ -26,7 +26,7 @@ class ProductionDataTests(unittest.TestCase):
     def populate(self):
         rows=make_credentials(self.payload)
         with self.store.transaction(write=True):
-            result=bootstrap(self.store,self.payload,rows);import_photo_manifest(self.store,self.photos)
+            result=bootstrap(self.store,self.payload,rows,include_catalogs=True);import_photo_manifest(self.store,self.photos)
         return result,rows
     def test_ai_reads_catalog_sources_without_inventing_prices_or_history(self):
         from server.knowledge import Knowledge
@@ -47,6 +47,16 @@ class ProductionDataTests(unittest.TestCase):
         with self.assertRaises(PermissionError):
             worker=next(row for row in credentials if row['role']=='worker')
             Knowledge(self.store,control).retrieve(self.store.authenticate(worker['username'],worker['password'],'worker'),'подшипники SKF')
+
+    def test_default_bootstrap_has_only_staff_and_no_operational_catalogs(self):
+        credentials=make_credentials(self.payload)
+        result=bootstrap(self.store,self.payload,credentials)
+        self.assertEqual(result['users'],19)
+        with self.store.transaction() as c:
+            for table in ('tasks','reports','materials','sites','equipment','shifts','shift_rules','defect_codes','brigades','training_photos','work_order_templates'):
+                self.assertEqual(c.execute('SELECT count(*) FROM '+table).fetchone()[0],0,table)
+        for row in credentials:
+            self.assertTrue(self.store.authenticate(row['username'],row['password'],row['role']))
     def test_verified_refs_and_unique_credentials_without_fake_history(self):
         result,credentials=self.populate()
         self.assertEqual(result['users'],19)

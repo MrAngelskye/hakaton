@@ -74,8 +74,9 @@ def load_reference_package(path):
         if row.get('company_usage_confirmed') or row.get('unit_price') is not None or row.get('stock_quantity') is not None:
             raise ValueError('Открытый каталог не подтверждает закупки, цены или остатки предприятия.')
     for row in payload['accounts']:
-        if row['role'] not in ('worker', 'master', 'admin', 'manager') or not re.fullmatch(r'km\.[a-z]+\.\d{2}', row['username']):
-            raise ValueError('Используйте отдельные логины km.role.01.')
+        # Accept old exported packages too; newly generated logins have no km. prefix.
+        if row['role'] not in ('worker', 'master', 'admin', 'manager') or not re.fullmatch(r'(?:km\.)?[a-z]+\.\d{2}', row['username']):
+            raise ValueError('Используйте отдельные логины worker.01, master.01, admin.01 или manager.01.')
         if row.get('identity_status') != 'unassigned_anonymized_profile':
             raise ValueError('Публичные имена сотрудников не импортируются как учётные записи.')
         if row.get('identity_origin') not in (None, 'fictional'):
@@ -94,7 +95,7 @@ def _provenance(c, kind, key, source, status, note, confirmed=False):
               (kind, str(key), source, status, int(confirmed), note))
 
 
-def bootstrap(store, payload, credentials):
+def bootstrap(store, payload, credentials, *, include_catalogs=False):
     """One transaction. Refuse populated DBs; do not relabel demo records as real."""
     from app.store import password_hash
     from app.production_schema import BUSINESS_TABLES
@@ -110,24 +111,26 @@ def bootstrap(store, payload, credentials):
                 if not c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='ai_jobs'").fetchone():continue
             if c.execute('SELECT count(*) FROM '+table).fetchone()[0]:
                 raise ValueError('База уже содержит данные. Подготовьте отдельную пустую БД; очистка не выполняется.')
+        account_sources = {row['source_id'] for row in payload['accounts']}
         for row in payload['sources']:
+            if not include_catalogs and row['source_id'] not in account_sources:continue
             _source(c, row)
-        for row in payload['sites']:
+        for row in (payload['sites'] if include_catalogs else []):
             c.execute('INSERT INTO sites(code,name) VALUES(?,?)', (row['code'], row['name']))
             _provenance(c, 'sites', row['code'], row['source_id'], 'public_verified', row['note'], True)
-        for row in payload['materials']:
+        for row in (payload['materials'] if include_catalogs else []):
             c.execute('INSERT INTO materials(code,name,unit,unit_price) VALUES(?,?,?,0)', (row['code'], row['name'], row['unit']))
             mid = c.execute('SELECT id FROM materials WHERE code=?', (row['code'],)).fetchone()[0]
             c.execute('INSERT INTO material_reference_metadata(material_id,source_id,manufacturer,model,note) VALUES(?,?,?,?,?)',
                       (mid, row['source_id'], row['manufacturer'], row['model'], row['note']))
             _provenance(c, 'materials', row['code'], row['source_id'], 'industry_reference', row['note'])
-        for row in payload['defect_codes']:
+        for row in (payload['defect_codes'] if include_catalogs else []):
             c.execute('INSERT INTO defect_codes(code,name,category) VALUES(?,?,?)', (row['code'], row['name'], row['category']))
             _provenance(c, 'defect_codes', row['code'], row['source_id'], 'editorial_template', 'Внутренняя классификация приложения, не шифры АО «КМ».')
-        for row in payload['equipment_types']:
+        for row in (payload['equipment_types'] if include_catalogs else []):
             c.execute('INSERT INTO equipment_reference_types(code,name,source_id,company_context,note) VALUES(?,?,?,?,?)',
                       (row['code'], row['name'], row['source_id'], int(row['company_context']), row['note']))
-        for row in payload['work_order_templates']:
+        for row in (payload['work_order_templates'] if include_catalogs else []):
             c.execute('INSERT INTO work_order_templates(template_id,title,equipment_category,kind,problem_description,closeout_requirements,source_id) VALUES(?,?,?,?,?,?,?)',
                       (row['template_id'], row['title'], row['equipment_category'], row['kind'], row['problem_description'],
                        json.dumps(row['closeout_requirements'], ensure_ascii=False), row['source_id']))
@@ -143,8 +146,10 @@ def bootstrap(store, payload, credentials):
             note = ('ФИО вымышлено. Источник подтверждает название должности, а не личность. '
                     if row.get('identity_origin') == 'fictional' else '')
             _provenance(c, 'users', row['username'], row['source_id'], 'anonymized_profile', note+'Распределение аккаунтов не является штатным расписанием.')
-    return {'users': len(payload['accounts']), 'sites': len(payload['sites']), 'materials': len(payload['materials']),
-            'work_order_templates': len(payload['work_order_templates']), 'tasks': 0, 'reports': 0, 'equipment': 0}
+    return {'users': len(payload['accounts']), 'sites': len(payload['sites']) if include_catalogs else 0,
+            'materials': len(payload['materials']) if include_catalogs else 0,
+            'work_order_templates': len(payload['work_order_templates']) if include_catalogs else 0,
+            'tasks': 0, 'reports': 0, 'equipment': 0}
 
 
 def make_credentials(payload):

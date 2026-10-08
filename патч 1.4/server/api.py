@@ -157,7 +157,7 @@ def create_app(settings,provider=None):
         return dict(u)
 
     @app.get('/health')
-    def health():return {'ok':True,'version':'1.7','release':'1.7-voice-production.1','seed_demo':settings.seed_demo,'ai_enabled':settings.ai_enabled,'features':['admin_chat','case1_workflow','period_analytics','notifications','atomic_rpc','mobile_web','desktop_notifications','announcements','grounded_ai','photo_analysis','admin_console','knowledge_documents','shared_database','production_bootstrap','voice_input']}
+    def health():return {'ok':True,'version':'1.8','release':'1.8-training-isolated.1','seed_demo':settings.seed_demo,'ai_enabled':settings.ai_enabled,'features':['admin_chat','case1_workflow','period_analytics','notifications','atomic_rpc','mobile_web','desktop_notifications','announcements','grounded_ai','photo_analysis','admin_console','knowledge_documents','shared_database','production_bootstrap','voice_input','isolated_training','staff_only_bootstrap','ai_diagnostics']}
     web=Path(__file__).resolve().parents[1]/'web'
     app.mount('/web',StaticFiles(directory=web),name='web')
     app.mount('/assets/branding',StaticFiles(directory=web.parent/'assets'/'branding'),name='branding')

@@ -21,7 +21,7 @@ def lookup(facts,message):
     query=facts.get('public_query','');lower=query.lower()
     internal=bool(facts.get('requested_task_ids')) or any(v in lower for v in ('сотрудник','работник','мастер','рейтинг','оценк','наряд','отчёт','отчет','зарплат','бухгалтер','кто выполня','база дан','наша бд','нашей бд'))
     technical=any(v in lower for v in ('как ','почему ','интернет','найди','найти','инструкц','подшип','неисправ','ремонт','насос','конвейер'))
-    if not facts.get('web_allowed') or internal or not technical or facts.get('documents_found'):return {'status':'not_used','sources':[]}
+    if 'training' in facts or not facts.get('web_allowed') or internal or not technical or facts.get('documents_found'):return {'status':'not_used','sources':[]}
     if '[email]' in query or '[номер]' in query or 'Сотрудник #' in query:return {'status':'private_query_blocked','sources':[]}
     try:
         req=Request('https://html.duckduckgo.com/html/?'+urlencode({'q':query[:300]}),headers={'User-Agent':'Mozilla/5.0 NaryadAI/1.6'})

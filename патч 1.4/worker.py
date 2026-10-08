@@ -62,7 +62,8 @@ class Worker:
     def run_chat_once(self):
         job=self.request('/api/ai/chat/claim',{})['job']
         if not job:return False
-        LOG.info('Получено сообщение администратора')
+        started=time.perf_counter()
+        LOG.info('Получено сообщение администратора; контекст %d символов',sum(len(item.get('content','')) for item in job['history']))
         try:answer=self.ai.chat(job['message'],job['history'],job['conversation_id']);error=''
         except (AIError,OSError) as e:answer='';error=str(e)
         body={'lease':job['lease'],'answer':answer,'error':error,'model':self.ai.settings.model_label[:200]}
@@ -71,7 +72,7 @@ class Worker:
             except OSError:
                 if attempt==2:raise
                 time.sleep(2)
-        LOG.info('Ответ чата передан в приложение')
+        LOG.info('Ответ чата передан в приложение; обработка %.1f с',time.perf_counter()-started)
         return True
     def run(self):
         stop=threading.Event()

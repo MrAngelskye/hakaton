@@ -1,0 +1,29 @@
+/* Phone administrator panel, shared with the Android app's external-browser entry. */
+@media (max-width:760px) {
+  .mobile-admin .main {padding:20px 16px calc(110px + env(safe-area-inset-bottom))}
+  .mobile-admin .topbar {padding:14px 16px calc(14px + env(safe-area-inset-top));align-items:flex-start}
+  .mobile-admin .topbar>div:first-child {min-width:0;overflow-wrap:anywhere}
+  .mobile-admin .topbar-actions {flex-shrink:0}
+  .mobile-admin .network {max-width:104px;font-size:11px;white-space:normal}
+  .mobile-admin .page-head {flex-wrap:wrap;align-items:flex-start}
+  .mobile-admin .page-head .toolbar {width:100%}
+  .mobile-admin .page-head .toolbar button {flex:1 1 130px}
+  .mobile-admin .menu-tile {min-height:76px;font-size:16px;justify-content:flex-start}
+  .mobile-admin .table-wrap {max-width:100%;overscroll-behavior-x:contain;scrollbar-width:thin}
+  .mobile-admin table {min-width:560px}
+  .mobile-admin th,.mobile-admin td {padding:12px 10px;vertical-align:top}
+  .mobile-admin .list-row {flex-wrap:wrap;align-items:flex-start}
+  .mobile-admin .list-row>div {min-width:0;overflow-wrap:anywhere}
+  .mobile-admin .list-row .toolbar {width:100%}
+  .mobile-admin .list-row button {min-height:48px}
+  .mobile-admin .terminal {max-height:38dvh;min-height:180px;font-size:13px}
+  .mobile-admin .event-stream {max-height:45dvh;overscroll-behavior:contain}
+  .mobile-admin dialog {max-height:calc(100dvh - 24px);max-width:calc(100vw - 24px);border-radius:20px;padding:0}
+  .mobile-admin .dialog-header {padding:18px 16px;position:sticky;top:0;z-index:1;background:#fff}
+  .mobile-admin .dialog-body {padding:18px 16px;overflow-wrap:anywhere}
+  .mobile-admin .dialog-actions {flex-direction:column;align-items:stretch}
+  .mobile-admin .dialog-actions button {width:100%;min-height:52px}
+  .mobile-admin .form-grid {grid-template-columns:minmax(0,1fr)}
+  .mobile-admin input,.mobile-admin select,.mobile-admin textarea {font-size:16px;max-width:100%}
+  .mobile-admin .toast {bottom:calc(92px + env(safe-area-inset-bottom))}
+}

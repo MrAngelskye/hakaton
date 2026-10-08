@@ -1,6 +1,6 @@
 /* Cache public application shell only. API responses and photo reports never enter CacheStorage. */
-const CACHE = 'naryadai-shell-v181-three-roles-1';
-const SHELL = ['/', '/web/styles.css', '/web/voice.css', '/web/polish.css', '/web/notifications.js', '/web/voice.js', '/web/app.js', '/web/manifest.webmanifest', '/web/icons/icon.svg', '/web/icons/icon-192.png', '/web/icons/icon-512.png', '/assets/branding/km-logo-white.svg', '/assets/icons/mic.svg'];
+const CACHE = 'naryadai-shell-v181-mobile-admin-1';
+const SHELL = ['/', '/web/styles.css', '/web/voice.css', '/web/polish.css', '/web/mobile-admin.css', '/web/notifications.js', '/web/voice.js', '/web/app.js', '/web/manifest.webmanifest', '/web/icons/icon.svg', '/web/icons/icon-192.png', '/web/icons/icon-512.png', '/assets/branding/km-logo-white.svg', '/assets/icons/mic.svg'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(async cache => {
     await Promise.all(SHELL.map(async url => {
